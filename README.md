@@ -31,9 +31,9 @@ npm i w-aggrid-vue
 [Necessary] Add script for ag-grid-community.
 > **Note:** include script for `ag-grid-vue`.
 ```alias
-<script src="https://unpkg.com/ag-grid-community@20.2.0/dist/ag-grid-community.min.noStyle.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/ag-grid-community@20.2.0/dist/styles/ag-grid.css">
-<link rel="stylesheet" href="https://unpkg.com/ag-grid-community@20.2.0/dist/styles/ag-theme-balham.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-theme-balham.css">
 ```
 [Necessary] Add script for vue-class-component.
 > **Note:** include script for `ag-grid-vue`.
