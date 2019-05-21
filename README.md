@@ -3,6 +3,9 @@ A support package for web developer.
 
 ![language](https://img.shields.io/badge/language-Javascript-orange.svg) [![language](https://img.shields.io/badge/vue-2.x-brightgreen.svg)](https://github.com/vuejs/vue) [![npm version](http://img.shields.io/npm/v/w-aggrid-vue.svg?style=flat)](https://npmjs.org/package/w-aggrid-vue) [![Build Status](https://travis-ci.org/yuda-lyu/w-aggrid-vue.svg?branch=master)](https://travis-ci.org/yuda-lyu/w-aggrid-vue) [![npm download](https://img.shields.io/npm/dt/w-aggrid-vue.svg)](https://npmjs.org/package/w-aggrid-vue) [![license](https://img.shields.io/npm/l/w-aggrid-vue.svg?style=flat)](https://npmjs.org/package/w-aggrid-vue)
 
+## Documentation
+To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-aggrid-vue/module-WAgGridVue.html).
+
 ## Example
 To view some examples for more understanding, visit examples:
 > **ag-grid-vue:** [ex-small.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-small.html)
