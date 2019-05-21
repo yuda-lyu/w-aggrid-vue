@@ -1,0 +1,68 @@
+import vue from 'rollup-plugin-vue'
+import commonjs from 'rollup-plugin-commonjs'
+import resolve from 'rollup-plugin-node-resolve'
+import postcss from 'rollup-plugin-postcss'
+import babel from 'rollup-plugin-babel'
+import minify from 'rollup-plugin-babel-minify'
+import fs from 'fs'
+ 
+ 
+let pkg=JSON.parse(fs.readFileSync('package.json', 'utf8'))
+
+
+export default {
+  input: 'src/WAgGridVue.vue',
+  output: {
+    banner: '/*!\n * wsemi v' + pkg.version + '\n * (c) 2018-2019 ' + pkg.author + '\n * Released under the MIT License.\n */',
+    globals: {
+      //'fs': 'fs',
+      //'dayjs': 'dayjs',
+      //'XLSX': 'XLSX',
+      //'fuzzball': 'fuzzball',
+      //'tippy': 'tippy.js', //外部預設名稱: 內部套件名稱
+      //'UAParser': 'ua-parser-js',
+      //'filterXSS': 'xss',
+      //'tinycolor': '@ctrl/tinycolor',
+    },
+    format: 'umd', //iife, umd
+    name: 'w-aggrid-vue', //iife時名稱內不能使用「-」
+    file: 'dist/w-aggrid-vue.umd.js',
+    sourcemap: true
+  },
+  external: [
+      //'fs',
+      //'dayjs',
+      //'XLSX',
+      //'fuzzball',
+      //'tippy.js', //內部套件名稱
+      //'ua-parser-js',
+      //'xss',
+      //'@ctrl/tinycolor',
+  ], 
+  plugins: [
+    vue(),
+    commonjs(),
+    resolve({
+        preferBuiltins: false,
+        browser: true,
+    }),
+    babel({
+      runtimeHelpers: true,
+      exclude: 'node_modules/**',
+      presets: [
+        [
+          "@babel/preset-env",
+          {
+            useBuiltIns: 'entry', //entry usage, usage is not stable
+            corejs: 3,
+          }
+        ]
+      ],
+    }),
+    postcss({
+      extensions: ['.css']
+    }),
+    minify({ comments: false, }),
+  ]
+}
+

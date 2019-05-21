@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for w-aggrid-vue</title>
+
+    <!--使用lodash-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+
+    <!--使用vue-->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+
+    <!--使用uuid-->
+    <script src="https://cdn.jsdelivr.net/npm/js-uuid@0.0.6/js-uuid.min.js"></script>
+
+    <!--使用ag-grid-community-->
+    <script src="https://unpkg.com/ag-grid-community@20.2.0/dist/ag-grid-community.min.noStyle.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@20.2.0/dist/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community@20.2.0/dist/styles/ag-theme-balham.css">
+
+    <!--使用vue-class-component-->
+    <script src="https://cdn.jsdelivr.net/npm/vue-class-component/dist/vue-class-component.js"></script>
+
+    <!--使用vue-property-decorator-->
+    <script src="https://cdn.jsdelivr.net/npm/vue-property-decorator/lib/vue-property-decorator.umd.min.js"></script>
+
+    <!--使用ag-grid-vue-->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.js"></script>
+
+    <!--使用自包vue組件-->
+    <script src="../dist/w-aggrid-vue.umd.js"></script>
+
+</head>
+<body>
+
+    <div id="app">
+        <w-aggrid-vue
+            ref="rftable"
+            v-bind:tbheight="600"
+            v-bind:search="search"
+            v-bind:opt="opt"
+        ></w-aggrid-vue>
+    </div>
+
+    <script>
+
+        //install ag-grid-vue
+        let AgGridVue=window['ag-grid-vue'].AgGridVue
+        Vue.component('ag-grid-vue', AgGridVue)
+
+        //install w-aggrid-vue
+        Vue.component('w-aggrid-vue',window['w-aggrid-vue'])
+
+        new Vue({
+            el: '#app',
+            data: {
+                search: '',
+                 opt: {},
+            },
+            mounted: function(){
+                let vo = this
+                vo.init()
+            },
+            methods: {
+              init:function(){
+                let vo = this
+
+                //cellChange
+                function cellChange(k, r) {
+                    console.log('cellChange', k, r)
+                    r['我們與惡的距離1'] = 'qqqA1'
+                    vo.$refs.rftable.refresh()
+                }
+
+                let ncol = 250
+                let nrow = 4000
+                //ncol = 25
+                //nrow = 30
+                let vkkeys = _.map(_.range(1, ncol), function(v)  {
+                    return '我們與惡的距離' + v
+                })
+                let vkrows = _.map(_.range(0, nrow), function(v) {
+                    let o = {}
+                    _.each(vkkeys, function(k) {
+                        o[k] = _.toUpper(uuid.v4())
+                    })
+                    return o
+                })
+                let opt = {
+                    rows: vkrows,
+                    keys: vkkeys,
+                    kpHeadFix: {
+                        '我們與惡的距離1': true,
+                    },
+                    kpHeadTooltip: {
+                        '我們與惡的距離1': function(v) {
+                            return '<b>' + v + '</b><div>測試head html 1<div>'
+                        },
+                        '我們與惡的距離2': function(v) {
+                            return '<b>' + v + '</b><div>測試head html 2<div>'
+                        }
+                    },
+                    kpHeadAlighH: {
+                        '我們與惡的距離2': 'right'
+                    },
+                    kpCellTooltip: {
+                        '我們與惡的距離2': function(v) {
+                            return '<b>測試tp</b><div>' + v + '<div>'
+                        }
+                    },
+                    kpCellAlighH: {
+                        '我們與惡的距離2': 'right'
+                    },
+                    kpCellRender: {
+                        '我們與惡的距離2': function(v, r) {
+                            //console.log('kpCellRender', v, r)
+                            return '<b style="color:red;">* 0123456789 : </b>' + v
+                        }
+                        // '我們與惡的距離2': function(v) {
+                        //     return '<div style="width:50px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">*' + v + '</div>'
+                        // }
+                    },
+                    defCellMinWidth: 150,
+                    kpCellWidth: {
+                        '我們與惡的距離2': 300
+                    },
+                    kpRowStyle: {
+                        '我們與惡的距離1': function(v) {
+                            if (v.indexOf('A1')>=0) {
+                                return {'background': '#f6a'}
+                            }
+                            return {}
+                        }
+                    },
+                    //cellDbClick: cellDbClick,
+                    cellChange: cellChange,
+                    kpCellEditable: {
+                        '我們與惡的距離1': true,
+                        '我們與惡的距離2': true,
+                        '我們與惡的距離249': true,
+                    },
+                    // kpHeadSort: {
+                    //     '我們與惡的距離1': false,
+                    // },
+                    // kpRowDrag: {
+                    //     '我們與惡的距離1': true,
+                    // },
+                }
+
+                //save
+                vo.opt=opt
+                
+              }
+            }
+        })
+
+    </script>
+
+</body>
+</html>
