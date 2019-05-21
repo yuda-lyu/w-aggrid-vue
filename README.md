@@ -5,7 +5,9 @@ A support package for web developer.
 
 ## Example
 To view some examples for more understanding, visit examples:
-> **ag-grid-vue:** [index.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/index.html)
+> **ag-grid-vue:** [ex-small.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-small.html)
+
+> **ag-grid-vue:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html)
 
 ## Installation
 ### Using npm(ES6 module):
