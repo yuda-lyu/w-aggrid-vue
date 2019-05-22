@@ -27,29 +27,16 @@ npm i w-aggrid-vue
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
 [Necessary] Add script for vue.
-> **Note:** include script for `ag-grid-vue`.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
 ```
 [Necessary] Add script for ag-grid-community.
-> **Note:** include script for `ag-grid-vue`.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-theme-balham.css">
 ```
-[Necessary] Add script for vue-class-component.
-> **Note:** include script for `ag-grid-vue`.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/vue-class-component/dist/vue-class-component.js"></script>
-```
-[Necessary] Add script for vue-property-decorator.
-> **Note:** include script for `ag-grid-vue`.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/vue-property-decorator/lib/vue-property-decorator.umd.min.js"></script>
-```
 [Necessary] Add script for ag-grid-vue.
-> **Note:** include script for `w-aggrid-vue`.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.js"></script>
 ```
