@@ -4,7 +4,7 @@
         <div v-bind:style="{height:tbheight+'px'}">
 
             <ag-grid-vue
-                style="width:100%; height:100%; margin-top:20px;"
+                style="width:100%; height:100%;"
                 class="ag-theme-balham"
                 v-bind:columnDefs="columns"
                 v-bind:rowData="filterRows"
@@ -22,6 +22,9 @@
 </template>
 
 <script>
+import { AgGridVue } from 'ag-grid-vue'
+//會引用vue-class-component與vue-property-decorator
+
 import map from 'lodash/map'
 import each from 'lodash/each'
 import filter from 'lodash/filter'
@@ -76,6 +79,7 @@ window.ttWAgGridVue = onTooltip
  * @vue-event {Null} getDisplayData 無輸入，會回傳目前表格所顯示之數據
  */
 export default {
+    components: { AgGridVue }, //組件載入時才加載ag-grid-vue, 避免使用udm時載入會比ag-grid-vue快, 進而導致無法掛載
     props: {
         opt: {
             type: Object,
@@ -702,6 +706,12 @@ export default {
 </script>
 
 <style>
+.CompCssWAgGridVue .ag-theme-balham, .ag-header {
+    font-family: inherit;
+}
+.CompCssWAgGridVue .ag-theme-balham .ag-header {
+    font-family: inherit;
+}
 .CompCssWAgGridVue .ag-floating-filter-input, .ag-filter-filter, .ag-filter-select {
     transition: all 1s;
     padding: 3px;
