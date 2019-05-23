@@ -22,8 +22,7 @@
 </template>
 
 <script>
-import { AgGridVue } from 'ag-grid-vue'
-//會引用vue-class-component與vue-property-decorator
+import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator
 
 import map from 'lodash/map'
 import each from 'lodash/each'
