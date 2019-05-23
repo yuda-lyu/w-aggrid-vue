@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>examples for kpHead</title>
+    <title>example for kpHead</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -22,13 +22,13 @@
     <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@1.0.3/dist/w-jsonview-tree.umd.js"></script>
 
     <!-- load json data for [jdata] -->
-    <script src="data.js"></script>
+    <script src="data-easy.js"></script>
 
 </head>
 <body style="font-family:Microsoft JhengHei,Helvetica;">
 
     <div style="display:flex;">
-        <div id="app" >
+        <div id="app">
             <w-aggrid-vue
                 style="width:620px;"
                 ref="rftable"
@@ -52,7 +52,7 @@
             kpHead:{
                 'make':'生產製造商',
                 'model':'車款型號',
-                'price':'虛擬販售價格'
+                'price':'虛擬販售價格',
             },
             rows: jdata,
         }

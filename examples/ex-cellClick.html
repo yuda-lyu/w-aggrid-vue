@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>example for large</title>
+    <title>example for cellClick</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -22,21 +22,24 @@
     <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@1.0.3/dist/w-jsonview-tree.umd.js"></script>
 
     <!-- load json data for [jdata] -->
-    <script src="data-eduagency.js"></script>
+    <script src="data-easy.js"></script>
 
 </head>
 <body style="font-family:Microsoft JhengHei,Helvetica;">
 
-    <div id="app">
-        <w-aggrid-vue
-            ref="rftable"
-            v-bind:height="tableHeight"
-            v-bind:opt="opt"
-        ></w-aggrid-vue>
-    </div>
-    <div style="margin-top:20px;">
-        <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #aaa; font-size:20pt;">Option:</div>
-        <div id="optjson" style="font-size:10pt;"></div>
+    <div style="display:flex;">
+        <div id="app">
+            <w-aggrid-vue
+                style="width:620px;"
+                ref="rftable"
+                v-bind:opt="opt"
+            ></w-aggrid-vue>
+            <pre id="ckmsg"></pre>
+        </div>
+        <div style="margin-left:20px;">
+            <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #aaa; font-size:20pt;">Option:</div>
+            <div id="optjson" style="font-size:10pt;"></div>
+        </div>
     </div>
 
     <script>
@@ -46,23 +49,10 @@
 
         //opt
         let opt={
-            keys: [
-                'name',
-                'category',
-                'categorychild',
-                'purpose',
-                'service',
-                'region',
-                'opentime',
-                'address',
-                'phone',
-                'fax',
-                'email',
-                'admincategory',
-                'img_front',
-                'img_inner',
-                'link'
-            ],
+            keys: ['make', 'model' ,'price'],
+            cellClick:function(k, r){
+                document.querySelector('#ckmsg').innerHTML='trigger: cellClick\n\n'+'key: '+k+'\n\n'+'value: '+r[k]+'\n\n'+'row: '+JSON.stringify(r,null,2)
+            },
             rows: jdata,
         }
 
@@ -70,7 +60,6 @@
         new Vue({
             el: '#app',
             data: {
-                tableHeight: 500,
                 opt: opt,
             }
         })

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>examples for table height</title>
+    <title>example for table height</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -22,17 +22,17 @@
     <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@1.0.3/dist/w-jsonview-tree.umd.js"></script>
 
     <!-- load json data for [jdata] -->
-    <script src="data.js"></script>
+    <script src="data-easy.js"></script>
 
 </head>
 <body style="font-family:Microsoft JhengHei,Helvetica;">
 
     <div style="display:flex;">
-        <div id="app" >
+        <div id="app" style="height:1000px;">
             <w-aggrid-vue
                 style="width:620px;"
                 ref="rftable"
-                v-bind:tableHeight="tableHeight"
+                v-bind:height="tableHeight"
                 v-bind:opt="opt"
             ></w-aggrid-vue>
         </div>
@@ -57,7 +57,7 @@
         new Vue({
             el: '#app',
             data: {
-                tableHeight: 600,
+                tableHeight: 500,
                 opt: opt,
             }
         })

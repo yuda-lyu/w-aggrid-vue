@@ -1,7 +1,7 @@
 <template>
     <div class="CompCssWAgGridVue" v-bind:ch_param="ch_param">
 
-        <div v-bind:style="{height:tableHeight+'px'}">
+        <div v-bind:style="{height:height+'px'}">
 
             <ag-grid-vue
                 style="width:100%; height:100%;"
@@ -66,9 +66,9 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Object} [opt.kpHeadFix={}] 輸入key對應head之是否固定於左側物件，預設為各key值為false
  * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設為各key值為true
  * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定key欄之cell值所需對應之row style，預設為{}
- * @vue-prop {Object} [opt.defCellMinWidth={}] 輸入cell預設最小寬度數字，預設為null
+ * @vue-prop {Number} [opt.defCellMinWidth=null] 輸入cell預設最小寬度數字，預設為null
  * @vue-prop {Object} [opt.kpRowDrag={}] [專有:ag-grid] 輸入key對應row之是否能拖曳排序物件，預設為各key值為false
- * @vue-prop {Object} [opt.kpCellWidth={}] 輸入key對應cell之寬度物件，預設為各key值為''
+ * @vue-prop {Object} [opt.kpCellWidth=null] 輸入key對應cell之寬度物件，預設為各key值為null
  * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設為{}
  * @vue-prop {Object} [opt.kpCellTooltip={}] 輸入key對應cell之tooltip的html字串物件，於各cell處滑鼠移入時觸發，預設為{}
  * @vue-prop {Object} [opt.kpCellAlighH={}] 輸入key對應cell之左右對齊字串物件，預設為各key值為center
@@ -79,7 +79,7 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Function} [opt.cellClick={}] 輸入cell click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellDbClick={}] 輸入cell double click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellChange={}] 輸入cell change之觸發事件，預設為function(){}
- * @vue-prop {Number} [tableHeight=300] 表格高度，預設300px
+ * @vue-prop {Number} [height=300] 表格高度，預設300(px)
  * @vue-prop {String} [search=''] 輸入過濾字串，預設為''
  * @vue-event {Null} refresh 刷新表格，無輸入與回傳
  * @vue-event {Array} showKeys 輸入要顯示欄位的keys，數量最多為原本初始化的keys，可更改順序，無回傳
@@ -91,7 +91,7 @@ export default {
         opt: {
             type: Object,
         },
-        tableHeight: {
+        height: {
             type: Number,
             default: 300
         },
@@ -220,8 +220,8 @@ export default {
             let style = {}
             each(vo.kpRowStyle, function(v, k) {
                 let f = v
-                let d = params.data[k]
-                if (isfun(f)) {
+                let d = getdtv(params.data, k)
+                if (isfun(f) && d) {
                     style = merge(style, f(d))
                 }
             })
@@ -384,12 +384,6 @@ export default {
                 vo.kpRowStyle = vo.opt.kpRowStyle
             }
 
-            //defCellMinWidth
-            vo.defCellMinWidth = null
-            if (isnum(vo.opt.defCellMinWidth)) {
-                vo.defCellMinWidth = vo.opt.defCellMinWidth
-            }
-
             //kpRowDrag, ag-grid才有
             vo.kpRowDrag = setobj(vo.keys,
                 true,
@@ -399,11 +393,17 @@ export default {
                 vo.opt.kpRowDrag
             )
 
+            //defCellMinWidth
+            vo.defCellMinWidth = null
+            if (isnum(vo.opt.defCellMinWidth)) {
+                vo.defCellMinWidth = vo.opt.defCellMinWidth
+            }
+
             //kpCellWidth
             vo.kpCellWidth = setobj(vo.keys,
                 true,
                 function(key) {
-                    return '' //預設空字串
+                    return null //預設null
                 },
                 vo.opt.kpCellWidth
             )
@@ -512,9 +512,14 @@ export default {
 
                 //filterParams
                 o.filterParams = {
-                    caseSensitive: true, //過濾區分大小寫
+                    // caseSensitive: true, //過濾區分大小寫, 會導致數字欄位無法被過濾
                     // applyButton: true, //彈出選單下方可加入使用按鈕
                     // clearButton: true, //彈出選單下方可加入取消按鈕
+                    // filterParams: {
+                    //     comparator: function(ft, cv) {
+                    //         console.log('comparator', ft, cv)
+                    //     }
+                    // }
                 }
 
                 //filter plus, 欄位標題下方加入文字過濾輸入框, 需gridOptions內floatingFilter=true
@@ -527,7 +532,7 @@ export default {
                 o.editable = vo.kpCellEditable[key]
 
                 //funHeadTooltip
-                let funHeadTooltip = getdtv(vo.kpHeadTooltip, key)
+                let funHeadTooltip = vo.kpHeadTooltip[key]
 
                 //header onmouseenter
                 let headerMouseenter = ''
