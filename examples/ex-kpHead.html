@@ -22,7 +22,7 @@
     <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@1.0.3/dist/w-jsonview-tree.umd.js"></script>
 
     <!-- load json data for [jdata] -->
-    <script src="json-15psn9.js"></script>
+    <script src="data.js"></script>
 
 </head>
 <body style="font-family:Microsoft JhengHei,Helvetica;">
@@ -51,22 +51,23 @@
             keys: ['make', 'model' ,'price'],
             kpHead:{
                 'make':'生產製造商',
-                'model':'型號',
-                'price':'價格'
+                'model':'車款型號',
+                'price':'虛擬販售價格'
             },
             rows: jdata,
         }
 
-        //show option
-        let jv=window['w-jsonview-tree']
-        jv(opt, document.querySelector('#optjson'), {expanded:true})
-
+        //initialize
         new Vue({
             el: '#app',
             data: {
                 opt: opt,
             }
         })
+
+        //show option
+        let jv=window['w-jsonview-tree']
+        jv(opt, document.querySelector('#optjson'), {expanded:true})
 
     </script>
 

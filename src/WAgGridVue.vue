@@ -1,7 +1,7 @@
 <template>
     <div class="CompCssWAgGridVue" v-bind:ch_param="ch_param">
 
-        <div v-bind:style="{height:tbheight+'px'}">
+        <div v-bind:style="{height:tableHeight+'px'}">
 
             <ag-grid-vue
                 style="width:100%; height:100%;"
@@ -41,11 +41,19 @@ import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
+import getdtv from 'wsemi/src/getdtv.mjs'
+import str2md5 from 'wsemi/src/str2md5.mjs'
 import oo from 'wsemi/src/oo.mjs'
 import onTooltip from 'wsemi/src/onTooltip.mjs'
 
-//add
-window.ttWAgGridVue = onTooltip
+
+//tooltip, 通過key查msg避免特殊html符號無法顯示
+let dtmsg = {}
+window.ttWAgGridVue = function(ele, kmsg) {
+    let msg = dtmsg[kmsg]
+    onTooltip(ele, msg)
+}
+
 
 /**
  * @vue-prop {Object} opt 輸入資料設定物件
@@ -71,7 +79,7 @@ window.ttWAgGridVue = onTooltip
  * @vue-prop {Function} [opt.cellClick={}] 輸入cell click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellDbClick={}] 輸入cell double click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellChange={}] 輸入cell change之觸發事件，預設為function(){}
- * @vue-prop {Number} [tbheight=300] 表格高度，預設300px
+ * @vue-prop {Number} [tableHeight=300] 表格高度，預設300px
  * @vue-prop {String} [search=''] 輸入過濾字串，預設為''
  * @vue-event {Null} refresh 刷新表格，無輸入與回傳
  * @vue-event {Array} showKeys 輸入要顯示欄位的keys，數量最多為原本初始化的keys，可更改順序，無回傳
@@ -83,7 +91,7 @@ export default {
         opt: {
             type: Object,
         },
-        tbheight: {
+        tableHeight: {
             type: Number,
             default: 300
         },
@@ -519,7 +527,7 @@ export default {
                 o.editable = vo.kpCellEditable[key]
 
                 //funHeadTooltip
-                let funHeadTooltip = vo.kpHeadTooltip[key]
+                let funHeadTooltip = getdtv(vo.kpHeadTooltip, key)
 
                 //header onmouseenter
                 let headerMouseenter = ''
@@ -528,8 +536,14 @@ export default {
                     //tooltip
                     let t = funHeadTooltip(vo.kpHead[key])
 
+                    //kmsg
+                    let kmsg = str2md5(t)
+
+                    //add dtmsg
+                    dtmsg[kmsg] = t
+
                     //onmouseenter
-                    headerMouseenter = `onmouseenter="ttWAgGridVue(this,'${t}')"`
+                    headerMouseenter = `onmouseenter="ttWAgGridVue(this,'${kmsg}')"`
 
                 }
 
@@ -577,8 +591,14 @@ export default {
                         //tooltip
                         let t = funCellTooltip(params.value)
 
+                        //kmsg
+                        let kmsg = str2md5(t)
+
+                        //add dtmsg
+                        dtmsg[kmsg] = t
+
                         //onmouseenter
-                        params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${t}')`)
+                        params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
 
                     }
 

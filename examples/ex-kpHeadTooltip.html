@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>examples for kpHead</title>
+    <title>examples for kpHeadTooltip</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.js"></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.1/dist/w-aggrid-vue.umd.js"></script>
+    <script src="../dist/w-aggrid-vue.umd.js"></script>
 
     <!-- w-jsonview-tree -->
     <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@1.0.3/dist/w-jsonview-tree.umd.js"></script>
@@ -49,10 +49,16 @@
         //opt
         let opt={
             keys: ['make', 'model' ,'price'],
-            kpHead:{
-                'make':'生產製造商',
-                'model':'車款型號',
-                'price':'虛擬販售價格'
+            kpHeadTooltip:{
+                'make':function(v){
+                    return '<div style="font-size:8pt; font-weight:bold; color:#6fe;">['+v+']</div><div>生產製造商</div>'
+                },
+                'model':function(v){
+                    return '<div style="font-size:8pt; font-weight:bold; color:#6fe;">['+v+']</div><div>車款型號</div>'
+                },
+                'price':function(v){
+                    return '<div style="font-size:8pt; font-weight:bold; color:#6fe;">['+v+']</div><div>虛擬販售價格</div>'
+                },
             },
             rows: jdata,
         }
