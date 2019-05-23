@@ -8,9 +8,19 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-
 
 ## Example
 To view some examples for more understanding, visit examples:
+> **simple:** [ex-simple.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-simple.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-simple.html)]
+
+> **tableHeight:** [ex-tableHeight.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableHeight.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableHeight.html)]
+
+> **tableWidth:** [ex-tableWidth.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableWidth.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableWidth.html)]
+
+> **tableWidthFull:** [ex-tableWidthFull.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableWidthFull.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableWidthFull.html)]
+
 > **kpHead:** [ex-kpHead.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHead.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHead.html)]
 
-> **ag-grid-vue:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-large.html)]
+> **kpHeadTooltip:** [ex-kpHeadTooltip.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadTooltip.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadTooltip.html)]
+
+> **large:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-large.html)]
 
 ## Installation
 ### Using npm(ES6 module):
