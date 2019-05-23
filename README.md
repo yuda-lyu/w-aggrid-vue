@@ -1,5 +1,5 @@
 # w-aggrid-vue
-A support package for web developer.
+A table wrapper for ag-grid-vue
 
 ![language](https://img.shields.io/badge/language-Javascript-orange.svg) [![language](https://img.shields.io/badge/vue-2.x-brightgreen.svg)](https://github.com/vuejs/vue) [![npm version](http://img.shields.io/npm/v/w-aggrid-vue.svg?style=flat)](https://npmjs.org/package/w-aggrid-vue) [![Build Status](https://travis-ci.org/yuda-lyu/w-aggrid-vue.svg?branch=master)](https://travis-ci.org/yuda-lyu/w-aggrid-vue) [![license](https://img.shields.io/npm/l/w-aggrid-vue.svg?style=flat)](https://npmjs.org/package/w-aggrid-vue) [![npm download](https://img.shields.io/npm/dt/w-aggrid-vue.svg)](https://npmjs.org/package/w-aggrid-vue) [![jsdelivr download](https://data.jsdelivr.com/v1/package/npm/w-jsonview-tree/badge)](https://www.jsdelivr.com/package/npm/w-jsonview-tree)
 
