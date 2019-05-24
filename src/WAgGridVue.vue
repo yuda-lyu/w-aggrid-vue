@@ -27,21 +27,25 @@ import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-
 import map from 'lodash/map'
 import each from 'lodash/each'
 import filter from 'lodash/filter'
+import find from 'lodash/find'
+import every from 'lodash/every'
 import merge from 'lodash/merge'
 import delay from 'lodash/delay'
 import join from 'lodash/join'
 import values from 'lodash/values'
 import cloneDeep from 'lodash/cloneDeep'
 import difference from 'lodash/difference'
-import concat from 'lodash/concat'
+//import concat from 'lodash/concat'
 
 import haskey from 'wsemi/src/haskey.mjs'
+import arrhas from 'wsemi/src/arrhas.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
 import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
 import getdtv from 'wsemi/src/getdtv.mjs'
+import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
 import oo from 'wsemi/src/oo.mjs'
 import onTooltip from 'wsemi/src/onTooltip.mjs'
@@ -61,18 +65,25 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Array} opt.rows 輸入資料列，各列為物件，內含各欄位keys之值，例[{},{},...,{}]
  * @vue-prop {Object} [opt.kpHead={}] 輸入key對應head物件，預設為keys
  * @vue-prop {Object} [opt.kpHeadTooltip={}] 輸入key對應需tooltip的html字串物件，於各head處滑鼠移入時觸發，預設為{}
- * @vue-prop {Object} [opt.kpHeadAlighH={}] 輸入key對應head之左右對齊字串物件，預設為各key值為center
- * @vue-prop {Object} [opt.kpHeadSort={}] 輸入key對應head之是否允許排序物件，預設為各key值為true
- * @vue-prop {Object} [opt.kpHeadFix={}] 輸入key對應head之是否固定於左側物件，預設為各key值為false
- * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設為各key值為true
+ * @vue-prop {Object} [opt.defHeadAlighH='center'] 輸入head預設之左右對齊字串，預設為'center'
+ * @vue-prop {Object} [opt.kpHeadAlighH={}] 輸入key對應head之左右對齊字串物件，預設為各key值為defHeadAlighH
+ * @vue-prop {Object} [opt.defHeadSort=true] 輸入head預設之是否允許排序布林值，預設為true
+ * @vue-prop {Object} [opt.kpHeadSort={}] 輸入key對應head之是否允許排序物件，預設為各key值為defHeadSort
+ * @vue-prop {Object} [opt.kpHeadFixLeft={}] 輸入key對應head之是否固定於左側物件，預設為各key值為false
+ * @vue-prop {Object} [opt.defHeadFilter=true] 輸入head預設之是否允許過濾布林值，預設為true
+ * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設為各key值為defHeadFilter
+ * @vue-prop {Object} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
+ * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設為各key值為defHeadDrag
  * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定key欄之cell值所需對應之row style，預設為{}
- * @vue-prop {Number} [opt.defCellMinWidth=null] 輸入cell預設最小寬度數字，預設為null
  * @vue-prop {Object} [opt.kpRowDrag={}] [專有:ag-grid] 輸入key對應row之是否能拖曳排序物件，預設為各key值為false
+ * @vue-prop {Number} [opt.defCellMinWidth=null] 輸入cell預設最小寬度數字，預設為null
  * @vue-prop {Object} [opt.kpCellWidth=null] 輸入key對應cell之寬度物件，預設為各key值為null
  * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設為{}
  * @vue-prop {Object} [opt.kpCellTooltip={}] 輸入key對應cell之tooltip的html字串物件，於各cell處滑鼠移入時觸發，預設為{}
- * @vue-prop {Object} [opt.kpCellAlighH={}] 輸入key對應cell之左右對齊字串物件，預設為各key值為center
- * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設為各key值為false
+ * @vue-prop {Object} [opt.defCellAlighH='center'] 輸入cell預設之左右對齊字串，預設為'center'
+ * @vue-prop {Object} [opt.kpCellAlighH={}] 輸入key對應cell之左右對齊字串物件，預設為各key值為defCellAlighH
+ * @vue-prop {Object} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
+ * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設為各key值為defCellEditable
  * @vue-prop {Function} [opt.rowClick={}] 輸入row click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.rowDbClick={}] 輸入row double click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.rowChange={}] 輸入row change之觸發事件，預設為function(){}
@@ -112,17 +123,25 @@ export default {
 
             kpHead: {},
             kpHeadTooltip: {},
+            defHeadAlighH: null,
             kpHeadAlighH: {},
+            defHeadSort: null,
             kpHeadSort: {},
-            kpHeadFix: {},
+            kpHeadFixLeft: {},
+            defHeadFilter: null,
             kpHeadFilter: {},
+            hideHeadFilter: null,
+            defHeadDrag: null,
+            kpHeadDrag: {},
             kpRowStyle: {},
-            defCellMinWidth: null,
             kpRowDrag: {}, //ag-grid才有
+            defCellMinWidth: null,
             kpCellWidth: {},
             kpCellRender: {},
             kpCellTooltip: {},
+            defCellAlighH: null,
             kpCellAlighH: {},
+            defCellEditable: null,
             kpCellEditable: {},
 
             tableClickEnable: false,
@@ -342,40 +361,78 @@ export default {
                 vo.kpHeadTooltip = vo.opt.kpHeadTooltip
             }
 
+            //defHeadAlighH
+            vo.defHeadAlighH = 'center'
+            if (arrhas(vo.opt.defHeadAlighH, ['left', 'center', 'right'])) {
+                vo.defHeadAlighH = vo.opt.defHeadAlighH
+            }
+
             //kpHeadAlighH
             vo.kpHeadAlighH = setobj(vo.keys,
                 true,
                 function(key) {
-                    return 'center' //預設center
+                    return vo.defHeadAlighH
                 },
                 vo.opt.kpHeadAlighH
             )
+
+            //defHeadSort
+            vo.defHeadSort = true
+            if (isbol(vo.opt.defHeadSort)) {
+                vo.defHeadSort = vo.opt.defHeadSort
+            }
 
             //kpHeadSort
             vo.kpHeadSort = setobj(vo.keys,
                 true,
                 function(key) {
-                    return true //預設true
+                    return vo.defHeadSort
                 },
                 vo.opt.kpHeadSort
             )
 
-            //kpHeadFix
-            vo.kpHeadFix = setobj(vo.keys,
+            //kpHeadFixLeft
+            vo.kpHeadFixLeft = setobj(vo.keys,
                 true,
                 function(key) {
                     return false //預設false
                 },
-                vo.opt.kpHeadFix
+                vo.opt.kpHeadFixLeft
             )
+
+            //defHeadFilter
+            vo.defHeadFilter = true
+            if (isbol(vo.opt.defHeadFilter)) {
+                vo.defHeadFilter = vo.opt.defHeadFilter
+            }
 
             //kpHeadFilter
             vo.kpHeadFilter = setobj(vo.keys,
                 true,
                 function(key) {
-                    return true //預設true
+                    return vo.defHeadFilter
                 },
                 vo.opt.kpHeadFilter
+            )
+
+            //hideHeadFilter
+            vo.hideHeadFilter = every(values(vo.kpHeadFilter), function(v) {
+                return v === false
+            })
+
+            //defHeadDrag
+            vo.defHeadDrag = true
+            if (isbol(vo.opt.defHeadDrag)) {
+                vo.defHeadDrag = vo.opt.defHeadDrag
+            }
+
+            //kpHeadDrag
+            vo.kpHeadDrag = setobj(vo.keys,
+                true,
+                function(key) {
+                    return vo.defHeadDrag
+                },
+                vo.opt.kpHeadDrag
             )
 
             //kpRowStyle
@@ -420,20 +477,32 @@ export default {
                 vo.kpCellTooltip = vo.opt.kpCellTooltip
             }
 
+            //defCellAlighH
+            vo.defCellAlighH = 'center'
+            if (arrhas(vo.opt.defCellAlighH, ['left', 'center', 'right'])) {
+                vo.defCellAlighH = vo.opt.defCellAlighH
+            }
+
             //kpCellAlighH
             vo.kpCellAlighH = setobj(vo.keys,
                 true,
                 function(key) {
-                    return 'center' //預設center
+                    return vo.defCellAlighH
                 },
                 vo.opt.kpCellAlighH
             )
+
+            //defCellEditable
+            vo.defCellEditable = false
+            if (isbol(vo.opt.defCellEditable)) {
+                vo.defCellEditable = vo.opt.defCellEditable
+            }
 
             //kpCellEditable
             vo.kpCellEditable = setobj(vo.keys,
                 true,
                 function(key) {
-                    return false //預設false
+                    return vo.defCellEditable
                 },
                 vo.opt.kpCellEditable
             )
@@ -494,6 +563,11 @@ export default {
 
             let vo = this
 
+            //hideHeadFilter
+            if (vo.hideHeadFilter) {
+                vo.gridOptions.floatingFilter = false
+            }
+
             let r = map(keys, function(key) {
                 let o = {}
 
@@ -521,9 +595,14 @@ export default {
                     //     }
                     // }
                 }
-
                 //filter plus, 欄位標題下方加入文字過濾輸入框, 需gridOptions內floatingFilter=true
                 o.floatingFilterComponentParams = { suppressFilterButton: true } //關閉文字過濾輸入框右邊按鈕, 需suppressFilterButton=true
+
+                //lockPosition, 會強制置左故不使用
+                //o.lockPosition = !vo.kpHeadDrag[key]
+
+                //suppressMovable, 指定欄位不能拖曳, 但會被其他欄位拖曳而改變位置
+                o.suppressMovable = !vo.kpHeadDrag[key]
 
                 //resizable
                 o.resizable = true
@@ -622,10 +701,10 @@ export default {
                 o.checkboxSelection = false
 
                 //fix
-                if (vo.kpHeadFix[key]) {
+                if (vo.kpHeadFixLeft[key]) {
 
                     //pinned
-                    o.pinned = vo.kpHeadFix[key] ? 'left' : ''
+                    o.pinned = vo.kpHeadFixLeft[key] ? 'left' : ''
 
                     //suppressSizeToFit, 禁止被sizeColumnsToFit
                     o.suppressSizeToFit = true
@@ -695,19 +774,74 @@ export default {
             //keys_nouse
             let keys_nouse = difference(keys_old, keys_new)
 
-            //cls_new
-            let cls_new = vo.keys2columns(keys_new)
-            let cls_nouse = vo.keys2columns(keys_nouse)
-            cls_nouse = map(cls_nouse, function(cl) {
-                cl.hide = true //未顯示column改為隱藏
-                return cl
+            //cs
+            let cs = vo.gridOptions.columnApi.getColumnState()
+
+            //csn
+            let csn = []
+            each(keys_new, function(key) {
+                let c = find(cs, { 'colId': key })
+                c.hide = false
+                csn.push(c)
+            })
+            each(keys_nouse, function(key) {
+                let c = find(cs, { 'colId': key })
+                c.hide = true //未顯示column改為隱藏
+                csn.push(c)
             })
 
-            //cls
-            let cls = concat(cls_new, cls_nouse)
-
             //update
-            vo.gridOptions.api.setColumnDefs(cls)
+            vo.gridOptions.columnApi.setColumnState(csn)
+
+        },
+
+        clearFilterAll: function() {
+            //console.log('methods clearFilterAll')
+
+            let vo = this
+
+            //reset all filters
+            vo.gridOptions.api.setFilterModel(null)
+
+            //fire onFilterChanged
+            vo.gridOptions.api.onFilterChanged()
+
+        },
+
+        clearFilterValue: function(key) {
+            //console.log('methods clearFilterValue', key)
+
+            let vo = this
+
+            //ft
+            let ft = vo.gridOptions.api.getFilterInstance(key)
+
+            //setModel
+            ft.setModel({
+                filter: null
+            })
+
+            //fire onFilterChanged
+            vo.gridOptions.api.onFilterChanged()
+
+        },
+
+        setFilterValue: function(key, value) {
+            //console.log('methods setFilterValue', key, value)
+
+            let vo = this
+
+            //ft
+            let ft = vo.gridOptions.api.getFilterInstance(key)
+
+            //setModel
+            ft.setModel({
+                type: 'contains',
+                filter: value
+            })
+
+            //fire onFilterChanged
+            vo.gridOptions.api.onFilterChanged()
 
         },
 
@@ -721,6 +855,15 @@ export default {
             vo.gridOptions.api.forEachNodeAfterFilterAndSort(function(node) {
                 rs.push(oo(node.data))
             })
+
+            //cs
+            let cs = vo.gridOptions.columnApi.getColumnState()
+
+            //show keys
+            let keys = map(filter(cs, { 'hide': false }), 'colId')
+
+            //ltdtmapping
+            rs = ltdtmapping(rs, keys)
 
             return rs
         },

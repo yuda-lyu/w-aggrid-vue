@@ -20,13 +20,23 @@ To view some examples for more understanding, visit examples:
 
 > **kpHeadTooltip:** [ex-kpHeadTooltip.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadTooltip.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadTooltip.html)]
 
+> **defHeadAlighH:** [ex-defHeadAlighH.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadAlighH.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadAlighH.html)]
+
 > **kpHeadAlighH:** [ex-kpHeadAlighH.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadAlighH.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadAlighH.html)]
+
+> **defHeadSort:** [ex-defHeadSort.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadSort.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadSort.html)]
 
 > **kpHeadSort:** [ex-kpHeadSort.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadSort.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadSort.html)]
 
-> **kpHeadFix:** [ex-kpHeadFix.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFix.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFix.html)]
+> **kpHeadFixLeft:** [ex-kpHeadFixLeft.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFixLeft.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFixLeft.html)]
+
+> **defHeadFilter:** [ex-defHeadFilter.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadFilter.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadFilter.html)]
 
 > **kpHeadFilter:** [ex-kpHeadFilter.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFilter.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFilter.html)]
+
+> **defHeadDrag:** [ex-defHeadDrag.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadDrag.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadDrag.html)]
+
+> **kpHeadDrag:** [ex-kpHeadDrag.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadDrag.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadDrag.html)]
 
 > **kpRowStyle:** [ex-kpRowStyle.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpRowStyle.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpRowStyle.html)]
 
@@ -40,7 +50,11 @@ To view some examples for more understanding, visit examples:
 
 > **kpCellTooltip:** [ex-kpCellTooltip.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellTooltip.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellTooltip.html)]
 
+> **defCellAlighH:** [ex-defCellAlighH.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-defCellAlighH.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defCellAlighH.html)]
+
 > **kpCellAlighH:** [ex-kpCellAlighH.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellAlighH.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellAlighH.html)]
+
+> **defCellEditable:** [ex-defCellEditable.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-defCellEditable.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defCellEditable.html)]
 
 > **kpCellEditable:** [ex-kpCellEditable.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellEditable.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellEditable.html)]
 
@@ -55,6 +69,18 @@ To view some examples for more understanding, visit examples:
 > **cellDbClick:** [ex-cellDbClick.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-cellDbClick.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-cellDbClick.html)]
 
 > **cellChange:** [ex-cellChange.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-cellChange.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-cellChange.html)]
+
+> **showKeys:** [ex-showKeys.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-showKeys.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-showKeys.html)]
+
+> **setFilterValue:** [ex-setFilterValue.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-setFilterValue.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-setFilterValue.html)]
+
+> **getDisplayData:** [ex-getDisplayData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html)]
+
+> **operateData:** [ex-operateData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-operateData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-operateData.html)]
+
+> **clearFilterValue:** [ex-clearFilterValue.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearFilterValue.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearFilterValue.html)]
+
+> **clearFilterAll:** [ex-clearFilterAll.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearFilterAll.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearFilterAll.html)]
 
 > **large:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-large.html)]
 
