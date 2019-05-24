@@ -91,9 +91,12 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Function} [opt.cellDbClick={}] 輸入cell double click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellChange={}] 輸入cell change之觸發事件，預設為function(){}
  * @vue-prop {Number} [height=300] 表格高度，預設300(px)
- * @vue-prop {String} [search=''] 輸入過濾字串，預設為''
+ * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
  * @vue-event {Null} refresh 刷新表格，無輸入與回傳
- * @vue-event {Array} showKeys 輸入要顯示欄位的keys，數量最多為原本初始化的keys，可更改順序，無回傳
+ * @vue-event {Array} showKeys 指定欲顯示欄位的keys，數量最多為原本初始化的keys，可更改順序，無回傳
+ * @vue-event {Array} setHeadFilter 指定欄位的key與要過濾的值value，會於界面上指定欄進行過濾
+ * @vue-event {Array} clearHeadFilter 指定欄位的key並清除當前所使用的過濾值
+ * @vue-event {Array} clearHeadFilterAll 清除當前所有欄位所使用的過濾值
  * @vue-event {Null} getDisplayData 無輸入，會回傳目前表格所顯示之數據
  */
 export default {
@@ -106,7 +109,7 @@ export default {
             type: Number,
             default: 300
         },
-        search: {
+        filterall: {
             type: String,
             default: ''
         },
@@ -203,25 +206,19 @@ export default {
 
             let vo = this
 
-            //rows, search for trigger
+            //rows, filterall for trigger
             let rows = vo.rows
-            let search = vo.search
+            let filterall = vo.filterall
 
             //check
-            if (search === '') {
+            if (filterall === '') {
                 return rows
             }
 
             //filter
-            // let frs = _.chain(rows)
-            //     .filter(function(v, k) {
-            //         let c = _.join(_.values(v), '')
-            //         return binstr(c, search)
-            //     })
-            //     .value()
             let frs = filter(rows, function(v, k) {
                 let c = join(values(v), '')
-                return binstr(c, search)
+                return binstr(c, filterall)
             })
 
             return frs
@@ -795,8 +792,8 @@ export default {
 
         },
 
-        clearFilterAll: function() {
-            //console.log('methods clearFilterAll')
+        clearHeadFilterAll: function() {
+            //console.log('methods clearHeadFilterAll')
 
             let vo = this
 
@@ -808,8 +805,8 @@ export default {
 
         },
 
-        clearFilterValue: function(key) {
-            //console.log('methods clearFilterValue', key)
+        clearHeadFilter: function(key) {
+            //console.log('methods clearHeadFilter', key)
 
             let vo = this
 
@@ -817,26 +814,29 @@ export default {
             let ft = vo.gridOptions.api.getFilterInstance(key)
 
             //setModel
-            ft.setModel({
-                filter: null
-            })
+            ft.setModel(null)
 
             //fire onFilterChanged
             vo.gridOptions.api.onFilterChanged()
 
         },
 
-        setFilterValue: function(key, value) {
-            //console.log('methods setFilterValue', key, value)
+        setHeadFilter: function(key, value, type = 'contains') {
+            //console.log('methods setHeadFilter', key, value, type)
 
             let vo = this
+
+            //check
+            if (!arrhas(type, ['equals', 'notEqual', 'contains', 'notContains', 'startsWith', 'endsWith'])) {
+                type = 'contains'
+            }
 
             //ft
             let ft = vo.gridOptions.api.getFilterInstance(key)
 
             //setModel
             ft.setModel({
-                type: 'contains',
+                type: type,
                 filter: value
             })
 

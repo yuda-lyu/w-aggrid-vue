@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>example for clearFilterValue</title>
+    <title>example for clearHeadFilter</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.js"></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.3/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.4/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- w-jsonview-tree -->
     <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@1.0.4/dist/w-jsonview-tree.umd.js"></script>
@@ -60,14 +60,14 @@
             }
         })
 
-        //setFilterValue
+        //setHeadFilter
         setTimeout(function(){
-            vo.$refs.rftable.setFilterValue('price', 5)
+            vo.$refs.rftable.setHeadFilter('price', 5)
         },500) 
 
-        //clearFilterValue
+        //clearHeadFilter
         setTimeout(function(){
-            vo.$refs.rftable.clearFilterValue('price')
+            vo.$refs.rftable.clearHeadFilter('price')
         },1000) 
 
         //show option

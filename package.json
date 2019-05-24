@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A table wrapper for ag-grid-vue",
   "main": "",
   "dependencies": {

@@ -10,6 +10,8 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-
 To view some examples for more understanding, visit examples:
 > **simple:** [ex-simple.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-simple.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-simple.html)]
 
+> **large:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-large.html)]
+
 > **tableHeight:** [ex-tableHeight.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableHeight.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableHeight.html)]
 
 > **tableWidth:** [ex-tableWidth.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableWidth.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableWidth.html)]
@@ -72,17 +74,17 @@ To view some examples for more understanding, visit examples:
 
 > **showKeys:** [ex-showKeys.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-showKeys.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-showKeys.html)]
 
-> **setFilterValue:** [ex-setFilterValue.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-setFilterValue.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-setFilterValue.html)]
-
-> **getDisplayData:** [ex-getDisplayData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html)]
-
 > **operateData:** [ex-operateData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-operateData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-operateData.html)]
 
-> **clearFilterValue:** [ex-clearFilterValue.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearFilterValue.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearFilterValue.html)]
+> **setHeadFilter:** [ex-setHeadFilter.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-setHeadFilter.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-setHeadFilter.html)]
 
-> **clearFilterAll:** [ex-clearFilterAll.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearFilterAll.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearFilterAll.html)]
+> **clearHeadFilter:** [ex-clearHeadFilter.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearHeadFilter.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearHeadFilter.html)]
 
-> **large:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-large.html)]
+> **clearHeadFilterAll:** [ex-clearHeadFilterAll.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearHeadFilterAll.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearHeadFilterAll.html)]
+
+> **filterAllData:** [ex-filterAllData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-filterAllData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-filterAllData.html)]
+
+> **getDisplayData:** [ex-getDisplayData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html)]
 
 ## Installation
 ### Using npm(ES6 module):
@@ -114,5 +116,5 @@ npm i w-aggrid-vue
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.3/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.4/dist/w-aggrid-vue.umd.js"></script>
 ```
