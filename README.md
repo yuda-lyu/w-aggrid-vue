@@ -13,7 +13,7 @@ To view some examples for more understanding, visit examples:
 
 > **large:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-large.html)]
 
-#### Table size
+### Table size
 
 Set width by css:
 
@@ -25,7 +25,7 @@ Set height by component props:: `height`
 
 > **tableHeight:** [ex-tableHeight.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableHeight.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableHeight.html)]
 
-#### Table control
+### Table control
 
 Set options by component props:: `opt`
 
