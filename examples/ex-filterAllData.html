@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>example for setFilterValue</title>
+    <title>example for filter all data</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.js"></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.3/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.4/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- w-jsonview-tree -->
     <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@1.0.4/dist/w-jsonview-tree.umd.js"></script>
@@ -32,6 +32,7 @@
             <w-aggrid-vue
                 style="width:620px;"
                 ref="rftable"
+                v-bind:filterall="filterall"
                 v-bind:opt="opt"
             ></w-aggrid-vue>
         </div>
@@ -56,15 +57,16 @@
         let vo=new Vue({
             el: '#app',
             data: {
+                filterall: '',
                 opt: opt,
             }
         })
 
-        //setFilterValue
+        //modify filterall
         setTimeout(function(){
-            vo.$refs.rftable.setFilterValue('price', 5)
+            vo.filterall='R'
         },500) 
-        
+
         //show option
         let jv=window['w-jsonview-tree']
         jv(opt, document.querySelector('#optjson'), {expanded:true})
