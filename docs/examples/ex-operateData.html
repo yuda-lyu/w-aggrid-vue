@@ -60,23 +60,36 @@
             }
         })
 
-        //operate data
+        //slice data
         setTimeout(function(){
             
             //slice
             jdata=jdata.slice(2, 4)
 
+            //set
+            vo.opt.rows=jdata
+
+        },500) 
+
+        //push data
+        setTimeout(function(){
+            
             //push
             jdata.push({
-                'make':'new make',
-                'model':'new model' ,
-                'price': 'new price'
+                'make':'new make1',
+                'model':'new model1' ,
+                'price': 'new price1'
+            })
+            jdata.push({
+                'make':'new make2',
+                'model':'new model2' ,
+                'price': 'new price2'
             })
 
             //set
             vo.opt.rows=jdata
 
-        },500) 
+        },1000) 
 
         //show option
         let jv=window['w-jsonview-tree']
