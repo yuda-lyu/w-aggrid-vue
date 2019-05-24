@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>example for kpHeadFix</title>
+    <title>example for kpHeadDrag</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -30,7 +30,7 @@
     <div style="display:flex;">
         <div id="app">
             <w-aggrid-vue
-                style="width:500px;"
+                style="width:620px;"
                 ref="rftable"
                 v-bind:opt="opt"
             ></w-aggrid-vue>
@@ -50,14 +50,14 @@
         let opt={
             keys: ['make', 'model' ,'price'],
             kpHead:{
-                'make':'make(false)',
-                'model':'model(true)',
-                'price':'price(false)',
+                'make':'make(true)',
+                'model':'model(false)',
+                'price':'price(true)',
             },
-            kpHeadFix:{ //default: false
-                //'make':false,
-                'model':true,
-                //'price':false,
+            kpHeadDrag:{ //default: true
+                //'make':true,
+                'model':false,
+                //'price':true,
             },
             rows: jdata,
         }
