@@ -8,15 +8,26 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-
 
 ## Example
 To view some examples for more understanding, visit examples:
+
 > **simple:** [ex-simple.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-simple.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-simple.html)]
 
 > **large:** [ex-large.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-large.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-large.html)]
 
-> **tableHeight:** [ex-tableHeight.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableHeight.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableHeight.html)]
+#### Table size
+
+Set width by css:
 
 > **tableWidth:** [ex-tableWidth.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableWidth.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableWidth.html)]
 
 > **tableWidthFull:** [ex-tableWidthFull.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableWidthFull.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableWidthFull.html)]
+
+Set height by component props:: `height`
+
+> **tableHeight:** [ex-tableHeight.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableHeight.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableHeight.html)]
+
+#### Table control
+
+Set options by component props:: `opt`
 
 > **kpHead:** [ex-kpHead.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHead.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHead.html)]
 
@@ -72,9 +83,15 @@ To view some examples for more understanding, visit examples:
 
 > **cellChange:** [ex-cellChange.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-cellChange.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-cellChange.html)]
 
-> **showKeys:** [ex-showKeys.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-showKeys.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-showKeys.html)]
-
 > **operateData:** [ex-operateData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-operateData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-operateData.html)]
+
+Set options by component props:: `filterall`
+
+> **filterAllData:** [ex-filterAllData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-filterAllData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-filterAllData.html)]
+
+Call functions by component methods:: `call $refs.[function]`
+
+> **showKeys:** [ex-showKeys.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-showKeys.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-showKeys.html)]
 
 > **setHeadFilter:** [ex-setHeadFilter.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-setHeadFilter.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-setHeadFilter.html)]
 
@@ -82,19 +99,17 @@ To view some examples for more understanding, visit examples:
 
 > **clearHeadFilterAll:** [ex-clearHeadFilterAll.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearHeadFilterAll.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearHeadFilterAll.html)]
 
-> **filterAllData:** [ex-filterAllData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-filterAllData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-filterAllData.html)]
-
 > **getDisplayData:** [ex-getDisplayData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html)]
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** w-aggrid-vue depends on lodash, wsemi, ag-grid-community, ag-grid-vue
+> **Note:** w-aggrid-vue depends on `lodash`, `wsemi`, `ag-grid-community`, `ag-grid-vue`
 ```alias
 npm i w-aggrid-vue
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with lodash and wsemi, by using tree-shaking for dead-code elimination
+> **Note:** umd file includes with `lodash` and `wsemi`, by using tree-shaking for dead-code elimination
 
 [Optional] Add script with nomodule for IE11.
 ```alias
