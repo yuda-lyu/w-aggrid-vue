@@ -34,6 +34,7 @@
     "jsdoc": "^3.6.2",
     "jsdoc-vuejs": "^2.4.3",
     "mocha": "^6.1.4",
+    "puppeteer": "^1.17.0",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-babel-minify": "^8.0.0",
     "rollup-plugin-buble": "^0.19.6",

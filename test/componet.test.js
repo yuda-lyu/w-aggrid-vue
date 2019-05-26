@@ -4,7 +4,7 @@ import assert from 'assert'
 
 describe('componet', function() {
 
-    it('need test in browser', function() {
+    it('test by screen', function() {
         assert.strict.deepEqual(1, 1)
     })
 
