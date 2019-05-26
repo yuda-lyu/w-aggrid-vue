@@ -831,6 +831,13 @@ export default {
                 type = 'contains'
             }
 
+            // //fo
+            // let fo = {}
+            // fo[key] = { type: type, filter: value }
+
+            // //setFilterModel
+            // vo.gridOptions.api.setFilterModel(fo) //此法是一次性對全部欄位設定過濾條件, 故分次設定過濾時, 前次的過濾設定會被取消
+
             //ft
             let ft = vo.gridOptions.api.getFilterInstance(key)
 
@@ -866,6 +873,14 @@ export default {
             rs = ltdtmapping(rs, keys)
 
             return rs
+        },
+
+        getInstance: function() {
+            //console.log('methods getInstance')
+
+            let vo = this
+
+            return vo.gridOptions
         },
 
     },

@@ -108,6 +108,8 @@ Call functions by component methods:: `call $refs.[function]`
 
 > **getDisplayData:** [ex-getDisplayData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html)]
 
+> **getInstance:** [ex-getInstance.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-getInstance.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getInstance.html)]
+
 ## Installation
 ### Using npm(ES6 module):
 > **Note:** w-aggrid-vue depends on `lodash`, `wsemi`, `ag-grid-community`, `ag-grid-vue`
@@ -138,5 +140,5 @@ npm i w-aggrid-vue
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.5/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.6/dist/w-aggrid-vue.umd.js"></script>
 ```

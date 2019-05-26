@@ -63,18 +63,18 @@
         //hide 'model' column and reverse keys order
         setTimeout(function(){
             vo.$refs.rftable.showKeys(['price', 'make'])
-        },500) 
+        },1000) 
 
         //setHeadFilter
         setTimeout(function(){
             vo.$refs.rftable.setHeadFilter('price', 5)
-        },1000) 
+        },2000) 
 
         //getDisplayData
         setTimeout(function(){
             let ddata=vo.$refs.rftable.getDisplayData()
             console.log(ddata)
-        },1500) 
+        },3000) 
 
         //show option
         let jv=window['w-jsonview-tree']

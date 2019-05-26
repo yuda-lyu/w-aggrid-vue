@@ -63,12 +63,17 @@
         //setHeadFilter
         setTimeout(function(){
             vo.$refs.rftable.setHeadFilter('price', 6) //default type='contains'
-        },500) 
+        },1000) 
         
         //setHeadFilter
         setTimeout(function(){
             vo.$refs.rftable.setHeadFilter('price', 6, 'notContains')
-        },1000) 
+        },2000) 
+        
+        //setHeadFilter
+        setTimeout(function(){
+            vo.$refs.rftable.setHeadFilter('model', 'a',)
+        },3000) 
         
         //show option
         let jv=window['w-jsonview-tree']

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>example for getDisplayData</title>
+    <title>example for getInstance</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -60,20 +60,22 @@
             }
         })
 
-        //hide 'model' column and reverse keys order
+        //getInstance
+        let o=vo.$refs.rftable.getInstance()
+
+        //api sort price(asc)
         setTimeout(function(){
-            vo.$refs.rftable.showKeys(['price', 'make'])
+            o.api.setSortModel([{colId: 'price', sort: 'asc'}])
         },1000) 
 
-        //setHeadFilter
+        //api sort price(desc)
         setTimeout(function(){
-            vo.$refs.rftable.setHeadFilter('price', 5)
+            o.api.setSortModel([{colId: 'price', sort: 'desc'}])
         },2000) 
 
-        //getDisplayData
+        //api filter model and price
         setTimeout(function(){
-            let ddata=vo.$refs.rftable.getDisplayData()
-            console.log(ddata)
+            o.api.setFilterModel({ model: {type: 'contains', filter: 'm'}, price: {type: 'contains', filter: 3} })
         },3000) 
 
         //show option
