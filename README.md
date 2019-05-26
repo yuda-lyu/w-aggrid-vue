@@ -92,6 +92,8 @@ Set options by component props:: `opt`
 
 > **operateData:** [ex-operateData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-operateData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-operateData.html)]
 
+> **highlight:** [ex-highlight.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-highlight.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-highlight.html)]
+
 Set options by component props:: `filterall`
 
 > **filterAllData:** [ex-filterAllData.html](https://yuda-lyu.github.io/w-aggrid-vue/examples/ex-filterAllData.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-filterAllData.html)]
