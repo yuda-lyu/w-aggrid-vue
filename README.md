@@ -8,7 +8,7 @@ A table wrapper for ag-grid-vue
 [![license](https://img.shields.io/npm/l/w-aggrid-vue.svg?style=flat)](https://npmjs.org/package/w-aggrid-vue) 
 [![gzip file size](http://img.badgesize.io/yuda-lyu/w-aggrid-vue/master/dist/w-aggrid-vue.umd.js.svg?compression=gzip)](https://github.com/yuda-lyu/w-aggrid-vue)
 [![npm download](https://img.shields.io/npm/dt/w-aggrid-vue.svg)](https://npmjs.org/package/w-aggrid-vue) 
-[![jsdelivr download](https://data.jsdelivr.com/v1/package/npm/w-aggrid-vue/badge)](https://www.jsdelivr.com/package/npm/w-aggrid-vue)
+[![jsdelivr download](https://img.shields.io/jsdelivr/npm/hm/w-aggrid-vue.svg)](https://www.jsdelivr.com/package/npm/w-aggrid-vue)
 
 ## Documentation
 To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-aggrid-vue/module-WAgGridVue.html).
