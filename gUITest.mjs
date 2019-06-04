@@ -1,4 +1,4 @@
-import { buildExpected, testExpected } from 'w-puppeteer-uitest/src/testScreenshot.mjs'
+import { build, test } from 'w-puppeteer-uitest/src/expectScreenshot.mjs'
 
 
 let fd = 'D:\\開源-NodeJS-w-aggrid-vue\\w-aggrid-vue\\'
@@ -9,12 +9,14 @@ fd_action = fd_action.replace(/\\/g, '/') //改成linux路徑反斜線
 fd_action = 'file:///' + fd_action //添加file開頭
 
 
-let mode = 'build'
-mode = ''
-if (mode === 'build') {
-    buildExpected(fd_html, fd_screen, fd_action)
+let opt = {
+    headless: true,
+    num_web: 10,
+    ratio_similar: 0.97,
+    // takeHtml: function(vs) {
+    //     console.log(vs)
+    //     return ['ex-click.html']
+    // }
 }
-else {
-    testExpected(fd_html, fd_screen, fd_action)
-}
-
+//build(fd_html, fd_screen, fd_action, opt)
+test(fd_html, fd_screen, fd_action, opt)

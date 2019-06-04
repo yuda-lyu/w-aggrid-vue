@@ -12,10 +12,6 @@ async function getB64ByAction(fn) {
                 mode: 'type',
                 str: 'C',
             },
-            {
-                mode: 'eleclick',
-                selector: '[col-id="model"]',
-            }
         ]
     }
     return getB64(fn, opt)

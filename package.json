@@ -7,7 +7,7 @@
     "ag-grid-community": "^20.2.0",
     "ag-grid-vue": "^20.2.0",
     "lodash": "^4.17.11",
-    "wsemi": "^1.1.5"
+    "wsemi": "^1.1.9"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
@@ -45,7 +45,7 @@
     "rollup-plugin-vue": "^5.0.0",
     "rollup-plugin-vue-template-compiler": "^1.0.3",
     "vue-template-compiler": "^2.6.10",
-    "w-puppeteer-uitest": "^1.0.2"
+    "w-puppeteer-uitest": "^1.0.9"
   },
   "scripts": {
     "test": "mocha --require @babel/register",
