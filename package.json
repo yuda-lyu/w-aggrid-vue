@@ -45,7 +45,7 @@
     "rollup-plugin-vue": "^5.0.0",
     "rollup-plugin-vue-template-compiler": "^1.0.3",
     "vue-template-compiler": "^2.6.10",
-    "w-puppeteer-uitest": "^1.0.9"
+    "w-puppeteer-uitest": "^1.0.11"
   },
   "scripts": {
     "test": "mocha --require @babel/register",

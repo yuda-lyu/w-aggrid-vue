@@ -23,7 +23,9 @@ async function main() {
     let cdn = `<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@${pkg.version}/dist/w-aggrid-vue.umd.js"></script>`
 
     //mkdirSync
-    fs.mkdirSync(fd_tar)
+    if (!fs.existsSync(fd_tar)) {
+        fs.mkdirSync(fd_tar)
+    }
 
     //getFiles
     let ltfs = await getFiles(fd_src)
