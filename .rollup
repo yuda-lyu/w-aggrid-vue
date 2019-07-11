@@ -12,7 +12,7 @@ let pkg=JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
 let optBabel={
       runtimeHelpers: true,
-      //exclude: 'node_modules/**', //need compile wsemi
+      //exclude: 'node_modules/**', //can not exclude node_modules, need compile wsemi
       presets: [
         [
           "@babel/preset-env",
