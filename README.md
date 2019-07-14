@@ -1,5 +1,5 @@
 # w-aggrid-vue
-A table wrapper for ag-grid-vue
+A wrapper for ag-grid-vue
 
 ![language](https://img.shields.io/badge/language-JavaScript-orange.svg) 
 [![language](https://img.shields.io/badge/vue-2.x-brightgreen.svg)](https://github.com/vuejs/vue) 

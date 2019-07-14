@@ -1,7 +1,7 @@
 {
   "name": "w-aggrid-vue",
   "version": "1.0.8",
-  "description": "A table wrapper for ag-grid-vue",
+  "description": "A wrapper for ag-grid-vue",
   "main": "dist/w-aggrid-vue.umd.js",
   "dependencies": {
     "ag-grid-community": "^20.2.0",
