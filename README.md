@@ -114,13 +114,15 @@ Call functions by component methods:: `call $refs.[function]`
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** w-aggrid-vue depends on `lodash`, `wsemi`, `ag-grid-community`, `ag-grid-vue`
+> **Note:** w-aggrid-vue depends on `lodash`, `wsemi`, `vue`, `ag-grid-community` and `ag-grid-vue`.
 ```alias
 npm i w-aggrid-vue
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with `lodash` and `wsemi`, by using tree-shaking for dead-code elimination
+> **Note:** w-aggrid-vue depends on `vue`, `ag-grid-community` and `ag-grid-vue`.
+
+> **Note:** umd file includes with `lodash` and `wsemi`, by using tree-shaking for dead-code elimination.
 
 [Optional] Add script with nomodule for IE11.
 ```alias
@@ -142,5 +144,5 @@ npm i w-aggrid-vue
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.8/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.11/dist/w-aggrid-vue.umd.js"></script>
 ```

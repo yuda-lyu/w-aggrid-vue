@@ -40,5 +40,10 @@ module.exports = {
         'no-constant-condition': 'off',
         'camelcase': 'off',
         'no-new': 'off',
+        'prefer-const': 'off',
+        'quote-props': ['error', 'consistent'],
+        'dot-notation': 'off',
+        'standard/no-callback-literal': 'off',
+        'quotes': ['error', "single", { "allowTemplateLiterals": true }],
     }
 };
