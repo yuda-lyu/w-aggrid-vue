@@ -1,13 +1,13 @@
 {
   "name": "w-aggrid-vue",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "A wrapper for ag-grid-vue",
   "main": "dist/w-aggrid-vue.umd.js",
   "dependencies": {
     "ag-grid-community": "^21.1.1",
     "ag-grid-vue": "^21.1.0",
     "lodash": "^4.17.15",
-    "wsemi": "^1.2.21"
+    "wsemi": "^1.2.23"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
@@ -35,13 +35,13 @@
     "rollup": "^1.20.2",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-babel-minify": "^9.0.0",
-    "rollup-plugin-commonjs": "^10.0.2",
+    "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-postcss": "^2.0.3",
     "rollup-plugin-vue": "^5.0.1",
     "rollup-plugin-vue-template-compiler": "^1.0.3",
     "vue-template-compiler": "^2.6.10",
-    "w-puppeteer-uitest": "^1.0.21"
+    "w-puppeteer-uitest": "^1.0.22"
   },
   "scripts": {
     "test": "mocha --require @babel/register",
