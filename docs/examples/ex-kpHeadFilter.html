@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>example for kpHeadFilter</title>
+
+    <!-- vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+
+    <!-- ag-grid-community -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-theme-balham.css">
+
+    <!-- ag-grid-vue -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.js"></script>
+
+    <!-- w-aggrid-vue -->
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@latest/dist/w-aggrid-vue.umd.js"></script>
+
+    <!-- w-jsonview-tree -->
+    <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree/dist/w-jsonview-tree.umd.js"></script>
+
+    <!-- load json data for [jdata] -->
+    <script src="data-easy.js"></script>
+
+</head>
+<body style="font-family:Microsoft JhengHei,Helvetica;">
+
+    <div style="display:flex;">
+        <div id="app">
+            <w-aggrid-vue
+                style="width:620px;"
+                ref="rftable"
+                v-bind:opt="opt"
+            ></w-aggrid-vue>
+        </div>
+        <div style="margin-left:20px;">
+            <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #aaa; font-size:20pt;">Option:</div>
+            <div id="optjson" style="font-size:10pt;"></div>
+        </div>
+    </div>
+
+    <script>
+
+        //install w-aggrid-vue
+        Vue.component('w-aggrid-vue',window['w-aggrid-vue'])
+
+        //opt
+        let opt={
+            keys: ['make', 'model' ,'price'],
+            kpHead:{
+                'make':'make(false)',
+                'model':'model(true)',
+                'price':'price(false)',
+            },
+            kpHeadFilter:{ //default: true
+                'make':false,
+                //'model':true,
+                'price':false,
+            },
+            rows: jdata,
+        }
+
+        //initialize
+        new Vue({
+            el: '#app',
+            data: {
+                opt: opt,
+            }
+        })
+
+        //show option
+        let jv=window['w-jsonview-tree']
+        jv(opt, document.querySelector('#optjson'), {expanded:true})
+
+    </script>
+
+</body>
+</html>

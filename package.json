@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "A wrapper for ag-grid-vue",
   "main": "dist/w-aggrid-vue.umd.js",
   "dependencies": {
@@ -44,6 +44,7 @@
     "rollup-plugin-vue": "^5.0.1",
     "rollup-plugin-vue-template-compiler": "^1.0.3",
     "vue-template-compiler": "^2.6.10",
+    "w-package-tools": "^1.0.2",
     "w-puppeteer-uitest": "^1.0.26"
   },
   "scripts": {
