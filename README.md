@@ -114,7 +114,7 @@ Call functions by component methods:: `call $refs.[function]`
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** w-aggrid-vue depends on `lodash`, `wsemi`, `vue`, `ag-grid-community` and `ag-grid-vue`.
+> **Note:** w-aggrid-vue depends on `vue-property-decorator`, `ag-grid-community` and `ag-grid-vue`.
 ```alias
 npm i w-aggrid-vue
 ```
@@ -144,5 +144,5 @@ npm i w-aggrid-vue
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.17/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.18/dist/w-aggrid-vue.umd.js"></script>
 ```
