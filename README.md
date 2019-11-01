@@ -16,7 +16,7 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-
 ## Example
 To view some examples for more understanding, visit examples:
 
-> **all examples:** [web](https://yuda-lyu.github.io/w-aggrid-vue/examples/index.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/index.html)]
+> **all examples:** [web](https://yuda-lyu.github.io/w-aggrid-vue/examples/app.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/app.html)]
 
 ## Installation
 ### Using npm(ES6 module):
@@ -48,5 +48,5 @@ npm i w-aggrid-vue
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.21/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.22/dist/w-aggrid-vue.umd.js"></script>
 ```
