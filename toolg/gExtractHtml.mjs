@@ -77,7 +77,7 @@ let h = `
     </style>
 
 </head>
-<body style="font-family:Microsoft JhengHei,Helvetica; padding:0px 30px; margin:0px;">
+<body style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px 30px; margin:0px;">
 
     <div id="app">
 
@@ -222,9 +222,9 @@ function extractApp(fn) {
     c = c.replace('{{methods}}', methods)
 
     //prettyhtml
-    // c = prettyhtml(c, {
-    //     tabWidth: 4,
-    // })
+    c = prettyhtml(c, {
+        tabWidth: 4,
+    })
 
     //write
     //console.log(c)
