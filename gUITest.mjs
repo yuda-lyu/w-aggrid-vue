@@ -1,7 +1,7 @@
 import { build, test } from 'w-puppeteer-uitest/src/exp.mjs'
 
 
-let fd = 'D:\\開源-NodeJS-w-aggrid-vue\\w-aggrid-vue\\'
+let fd = 'D:\\開源-JS-103-3-w-aggrid-vue\\w-aggrid-vue\\'
 let fd_html = fd + 'examples\\'
 let fd_out = fd + 'test-screenshot\\'
 let fd_action = fd + 'test-action\\'
