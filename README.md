@@ -16,7 +16,7 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-
 ## Example
 To view some examples for more understanding, visit examples:
 
-> **all components:** [web](https://yuda-lyu.github.io/w-aggrid-vue/examples/app.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/app.html)]
+> **all examples:** [web](https://yuda-lyu.github.io/w-aggrid-vue/examples/index.html) [[source code](https://github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/index.html)]
 
 ## Installation
 ### Using npm(ES6 module):
