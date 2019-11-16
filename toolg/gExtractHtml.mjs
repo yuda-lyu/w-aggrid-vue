@@ -110,6 +110,7 @@ function extractApp(fn) {
 
     //casename
     let tfn = fn.replace('App', '')
+    tfn = tfn.replace('.vue', '')
     let casename = _.toLower(tfn[0]) + w.strdelleft(tfn, 1)
 
     //read

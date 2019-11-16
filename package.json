@@ -4,7 +4,7 @@
   "author": "yuda-lyu(semisphere)",
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build --report --dest dist2",
     "lint": "vue-cli-service lint",
     "test": "./node_modules/.bin/mocha --require @babel/register",
     "deploy": "gh-pages -d docs"
@@ -33,9 +33,9 @@
     "core-js": "^3.3.5",
     "docdash": "^1.1.1",
     "eslint": "^6.6.0",
+    "eslint-loader": "^3.0.2",
     "eslint-config-standard": "^14.1.0",
     "eslint-friendly-formatter": "^4.0.1",
-    "eslint-loader": "^3.0.2",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
@@ -63,8 +63,8 @@
     "vue-property-decorator": "^7.3.0",
     "vue-template-compiler": "^2.6.10",
     "w-jsonview-tree": "^1.0.19",
-    "w-package-tools": "^1.0.9",
-    "wsemi": "^1.2.45"
+    "w-package-tools": "^1.0.11",
+    "wsemi": "^1.2.47"
   },
   "eslintConfig": {
     "root": true,
