@@ -29,6 +29,7 @@ import find from 'lodash/find'
 import every from 'lodash/every'
 import merge from 'lodash/merge'
 import delay from 'lodash/delay'
+import get from 'lodash/get'
 import join from 'lodash/join'
 import values from 'lodash/values'
 import cloneDeep from 'lodash/cloneDeep'
@@ -36,6 +37,8 @@ import difference from 'lodash/difference'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrhas from 'wsemi/src/arrhas.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
+import iseobj from 'wsemi/src/iseobj.mjs'
+import isearr from 'wsemi/src/isearr.mjs'
 import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
@@ -43,7 +46,6 @@ import binstr from 'wsemi/src/binstr.mjs'
 import getdtv from 'wsemi/src/getdtv.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
-import oo from 'wsemi/src/oo.mjs'
 import onTooltip from 'wsemi/src/onTooltip.mjs'
 import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator
 import 'ag-grid-community/dist/styles/ag-grid.css'
@@ -313,6 +315,19 @@ export default {
 
             let vo = this
 
+            //check
+            if (!iseobj(vo.opt)) {
+                return
+            }
+            if (!isearr(get(vo, 'opt.keys'))) {
+                console.log('no keys')
+                return
+            }
+            if (!isearr(get(vo, 'opt.rows'))) {
+                console.log('no rows')
+                return
+            }
+
             //setobj
             function setobj(keys, defEvalKey = true, def, kpobj) {
                 let o = {}
@@ -417,6 +432,7 @@ export default {
             vo.hideHeadFilter = every(values(vo.kpHeadFilter), function(v) {
                 return v === false
             })
+            console.log('vo.hideHeadFilter', vo.hideHeadFilter)
 
             //defHeadDrag
             vo.defHeadDrag = true
@@ -689,7 +705,7 @@ export default {
 
                     //funCellRender
                     if (isfun(funCellRender)) {
-                        h = funCellRender(params.value, oo(params.data))
+                        h = funCellRender(params.value, cloneDeep(params.data))
                     }
 
                     return h
@@ -861,7 +877,7 @@ export default {
             //rs
             let rs = []
             vo.gridOptions.api.forEachNodeAfterFilterAndSort(function(node) {
-                rs.push(oo(node.data))
+                rs.push(cloneDeep(node.data))
             })
 
             //cs
