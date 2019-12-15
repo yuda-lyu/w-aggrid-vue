@@ -107,9 +107,6 @@ let h = `
 
 
 function extractApp(fn) {
-    if (fn.indexOf('OperateData') < 0) {
-        return
-    }
 
     //casename
     let tfn = fn.replace('App', '')

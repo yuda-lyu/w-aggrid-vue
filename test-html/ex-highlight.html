@@ -6,7 +6,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
-    <title>example for operateData</title>
+    <title>example for highlight</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -30,7 +30,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.27/dist/w-aggrid-vue.umd.js"></script>
+    <script src="../dist/w-aggrid-vue.umd.js"></script>
 
     <!-- w-jsonview-tree -->
     <script
@@ -88,14 +88,14 @@
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
                         title
-                    >operateData</span>
+                    >highlight</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-operateData.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-highlight.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-operateData.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-highlight.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
@@ -128,51 +128,44 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
+          kpCellEditable: {
+            //default: false
+            price: true
+          },
+          kpRowStyle: {
+            price: function(v) {
+              if (v >= 70000) {
+                return { background: "#fac" };
+              }
+              return {};
+            }
+          },
           rows: JSON.parse(JSON.stringify(jdata1))
         },
-        action: []
+        action: [
+          { mode: "wait", time: 1500 },
+          { mode: "click", x1: 510, y1: 87 },
+          { mode: "type", str: "80000" }
+        ]
       };
     },
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
 
-      //slice data
-      setTimeout(function() {
-        try {
-          //cloneDeep
-          let rows = JSON.parse(JSON.stringify(jdata1));
-
-          //slice
-          rows = rows.slice(2, 4);
-
-          //set
-          vo.opt.rows = rows;
-        } catch (err) {}
-      }, 1000);
-
       //push data
       setTimeout(function() {
         try {
-          //rows
-          let rows = vo.opt.rows;
+          //cloneDeep
+          let t = JSON.parse(JSON.stringify(vo.opt.rows));
 
-          //push
-          rows.push({
-            make: "new make1",
-            model: "new model1",
-            price: "new price1"
-          });
-          rows.push({
-            make: "new make2",
-            model: "new model2",
-            price: "new price2"
-          });
+          //modify
+          t[5]["price"] = 75000;
 
-          //set
-          vo.opt.rows = rows;
+          //set for vue detect
+          vo.opt.rows = t;
         } catch (err) {}
-      }, 2000);
+      }, 1000);
     },
     computed: {},
     methods: {}

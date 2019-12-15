@@ -6,7 +6,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
-    <title>example for operateData</title>
+    <title>example for getDisplayData</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -88,19 +88,18 @@
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
                         title
-                    >operateData</span>
+                    >getDisplayData</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-operateData.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-operateData.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
                 </div>
-
                 <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
 
                 <pre id="ckmsg"></pre>
@@ -118,65 +117,50 @@
     </div>
 
     <script>
-  //install w-aggrid-vue
-  Vue.component("w-aggrid-vue", window["w-aggrid-vue"]);
+      //install w-aggrid-vue
+      Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
 
-  //initialize
-  new Vue({
-    el: "#app",
-    data: function() {
+      //initialize
+      new Vue({
+          el: '#app',
+          data:      function() {
       return {
-        opt: {
-          keys: ["make", "model", "price"],
-          rows: JSON.parse(JSON.stringify(jdata1))
-        },
-        action: []
-      };
-    },
-    mounted: function() {
-      let vo = this;
-      jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+          'opt': {
+              keys: ['make', 'model', 'price'],
+              rows: JSON.parse(JSON.stringify(jdata1)),
+          },
+          'action': [
 
-      //slice data
+          ],
+      }
+  },
+          mounted:      function() {
+      let vo = this
+      jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
+
+      //hide 'model' column and reverse keys order
       setTimeout(function() {
-        try {
-          //cloneDeep
-          let rows = JSON.parse(JSON.stringify(jdata1));
+          try {
+              vo.$refs.rftable.showKeys(['price', 'make'])
+          }
+          catch (err) { }
+      }, 1000)
 
-          //slice
-          rows = rows.slice(2, 4);
-
-          //set
-          vo.opt.rows = rows;
-        } catch (err) {}
-      }, 1000);
-
-      //push data
+      //setHeadFilter
       setTimeout(function() {
-        try {
-          //rows
-          let rows = vo.opt.rows;
+          try {
+              vo.$refs.rftable.setHeadFilter('price', 5)
+          }
+          catch (err) { }
+      }, 2000)
 
-          //push
-          rows.push({
-            make: "new make1",
-            model: "new model1",
-            price: "new price1"
-          });
-          rows.push({
-            make: "new make2",
-            model: "new model2",
-            price: "new price2"
-          });
-
-          //set
-          vo.opt.rows = rows;
-        } catch (err) {}
-      }, 2000);
-    },
-    computed: {},
-    methods: {}
-  });
+      //getDisplayData
+      setTimeout(function() {
+          try {
+              let ddata = vo.$refs.rftable.getDisplayData(,
+          computed: {},
+          methods: {},
+      })
     </script>
 </body>
 </html>
