@@ -432,7 +432,6 @@ export default {
             vo.hideHeadFilter = every(values(vo.kpHeadFilter), function(v) {
                 return v === false
             })
-            console.log('vo.hideHeadFilter', vo.hideHeadFilter)
 
             //defHeadDrag
             vo.defHeadDrag = true
