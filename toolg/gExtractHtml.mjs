@@ -107,6 +107,9 @@ let h = `
 
 
 function extractApp(fn) {
+    if (fn.indexOf('OperateData') < 0) {
+        return
+    }
 
     //casename
     let tfn = fn.replace('App', '')
@@ -124,10 +127,8 @@ function extractApp(fn) {
         let c = _.get(hh.match(reg), 0)
         if (c) {
             c = c.replace(`${name}:`, ``)
-
-            let ts = ['mounted', 'methods', 'computed', 'data']
+            let ts = ['mounted:', 'methods:', 'computed:', 'data:'] //要配分號結尾, 否則會因註解有data等造成切分錯誤
             ts = _.pull(ts, name)
-
             let ss = _.split(c, '\r\n')
             let q = []
             for (let i = 0; i < _.size(ss); i++) {
@@ -140,7 +141,6 @@ function extractApp(fn) {
                 }
             }
             c = _.join(q, '\r\n')
-
             c = w.strdelright(c, 1)
         }
         else {

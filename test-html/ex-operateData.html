@@ -118,30 +118,65 @@
     </div>
 
     <script>
-          //install w-aggrid-vue
-          Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+  //install w-aggrid-vue
+  Vue.component("w-aggrid-vue", window["w-aggrid-vue"]);
 
-          //initialize
-          new Vue({
-              el: '#app',
-              data:      function() {
-          return {
-              'opt': {
-                  keys: ['make', 'model', 'price'],
-                  rows: JSON.parse(JSON.stringify(jdata1)),
-              },
-              'action': [
+  //initialize
+  new Vue({
+    el: "#app",
+    data: function() {
+      return {
+        opt: {
+          keys: ["make", "model", "price"],
+          rows: JSON.parse(JSON.stringify(jdata1))
+        },
+        action: []
+      };
+    },
+    mounted: function() {
+      let vo = this;
+      jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
 
-              ],
-          }
-      },
-              mounted:      function() {
-          let vo = this
-          jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
-  ,
-              computed: {},
-              methods: {},
-          })
+      //slice data
+      setTimeout(function() {
+        try {
+          //cloneDeep
+          let rows = JSON.parse(JSON.stringify(jdata1));
+
+          //slice
+          rows = rows.slice(2, 4);
+
+          //set
+          vo.opt.rows = rows;
+        } catch (err) {}
+      }, 1000);
+
+      //push data
+      setTimeout(function() {
+        try {
+          //rows
+          let rows = vo.opt.rows;
+
+          //push
+          rows.push({
+            make: "new make1",
+            model: "new model1",
+            price: "new price1"
+          });
+          rows.push({
+            make: "new make2",
+            model: "new model2",
+            price: "new price2"
+          });
+
+          //set
+          vo.opt.rows = rows;
+        } catch (err) {}
+      }, 2000);
+    },
+    computed: {},
+    methods: {}
+  });
     </script>
 </body>
 </html>
