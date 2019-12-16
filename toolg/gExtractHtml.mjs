@@ -255,7 +255,8 @@ function main() {
     let fns = ['data-easy.mjs', 'data-eduagency.mjs']
     _.each(fns, (fn) => {
         let h = fs.readFileSync(`${fdSrc}${fn}`, 'utf8')
-        h = h.replace('export default jdata', '')
+        h = h.replace('export default jdata1', '')
+        h = h.replace('export default jdata2', '')
         fs.writeFileSync(`${fdTestHtml}${fn.replace('mjs', 'js')}`, h, 'utf8')
     })
 
