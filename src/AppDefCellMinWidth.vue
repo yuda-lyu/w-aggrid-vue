@@ -36,7 +36,6 @@
 <script>
 import WAgGridVue from './components/WAgGridVue.vue'
 import jv from 'w-jsonview-tree'
-import jdata1 from './data-easy.mjs'
 
 export default {
     components: {
@@ -47,7 +46,7 @@ export default {
             'opt': {
                 keys: ['make', 'model', 'price'],
                 defCellMinWidth: 150, //拖曳欄寬度可看到最小寬度限定為150
-                rows: JSON.parse(JSON.stringify(jdata1)),
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
                 { 'mode': 'eledrag', 'selector': '[col-id="price"] > [ref="eResize"]', 'shiftx': 100, 'shifty': 0 }, { 'mode': 'eledrag', 'selector': '[col-id="model"] > [ref="eResize"]', 'shiftx': -300, 'shifty': 0 }

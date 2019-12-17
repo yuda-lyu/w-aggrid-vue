@@ -36,7 +36,6 @@
 <script>
 import WAgGridVue from './components/WAgGridVue.vue'
 import jv from 'w-jsonview-tree'
-import jdata1 from './data-easy.mjs'
 
 export default {
     components: {
@@ -54,7 +53,7 @@ export default {
                 cellChange: function(k, r) {
                     document.querySelector('#ckmsg').innerHTML = 'trigger: cellChange\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + 'row: ' + JSON.stringify(r, null, 2)
                 },
-                rows: JSON.parse(JSON.stringify(jdata1)),
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
                 { 'mode': 'click', 'x1': 309, 'y1': 87 },

@@ -36,7 +36,6 @@
 <script>
 import WAgGridVue from './components/WAgGridVue.vue'
 import jv from 'w-jsonview-tree'
-import jdata1 from './data-easy.mjs'
 
 export default {
     components: {
@@ -49,7 +48,7 @@ export default {
                 rowClick: function(k, r) {
                     document.querySelector('#ckmsg').innerHTML = 'trigger: rowClick\n\n' + 'key: ' + k + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
                 },
-                rows: JSON.parse(JSON.stringify(jdata1)),
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
                 { 'mode': 'eleclick', 'selector': '[comp-id="33"]' }

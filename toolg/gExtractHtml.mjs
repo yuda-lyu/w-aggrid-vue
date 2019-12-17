@@ -39,9 +39,14 @@ let h = `
         let jv=window['w-jsonview-tree']
     </script>
 
-    <!-- load json data for jdata -->
-    <script src="./data-easy.js"></script>
-    <script src="./data-eduagency.js"></script>
+    <!-- data -->
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEasy.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEduagency.js"></script>
+    <script>
+        //save in window
+        window.dataEasy=dataEasy
+        window.dataEduagency=dataEduagency
+    </script>
 
     <style>
         .item {
@@ -250,15 +255,6 @@ function main() {
     })
     _.pull(ltfs, 'App.vue')
     //console.log(ltfs)
-
-    //copy
-    let fns = ['data-easy.mjs', 'data-eduagency.mjs']
-    _.each(fns, (fn) => {
-        let h = fs.readFileSync(`${fdSrc}${fn}`, 'utf8')
-        h = h.replace('export default jdata1', '')
-        h = h.replace('export default jdata2', '')
-        fs.writeFileSync(`${fdTestHtml}${fn.replace('mjs', 'js')}`, h, 'utf8')
-    })
 
     //extractApp
     _.each(ltfs, function(v) {

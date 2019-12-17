@@ -36,7 +36,6 @@
 <script>
 import WAgGridVue from './components/WAgGridVue.vue'
 import jv from 'w-jsonview-tree'
-import jdata1 from './data-easy.mjs'
 
 export default {
     components: {
@@ -56,7 +55,7 @@ export default {
                     //'model':true,
                     'price': false,
                 },
-                rows: JSON.parse(JSON.stringify(jdata1)),
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
                 { 'mode': 'eleclick', 'selector': 'input.ag-floating-filter-input' }, { 'mode': 'type', 'str': 'C' }

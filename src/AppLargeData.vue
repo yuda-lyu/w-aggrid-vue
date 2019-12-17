@@ -29,7 +29,6 @@
 <script>
 import WAgGridVue from './components/WAgGridVue.vue'
 import jv from 'w-jsonview-tree'
-import jdata2 from './data-eduagency.mjs'
 
 export default {
     components: {
@@ -55,7 +54,7 @@ export default {
                     'img_inner',
                     'link'
                 ],
-                rows: JSON.parse(JSON.stringify(jdata2)),
+                rows: JSON.parse(JSON.stringify(window.dataEduagency)),
             },
             'action': [
 

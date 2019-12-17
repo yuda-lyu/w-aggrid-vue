@@ -40,9 +40,18 @@
   let jv = window["w-jsonview-tree"];
     </script>
 
-    <!-- load json data for jdata -->
-    <script src="./data-easy.js"></script>
-    <script src="./data-eduagency.js"></script>
+    <!-- data -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEasy.js"
+    ></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEduagency.js"
+    ></script>
+    <script>
+  //save in window
+  window.dataEasy = dataEasy;
+  window.dataEduagency = dataEduagency;
+    </script>
 
     <style>
   .item {
@@ -139,7 +148,7 @@
             //'model':false,
             price: true
           },
-          rows: JSON.parse(JSON.stringify(jdata1))
+          rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
         action: [
           {

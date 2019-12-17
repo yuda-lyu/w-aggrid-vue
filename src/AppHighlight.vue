@@ -36,7 +36,6 @@
 <script>
 import WAgGridVue from './components/WAgGridVue.vue'
 import jv from 'w-jsonview-tree'
-import jdata1 from './data-easy.mjs'
 
 export default {
     components: {
@@ -57,7 +56,7 @@ export default {
                         return {}
                     },
                 },
-                rows: JSON.parse(JSON.stringify(jdata1)),
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
                 { 'mode': 'wait', 'time': 1500 }, { 'mode': 'click', 'x1': 510, 'y1': 87 }, { 'mode': 'type', 'str': '80000' }

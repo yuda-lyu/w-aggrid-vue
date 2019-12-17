@@ -36,7 +36,6 @@
 <script>
 import WAgGridVue from './components/WAgGridVue.vue'
 import jv from 'w-jsonview-tree'
-import jdata1 from './data-easy.mjs'
 
 export default {
     components: {
@@ -47,7 +46,7 @@ export default {
             'opt': {
                 keys: ['make', 'model', 'price'],
                 defHeadDrag: false,
-                rows: JSON.parse(JSON.stringify(jdata1)),
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
                 { 'mode': 'drag', 'x1': 507, 'y1': 25, 'x2': 307, 'y2': 25 }
