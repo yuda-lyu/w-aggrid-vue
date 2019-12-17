@@ -33,12 +33,6 @@ let h = `
     <!-- w-aggrid-vue -->
     <script src="../dist/w-aggrid-vue.umd.js"></script>
 
-    <!-- w-jsonview-tree -->
-    <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree/dist/w-jsonview-tree.umd.js"></script>
-    <script>
-        let jv=window['w-jsonview-tree']
-    </script>
-
     <!-- data -->
     <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEasy.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEduagency.js"></script>
@@ -46,6 +40,12 @@ let h = `
         //save in window
         window.dataEasy=dataEasy
         window.dataEduagency=dataEduagency
+    </script>
+
+    <!-- w-jsonview-tree -->
+    <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree/dist/w-jsonview-tree.umd.js"></script>
+    <script>
+        let jv=window['w-jsonview-tree']
     </script>
 
     <style>
