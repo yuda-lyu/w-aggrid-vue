@@ -1,7 +1,7 @@
 <template>
     <div class="CompCssWAgGridVue" :changeParam="changeParam">
 
-        <div :style="{height:height+'px'}">
+        <div :style="`transition:all 0.5s ease; width:${width}%; height:${height}px; opacity:${opacity};`">
 
             <ag-grid-vue
                 style="width:100%; height:100%;"
@@ -99,6 +99,8 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-event {Array} clearHeadFilter 指定欄位的key並清除當前所使用的過濾值
  * @vue-event {Array} clearHeadFilterAll 清除當前所有欄位所使用的過濾值
  * @vue-event {Null} getDisplayData 無輸入，會回傳目前表格所顯示之數據
+ * @vue-event {Null} getInstance 無輸入，會回傳ag-grid表格實例物件
+ * @vue-event {Null} fitColumns 無輸入，會進行擴充版的sizeColumnsToFit
  */
 export default {
     components: {
@@ -121,7 +123,10 @@ export default {
         let vo = this
         return {
 
-            canFitColumn: true,
+            width: 100,
+            opacity: 1,
+
+            canFitColumn: false,
 
             rows: [],
             keys: [],
@@ -349,7 +354,7 @@ export default {
                 return o
             }
 
-            //canFitColumn, ag-grid僅有
+            //canFitColumn, ag-grid僅有, 可用但效果不好
             let canFitColumn = false
             if (isbol(vo.opt.canFitColumn)) {
                 canFitColumn = vo.opt.canFitColumn
@@ -767,10 +772,8 @@ export default {
 
             if (vo.canFitColumn) {
 
-                //delay
-                delay(function() {
-                    params.api.sizeColumnsToFit()
-                }, 1)
+                //fitColumns
+                vo.fitColumns()
 
             }
 
@@ -897,6 +900,44 @@ export default {
             let vo = this
 
             return vo.gridOptions
+        },
+
+        fitColumns: async function() {
+            //console.log('methods fitColumns')
+
+            let vo = this
+
+            //fit
+            async function fit(w) {
+                try {
+
+                    //width
+                    vo.width = w
+
+                    //getInstance
+                    let o = vo.getInstance()
+
+                    //sizeColumnsToFit
+                    o.api.sizeColumnsToFit()
+
+                }
+                catch (e) {
+                    console.log('fitColumns error', e)
+                }
+            }
+
+            //hide
+            vo.opacity = 0
+
+            //先微縮小fit
+            await fit(99.5)
+
+            //還原再fit
+            await fit(100)
+
+            //show
+            vo.opacity = 1
+
         },
 
     },

@@ -87,6 +87,8 @@
 
                     <AppGetDisplayData v-if="showCmp==='getDisplayData'"></AppGetDisplayData>
 
+                    <AppFitColumns v-if="showCmp==='fitColumns'"></AppFitColumns>
+
                     <AppGetInstance v-if="showCmp==='getInstance'"></AppGetInstance>
 
                     <AppHighlight v-if="showCmp==='highlight'"></AppHighlight>
@@ -166,6 +168,7 @@ import AppDefHeadFilter from './AppDefHeadFilter.vue'
 import AppDefHeadSort from './AppDefHeadSort.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
 import AppGetDisplayData from './AppGetDisplayData.vue'
+import AppFitColumns from './AppFitColumns.vue'
 import AppGetInstance from './AppGetInstance.vue'
 import AppHighlight from './AppHighlight.vue'
 import AppKpCellAlighH from './AppKpCellAlighH.vue'
@@ -211,6 +214,7 @@ export default {
         AppDefHeadSort,
         AppFilterAllData,
         AppGetDisplayData,
+        AppFitColumns,
         AppGetInstance,
         AppHighlight,
         AppKpCellAlighH,
@@ -293,6 +297,7 @@ export default {
                 funcs: [
                     'filterAllData',
                     'getDisplayData',
+                    'fitColumns',
                     'operateData',
                     'getInstance',
                     'highlight',
