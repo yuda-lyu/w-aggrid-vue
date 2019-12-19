@@ -14,7 +14,7 @@
             @mouseenter="showMenu=true"
             @mouseleave="showMenu=false"
         >
-            <div :class="`${showMenu?'item-shadow':''}`" :style="`transition:all 0.1s linear; padding:20px 0px 0px 0px; background-color:#fff; width:${showMenu?'100vw':'80px'}; ${showMenu?'':'overflow-x:hidden;'}`">
+            <div :class="`${showMenu?'item-shadow':''}`" :style="`transition:all 0.1s; padding:20px 0px 0px 0px; background-color:#fff; width:${showMenu?'100vw':'80px'}; ${showMenu?'':'overflow-x:hidden;'}`">
                 <template v-for="(mcmp,kmcmp) in mcmps">
                     <div style="display:table; width:98.75vw;" :key="kmcmp">
                         <div :style="`display:table-cell; padding-right:10px; width:65px; text-align:right; color:${showMenu?'#e7c':'#444'}; font-size:0.9rem; transition:all 0.2s; opacity:${showMenu?1:0.7};`">{{kmcmp}}</div>

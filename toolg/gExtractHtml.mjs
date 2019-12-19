@@ -50,7 +50,7 @@ let h = `
 
     <style>
         .item {
-            transition: all 0.3s linear;
+            transition: all 0.3s;
             display: inline-block;
             margin: 0px 15px 20px 0px;
             padding: 4px 15px;

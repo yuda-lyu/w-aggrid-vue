@@ -1,7 +1,12 @@
 <template>
-    <div class="CompCssWAgGridVue" :changeParam="changeParam">
+    <div
+        class="CompCssWAgGridVue"
+        :changeParam="changeParam"
+    >
 
-        <div :style="`transition:all 0.5s ease; width:${width}%; height:${height}px; opacity:${opacity};`">
+        <div
+            :style="`width:${width}%; height:${height}px; ${transition}; opacity:${opacity};`"
+        >
 
             <ag-grid-vue
                 style="width:100%; height:100%;"
@@ -28,7 +33,6 @@ import filter from 'lodash/filter'
 import find from 'lodash/find'
 import every from 'lodash/every'
 import merge from 'lodash/merge'
-import delay from 'lodash/delay'
 import get from 'lodash/get'
 import join from 'lodash/join'
 import values from 'lodash/values'
@@ -46,6 +50,7 @@ import binstr from 'wsemi/src/binstr.mjs'
 import getdtv from 'wsemi/src/getdtv.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
+import delay from 'wsemi/src/delay.mjs'
 import onTooltip from 'wsemi/src/onTooltip.mjs'
 import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator
 import 'ag-grid-community/dist/styles/ag-grid.css'
@@ -124,7 +129,8 @@ export default {
         return {
 
             width: 100,
-            opacity: 1,
+            transition: 'transition:all 0.5s',
+            opacity: 0,
 
             canFitColumn: false,
 
@@ -300,18 +306,16 @@ export default {
 
         },
 
-        refresh: function() {
+        refresh: async function() {
             //console.log('methods refresh')
 
             let vo = this
 
-            //delay, 執行緒脫勾
-            delay(function() {
+            //delay
+            await delay(1)
 
-                //redrawRows, 因資料變更不會觸發getRowStyle, 給自行redrawRows
-                vo.gridOptions.api.redrawRows()
-
-            }, 1)
+            //redrawRows, 因資料變更不會觸發getRowStyle, 給自行redrawRows
+            vo.gridOptions.api.redrawRows()
 
         },
 
@@ -776,6 +780,14 @@ export default {
                 vo.fitColumns()
 
             }
+            else {
+
+                //show, 假如transition沒被清空, 就代表沒有fitColumns執行中, 可直接顯示
+                if (vo.transition !== '') {
+                    vo.opacity = 1
+                }
+
+            }
 
         },
 
@@ -927,15 +939,26 @@ export default {
             }
 
             //hide
+            vo.transition = ''
             vo.opacity = 0
+
+            //delay
+            await delay(1)
 
             //先微縮小fit
             await fit(99.5)
 
+            //delay
+            await delay(1)
+
             //還原再fit
             await fit(100)
 
+            //delay
+            await delay(1)
+
             //show
+            vo.transition = 'transition:all 0.5s'
             vo.opacity = 1
 
         },
