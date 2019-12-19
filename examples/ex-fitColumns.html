@@ -6,7 +6,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
-    <title>example for defHeadSort</title>
+    <title>example for fitColumns</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -91,28 +91,29 @@
     style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px 30px; margin:0px;"
 >
     <div id="app">
-        <div style="font-size:1.5rem; margin:20px 0px;" title>defHeadSort</div>
-
         <div style="display:flex;">
             <div>
                 <div style="margin:20px 0px;">
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
                         title
-                    >defHeadSort</span>
+                    >fitColumns</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadSort.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-fitColumns.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadSort.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-fitColumns.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
                 </div>
-
-                <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
+                <w-aggrid-vue
+                    ref="rftable"
+                    :style="`width:${opt.width}px;`"
+                    :opt="opt"
+                ></w-aggrid-vue>
 
                 <pre id="ckmsg"></pre>
             </div>
@@ -138,19 +139,40 @@
     data: function() {
       return {
         opt: {
+          width: 620,
           keys: ["make", "model", "price"],
-          defHeadSort: false,
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
-        action: [
-          { mode: "eleclick", selector: '[col-id="model"]' },
-          { mode: "eleclick", selector: '[col-id="price"]' }
-        ]
+        action: []
       };
     },
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+
+      //fitColumns
+      setTimeout(function() {
+        try {
+          vo.opt.width = 400;
+          vo.$refs.rftable.fitColumns();
+        } catch (err) {}
+      }, 1000);
+
+      //fitColumns
+      setTimeout(function() {
+        try {
+          vo.opt.width = 800;
+          vo.$refs.rftable.fitColumns();
+        } catch (err) {}
+      }, 2000);
+
+      //fitColumns
+      setTimeout(function() {
+        try {
+          vo.opt.width = 620;
+          vo.$refs.rftable.fitColumns();
+        } catch (err) {}
+      }, 3000);
     },
     computed: {},
     methods: {}
