@@ -30,7 +30,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.30/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.31/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -126,50 +126,53 @@
     </div>
 
     <script>
-      //install w-aggrid-vue
-      Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+  //install w-aggrid-vue
+  Vue.component("w-aggrid-vue", window["w-aggrid-vue"]);
 
-      //initialize
-      new Vue({
-          el: '#app',
-          data:      function() {
+  //initialize
+  new Vue({
+    el: "#app",
+    data: function() {
       return {
-          'opt': {
-              keys: ['make', 'model', 'price'],
-              rows: JSON.parse(JSON.stringify(window.dataEasy)),
-          },
-          'action': [
-
-          ],
-      }
-  },
-          mounted:      function() {
-      let vo = this
-      jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
+        opt: {
+          keys: ["make", "model", "price"],
+          rows: JSON.parse(JSON.stringify(window.dataEasy))
+        },
+        action: []
+      };
+    },
+    mounted: function() {
+      let vo = this;
+      jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
 
       //hide 'model' column and reverse keys order
       setTimeout(function() {
-          try {
-              vo.$refs.rftable.showKeys(['price', 'make'])
-          }
-          catch (err) { }
-      }, 1000)
+        try {
+          vo.$refs.rftable.showKeys(["price", "make"]);
+        } catch (err) {}
+      }, 1000);
 
       //setHeadFilter
       setTimeout(function() {
-          try {
-              vo.$refs.rftable.setHeadFilter('price', 5)
-          }
-          catch (err) { }
-      }, 2000)
+        try {
+          vo.$refs.rftable.setHeadFilter("price", 5);
+        } catch (err) {}
+      }, 2000);
 
       //getDisplayData
       setTimeout(function() {
-          try {
-              let ddata = vo.$refs.rftable.getDisplayData(,
-          computed: {},
-          methods: {},
-      })
+        try {
+          let ddata = vo.$refs.rftable.getDisplayData();
+          document.querySelector("#ckmsg").innerHTML =
+            "trigger: getDisplayData\n\n" +
+            "data: " +
+            JSON.stringify(ddata, null, 2);
+        } catch (err) {}
+      }, 3000);
+    },
+    computed: {},
+    methods: {}
+  });
     </script>
 </body>
 </html>

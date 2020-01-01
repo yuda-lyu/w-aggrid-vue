@@ -47,7 +47,6 @@ import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
-import getdtv from 'wsemi/src/getdtv.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
 import delay from 'wsemi/src/delay.mjs'
@@ -250,7 +249,7 @@ export default {
             let style = {}
             each(vo.kpRowStyle, function(v, k) {
                 let f = v
-                let d = getdtv(params.data, k)
+                let d = get(params.data, k)
                 if (isfun(f) && d) {
                     style = merge(style, f(d))
                 }

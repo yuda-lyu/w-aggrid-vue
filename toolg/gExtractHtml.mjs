@@ -1,6 +1,6 @@
 import fs from 'fs'
-import _ from 'lodash'
 import prettyhtml from '@starptech/prettyhtml'
+import _ from 'lodash'
 import w from 'wsemi'
 import getFiles from 'w-package-tools/src/getFiles.mjs'
 import cleanFolder from 'w-package-tools/src/cleanFolder.mjs'
@@ -111,96 +111,27 @@ let h = `
 `
 
 
-function extractApp(fn) {
-
-    //casename
-    let tfn = fn.replace('App', '')
-    tfn = tfn.replace('.vue', '')
-    let casename = _.toLower(tfn[0]) + w.strdelleft(tfn, 1)
-
-    //read
-    let hh = fs.readFileSync(fdSrc + fn, 'utf8')
-
-    let r
-    let reg
-    function parse(name) {
-        let r = `(    ${name}:)[\\s\\S]+(    },)`
-        let reg = new RegExp(r, 'g')
-        let c = _.get(hh.match(reg), 0)
-        if (c) {
-            c = c.replace(`${name}:`, ``)
-            let ts = ['mounted:', 'methods:', 'computed:', 'data:'] //要配分號結尾, 否則會因註解有data等造成切分錯誤
-            ts = _.pull(ts, name)
-            let ss = _.split(c, '\r\n')
-            let q = []
-            for (let i = 0; i < _.size(ss); i++) {
-                let s = ss[i]
-                if (w.binstr(s, ts)) {
-                    break
-                }
-                else {
-                    q.push(s)
-                }
+function getBlock(ss, m1, m2) {
+    let rs = []
+    for (let i = 0; i < ss.length; i++) {
+        let s = ss[i]
+        if (s.indexOf(m1) >= 0) { //indexOf for m1
+            let t = s.substring(s.indexOf(m1) + m1.length, s.length)
+            rs.push(t)
+            continue
+        }
+        if (rs.length > 0) {
+            rs.push(s)
+            if (s === m2) { //equal for m2
+                break
             }
-            c = _.join(q, '\r\n')
-            c = w.strdelright(c, 1)
         }
-        else {
-            c = null
-        }
-        return c
     }
+    return rs.join('\n')
+}
 
-    //tmp
-    r = `<template>[\\s\\S]+<\/template>`
-    reg = new RegExp(r, 'g')
-    let tmp = hh.match(reg)[0]
-    let s = _.split(tmp, '\r\n')
-    s = _.drop(s, 2)
-    s = _.dropRight(s, 2)
-    tmp = _.join(s, '\r\n')
-    tmp = w.replace(tmp, 'WAgGridVue', 'w-aggrid-vue')
-    //console.log('tmp', tmp)
 
-    //data
-    let data = parse('data')
-    if (!data) {
-        data = 'function() { return {} }'
-    }
-    //console.log('data', data)
-
-    //mounted
-    let mounted = parse('mounted')
-    if (!mounted) {
-        mounted = 'function() {}'
-    }
-    //console.log('mounted', mounted)
-
-    //computed
-    let computed = parse('computed')
-    if (!computed) {
-        computed = '{}'
-    }
-    //console.log('computed', computed)
-
-    //methods
-    let methods = parse('methods')
-    if (!methods) {
-        methods = '{}'
-    }
-    //console.log('methods', methods)
-
-    //action
-    r = `'action[\\s\\S]+ {12}\\]`
-    reg = new RegExp(r, 'g')
-    let action = _.get(hh.match(reg), 0)
-    if (action) {
-        action = action.replace(`'actions':`, ``)
-    }
-    else {
-        action = '[]'
-    }
-    //console.log('action', action)
+function writeHtml({ fn, casename, tmp, mounted, data, computed, methods, action }) {
 
     //c
     let c = h
@@ -231,10 +162,115 @@ function extractApp(fn) {
 
     //write
     //console.log(c)
-    fs.writeFileSync(fdTestHtml + `ex-${casename}.html`, c, 'utf8')
+    fs.writeFileSync(fn, c, 'utf8')
 
     // //write action
     // fs.writeFileSync(fdTestSrc + `${v.fn}.action.json`, v.action, 'utf8')
+
+}
+
+
+function extractApp(fn) {
+    let r
+    let reg
+    let m1
+    let m2
+
+    //casename
+    let tfn = fn.replace('App', '')
+    tfn = tfn.replace('.vue', '')
+    let casename = _.toLower(tfn[0]) + w.strdelleft(tfn, 1)
+
+    //read
+    let h = fs.readFileSync(fdSrc + fn, 'utf8')
+
+    //ss
+    let ss = h.split('\r\n')
+
+    //tmp
+    r = `<template>[\\s\\S]+<\/template>`
+    reg = new RegExp(r, 'g')
+    let tmp = h.match(reg)[0]
+    let s = _.split(tmp, '\r\n')
+    s = _.drop(s, 2)
+    s = _.dropRight(s, 2)
+    tmp = _.join(s, '\r\n')
+    tmp = w.replace(tmp, 'WAgGridVue', 'w-aggrid-vue')
+    //console.log('tmp', tmp)
+
+    //data
+    m1 = 'data: function() {'
+    m2 = '    },'
+    let data = getBlock(ss, m1, m2)
+    if (!data) {
+        data = 'function() { return {} }'
+    }
+    else {
+        data = 'function() {' + data
+        data = w.strdelright(data, 1)
+    }
+    //console.log('data', data)
+
+    //mounted
+    m1 = 'mounted: function() {'
+    m2 = '    },'
+    let mounted = getBlock(ss, m1, m2)
+    if (!mounted) {
+        mounted = 'function() { return {} }'
+    }
+    else {
+        mounted = 'function() {' + mounted
+        mounted = w.strdelright(mounted, 1)
+    }
+    //console.log('mounted', mounted)
+
+    //computed
+    m1 = 'computed:'
+    m2 = '    },'
+    let computed = getBlock(ss, m1, m2)
+    if (!computed) {
+        computed = '{}'
+    }
+    else {
+        computed = w.strdelright(computed, 1)
+    }
+    //console.log('computed', computed)
+
+    //methods
+    m1 = 'methods:'
+    m2 = '    },'
+    let methods = getBlock(ss, m1, m2)
+    if (!methods) {
+        methods = '{}'
+    }
+    else {
+        methods = w.strdelright(methods, 1)
+    }
+    //console.log('methods', methods)
+
+    //action
+    m1 = `'actions':`
+    m2 = '            ],'
+    let action = getBlock(ss, m1, m2)
+    if (!action) {
+        action = '[]'
+    }
+    else {
+        action = w.strdelright(action, 1)
+    }
+    //console.log('action', action)
+
+    //writeHtml
+    writeHtml({
+        fn: fdTestHtml + `ex-${casename}.html`,
+        casename,
+        tmp,
+        mounted,
+        data,
+        computed,
+        methods,
+        action,
+    })
 
 }
 
