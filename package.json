@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "author": "yuda-lyu(semisphere)",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -19,6 +19,9 @@
     "wsemi": "^1.3.41"
   },
   "devDependencies": {
+    "@vue/cli-plugin-babel": "^4.2.3",
+    "@vue/cli-plugin-eslint": "^4.2.3",
+    "@vue/cli-service": "^4.2.3",
     "@starptech/prettyhtml": "^0.10.0",
     "fs-extra": "^8.1.0",
     "vue": "^2.6.11",
