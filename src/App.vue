@@ -93,6 +93,8 @@
 
                     <AppFitColumns v-if="showCmp==='fitColumns'"></AppFitColumns>
 
+                    <AppAutoFitColumns v-if="showCmp==='autoFitColumns'"></AppAutoFitColumns>
+
                     <AppGetInstance v-if="showCmp==='getInstance'"></AppGetInstance>
 
                     <AppHighlight v-if="showCmp==='highlight'"></AppHighlight>
@@ -179,6 +181,7 @@ import AppDefHeadSort from './AppDefHeadSort.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
 import AppGetDisplayData from './AppGetDisplayData.vue'
 import AppFitColumns from './AppFitColumns.vue'
+import AppAutoFitColumns from './AppAutoFitColumns.vue'
 import AppGetInstance from './AppGetInstance.vue'
 import AppHighlight from './AppHighlight.vue'
 import AppKpCellAlighH from './AppKpCellAlighH.vue'
@@ -209,6 +212,7 @@ import AppTableHeight from './AppTableHeight.vue'
 import AppTableWidth from './AppTableWidth.vue'
 import AppTableWidthFull from './AppTableWidthFull.vue'
 
+
 export default {
     name: 'app',
     components: {
@@ -229,6 +233,7 @@ export default {
         AppFilterAllData,
         AppGetDisplayData,
         AppFitColumns,
+        AppAutoFitColumns,
         AppGetInstance,
         AppHighlight,
         AppKpCellAlighH,
@@ -318,6 +323,7 @@ export default {
                     'filterAllData',
                     'getDisplayData',
                     'fitColumns',
+                    'autoFitColumns',
                     'operateData',
                     'getInstance',
                     'highlight',

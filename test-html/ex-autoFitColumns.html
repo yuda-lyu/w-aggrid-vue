@@ -6,7 +6,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
-    <title>example for clearHeadFilterAll</title>
+    <title>example for autoFitColumns</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -30,7 +30,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.35/dist/w-aggrid-vue.umd.js"></script>
+    <script src="../dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -97,20 +97,23 @@
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
                         title
-                    >clearHeadFilterAll</span>
+                    >autoFitColumns</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearHeadFilterAll.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-autoFitColumns.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearHeadFilterAll.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-autoFitColumns.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
                 </div>
-
-                <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
+                <w-aggrid-vue
+                    ref="rftable"
+                    :style="`width:${opt.width}px;`"
+                    :opt="opt"
+                ></w-aggrid-vue>
 
                 <pre id="ckmsg"></pre>
             </div>
@@ -136,8 +139,10 @@
     data: function() {
       return {
         opt: {
+          width: 620,
           keys: ["make", "model", "price"],
-          rows: JSON.parse(JSON.stringify(window.dataEasy))
+          rows: JSON.parse(JSON.stringify(window.dataEasy)),
+          autoFitColumn: true
         },
         action: []
       };
@@ -146,24 +151,24 @@
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
 
-      //setHeadFilter
+      //change width
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("price", 6);
+          vo.opt.width = 400;
         } catch (err) {}
       }, 1000);
 
-      //setHeadFilter
+      //change width
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("model", "m");
+          vo.opt.width = 800;
         } catch (err) {}
       }, 2000);
 
-      //clearHeadFilterAll
+      //change width
       setTimeout(function() {
         try {
-          vo.$refs.rftable.clearHeadFilterAll();
+          vo.opt.width = 620;
         } catch (err) {}
       }, 3000);
     },

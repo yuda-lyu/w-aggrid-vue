@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="shell"
         class="CompCssWAgGridVue"
         :changeParam="changeParam"
     >
@@ -139,7 +140,13 @@ export default {
             transition: 'transition:all 0.5s',
             opacity: 0,
 
-            canFitColumn: false,
+            //因ag-grid顯示區可能會改變大小或顯隱, 通過timer偵測, 進而提供autoFitColumn功能
+            detectSize: {
+                w: 0,
+                h: 0,
+            },
+            detectTimer: null,
+            autoFitColumn: false,
 
             rows: [],
             keys: [],
@@ -180,6 +187,7 @@ export default {
             cellMouseEnter: function() {},
             cellMouseLeave: function() {},
 
+            //因ag-grid只提供mouseout沒有mouseleave, 導致會因為內元素而觸發mouseout, 得通過暫存機制產生mouseleave事件
             vRowMouseEnter: null,
             vRowMouseLeave: null,
             eRowMouseLeaves: [],
@@ -201,6 +209,57 @@ export default {
         }
     },
     mounted: function() {
+
+        let vo = this
+
+        function getSize() {
+            let r = {
+                w: 0,
+                h: 0,
+            }
+            let ele = get(vo, '$refs.shell', null)
+            if (ele) {
+                try {
+                    r = ele.getBoundingClientRect()
+                    r = {
+                        w: r.width,
+                        h: r.height,
+                    }
+                }
+                catch (err) { }
+            }
+            if (r.w === 0 || r.h === 0) {
+                return null
+            }
+            return r
+        }
+
+        vo.detectTimer = setInterval(() => {
+            let s = getSize()
+            if (s && !isEqual(vo.detectSize, s)) {
+                //console.log('resize', JSON.stringify(vo.detectSize))
+                vo.detectSize = s
+
+                if (vo.autoFitColumn) {
+
+                    //fitColumns
+                    vo.fitColumns()
+
+                }
+
+            }
+        }
+        , 100)
+
+    },
+    beforeDestroy: function() {
+        //console.log('beforeMount')
+
+        let vo = this
+
+        //clearTimeout
+        clearTimeout(vo.detectTimer)
+
     },
     computed: {
 
@@ -552,12 +611,12 @@ export default {
                 return o
             }
 
-            //canFitColumn, ag-grid僅有, 可用但效果不好
-            let canFitColumn = false
-            if (isbol(vo.opt.canFitColumn)) {
-                canFitColumn = vo.opt.canFitColumn
+            //autoFitColumn, ag-grid僅有
+            let autoFitColumn = false
+            if (isbol(vo.opt.autoFitColumn)) {
+                autoFitColumn = vo.opt.autoFitColumn
             }
-            vo.canFitColumn = canFitColumn
+            vo.autoFitColumn = autoFitColumn
 
             //keys
             vo.keys = vo.opt.keys
@@ -992,7 +1051,7 @@ export default {
             //ag
             vo.ag = params
 
-            if (vo.canFitColumn) {
+            if (vo.autoFitColumn) {
 
                 //fitColumns
                 vo.fitColumns()
@@ -1151,8 +1210,8 @@ export default {
                     o.api.sizeColumnsToFit()
 
                 }
-                catch (e) {
-                    console.log('fitColumns error', e)
+                catch (err) {
+                    console.log('fitColumns error', err)
                 }
             }
 
@@ -1192,23 +1251,15 @@ export default {
 .CompCssWAgGridVue .ag-theme-balham .ag-header {
     font-family: inherit;
 }
-.CompCssWAgGridVue .ag-floating-filter-input, .ag-filter-filter, .ag-filter-select {
-    transition: all 1s;
-    padding: 3px;
-    min-height: 21px;
+.CompCssWAgGridVue .ag-input-field-input {
+    transition: all 0.5s;
+    padding: 3px 8px;
+    box-shadow: inherit !important;
     background-color: #fff;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 10px;
 }
-.CompCssWAgGridVue .ag-floating-filter-input:focus, .ag-filter-filter:focus, .ag-filter-select:focus {
+.CompCssWAgGridVue .ag-input-field-input:focus {
     border: 1px solid #777;
-}
-.CompCssWAgGridVue .ag-floating-filter-button {
-    margin: 0 !important;
-    line-height: inherit !important;
-    vertical-align: middle !important;
-}
-.CompCssWAgGridVue .ag-icon {
-    vertical-align: middle !important;
 }
 </style>
