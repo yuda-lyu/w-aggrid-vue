@@ -140,9 +140,11 @@ function writeHtml({ fn, casename, tmp, mounted, data, computed, methods, action
     c = prettyhtml(c, {
         tabWidth: 4,
     })
+    c = c.contents //取contents
+    //console.log('prettyhtml', c)
 
     //write
-    //console.log(c)
+    // console.log(c)
     fs.writeFileSync(fn, c, 'utf8')
 
     // //write action
