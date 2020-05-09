@@ -61,6 +61,10 @@
 
                     <AppCellChange v-if="showCmp==='cellChange'"></AppCellChange>
 
+                    <AppCellMouseEnter v-if="showCmp==='cellMouseEnter'"></AppCellMouseEnter>
+
+                    <AppCellMouseLeave v-if="showCmp==='cellMouseLeave'"></AppCellMouseLeave>
+
                     <AppCellClick v-if="showCmp==='cellClick'"></AppCellClick>
 
                     <AppCellDbClick v-if="showCmp==='cellDbClick'"></AppCellDbClick>
@@ -127,6 +131,10 @@
 
                     <AppRowChange v-if="showCmp==='rowChange'"></AppRowChange>
 
+                    <AppRowMouseEnter v-if="showCmp==='rowMouseEnter'"></AppRowMouseEnter>
+
+                    <AppRowMouseLeave v-if="showCmp==='rowMouseLeave'"></AppRowMouseLeave>
+
                     <AppRowClick v-if="showCmp==='rowClick'"></AppRowClick>
 
                     <AppRowDbClick v-if="showCmp==='rowDbClick'"></AppRowDbClick>
@@ -155,6 +163,8 @@
 
 <script>
 import AppCellChange from './AppCellChange.vue'
+import AppCellMouseEnter from './AppCellMouseEnter.vue'
+import AppCellMouseLeave from './AppCellMouseLeave.vue'
 import AppCellClick from './AppCellClick.vue'
 import AppCellDbClick from './AppCellDbClick.vue'
 import AppClearHeadFilter from './AppClearHeadFilter.vue'
@@ -188,6 +198,8 @@ import AppKpRowStyle from './AppKpRowStyle.vue'
 import AppLargeData from './AppLargeData.vue'
 import AppOperateData from './AppOperateData.vue'
 import AppRowChange from './AppRowChange.vue'
+import AppRowMouseEnter from './AppRowMouseEnter.vue'
+import AppRowMouseLeave from './AppRowMouseLeave.vue'
 import AppRowClick from './AppRowClick.vue'
 import AppRowDbClick from './AppRowDbClick.vue'
 import AppSetHeadFilter from './AppSetHeadFilter.vue'
@@ -201,6 +213,8 @@ export default {
     name: 'app',
     components: {
         AppCellChange,
+        AppCellMouseEnter,
+        AppCellMouseLeave,
         AppCellClick,
         AppCellDbClick,
         AppClearHeadFilter,
@@ -234,6 +248,8 @@ export default {
         AppLargeData,
         AppOperateData,
         AppRowChange,
+        AppRowMouseEnter,
+        AppRowMouseLeave,
         AppRowClick,
         AppRowDbClick,
         AppSetHeadFilter,
@@ -259,11 +275,15 @@ export default {
                 ],
                 cell: [
                     'cellChange',
+                    'cellMouseEnter',
+                    'cellMouseLeave',
                     'cellClick',
                     'cellDbClick',
                 ],
                 row: [
                     'rowChange',
+                    'rowMouseEnter',
+                    'rowMouseLeave',
                     'rowClick',
                     'rowDbClick',
                 ],

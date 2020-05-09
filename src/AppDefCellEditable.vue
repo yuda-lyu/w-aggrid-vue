@@ -47,7 +47,7 @@ export default {
                 keys: ['make', 'model', 'price'],
                 defCellEditable: true,
                 cellChange: function(k, r) {
-                    document.querySelector('#ckmsg').innerHTML = 'trigger: defCellEditable\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + 'row: ' + JSON.stringify(r, null, 2)
+                    document.querySelector('#ckmsg').innerHTML = 'trigger: defCellEditable\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },

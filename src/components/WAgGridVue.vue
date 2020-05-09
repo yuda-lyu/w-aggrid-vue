@@ -6,6 +6,7 @@
 
         <div
             :style="`width:${width}%; height:${height}px; ${transition}; opacity:${opacity};`"
+            @mouseleave="leaveTable"
         >
 
             <ag-grid-vue
@@ -15,10 +16,12 @@
                 :rowData="filterRows"
                 :rowStyle="getRowsStyle"
                 :gridOptions="gridOptions"
-                v-on:cellClicked="agCellClick"
-                v-on:cellDoubleClicked="agCellDbClick"
-                v-on:cellValueChanged="agCellChange"
-                v-on:grid-ready="onGridReady"
+                @cellClicked="agCellClick"
+                @cellDoubleClicked="agCellDbClick"
+                @cellValueChanged="agCellChange"
+                @cellMouseOver="agCellMouseEnter"
+                @cellMouseOut="agCellMouseLeave"
+                @grid-ready="onGridReady"
             ></ag-grid-vue>
 
         </div>
@@ -30,6 +33,7 @@
 import map from 'lodash/map'
 import each from 'lodash/each'
 import filter from 'lodash/filter'
+import isEqual from 'lodash/isEqual'
 import find from 'lodash/find'
 import every from 'lodash/every'
 import merge from 'lodash/merge'
@@ -92,9 +96,13 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Function} [opt.rowClick={}] 輸入row click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.rowDbClick={}] 輸入row double click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.rowChange={}] 輸入row change之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowMouseEnter={}] 輸入row mouseenter之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowMouseLeave={}] 輸入row mouseleave之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellClick={}] 輸入cell click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellDbClick={}] 輸入cell double click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellChange={}] 輸入cell change之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.cellMouseEnter={}] 輸入cell mouseenter之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.cellMouseLeave={}] 輸入cell mouseleave之觸發事件，預設為function(){}
  * @vue-prop {Number} [height=300] 表格高度，預設300(px)
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
  * @vue-event {Null} refresh 刷新表格，無輸入與回傳
@@ -162,11 +170,22 @@ export default {
 
             tableClickEnable: false,
             rowChange: function() {},
+            rowMouseEnter: function() {},
+            rowMouseLeave: function() {},
             rowClick: function() {},
             rowDbClick: function() {},
             cellClick: function() {},
             cellDbClick: function() {},
             cellChange: function() {},
+            cellMouseEnter: function() {},
+            cellMouseLeave: function() {},
+
+            vRowMouseEnter: null,
+            vRowMouseLeave: null,
+            eRowMouseLeaves: [],
+            vCellMouseEnter: null,
+            vCellMouseLeave: null,
+            eCellMouseLeaves: [],
 
             gridOptions: {
                 animateRows: true,
@@ -305,6 +324,182 @@ export default {
 
         },
 
+        leaveTable: function() {
+            //console.log('methods leaveTable')
+
+            let vo = this
+
+            //emitCellMouseLeaves
+            vo.emitCellMouseLeaves()
+
+            //emitRowMouseLeaves
+            vo.emitRowMouseLeaves()
+
+            //clear
+            vo.vRowMouseEnter = null
+            vo.vRowMouseLeave = null
+            vo.vCellMouseEnter = null
+            vo.vCellMouseLeave = null
+
+        },
+
+        emitCellMouseLeaves: function() {
+            //console.log('methods emitCellMouseLeaves')
+
+            let vo = this
+
+            //cellMouseLeave
+            each(vo.eCellMouseLeaves, (v) => {
+                vo.cellMouseLeave(cloneDeep(v.field), cloneDeep(v.data))
+                //console.log('cellMouseLeave', cloneDeep(v.field), cloneDeep(v.data))
+            })
+
+            //clear
+            vo.eCellMouseLeaves = []
+
+        },
+
+        emitRowMouseLeaves: function() {
+            //console.log('methods emitRowMouseLeaves')
+
+            let vo = this
+
+            //rowMouseLeave
+            each(vo.eRowMouseLeaves, (v) => {
+                vo.rowMouseLeave(cloneDeep(v.field), cloneDeep(v.data))
+                //console.log('rowMouseLeave', cloneDeep(v.field), cloneDeep(v.data))
+            })
+
+            //clear
+            vo.eRowMouseLeaves = []
+
+        },
+
+        agCellMouseEnter: function(param) {
+            //console.log('methods agCellMouseEnter', param)
+
+            let vo = this
+
+            //tvCellMouseEnter, tvRowMouseEnter
+            let tvCellMouseEnter = {
+                field: param.colDef.field,
+                data: param.data,
+            }
+            let tvRowMouseEnter = {
+                data: param.data, //紀錄資料只會比對data, data不一樣才觸發
+            }
+
+            //cellMouseEnter
+            if (!isEqual(vo.vCellMouseEnter, tvCellMouseEnter)) {
+
+                //emitCellMouseLeaves, 要觸發enter前先觸發leave, 避免cell leave偵測失效或過慢導致連發
+                vo.emitCellMouseLeaves()
+
+                //field, data
+                let field = cloneDeep(param.colDef.field)
+                let data = cloneDeep(param.data)
+
+                //update vCellMouseEnter
+                vo.vCellMouseEnter = tvCellMouseEnter
+
+                //cellMouseEnter
+                vo.cellMouseEnter(field, data)
+
+                //push, 儲存需離開事件資訊
+                vo.eCellMouseLeaves.push({
+                    field,
+                    data,
+                })
+
+            }
+
+            //rowMouseEnter
+            if (!isEqual(vo.vRowMouseEnter, tvRowMouseEnter)) {
+
+                //emitRowMouseLeaves, 要觸發enter前先觸發leave, 避免row leave偵測失效或過慢導致連發
+                vo.emitRowMouseLeaves()
+
+                //field, data
+                let field = cloneDeep(param.colDef.field)
+                let data = cloneDeep(param.data)
+
+                //update vRowMouseEnter
+                vo.vRowMouseEnter = tvRowMouseEnter
+
+                //rowMouseEnter
+                vo.rowMouseEnter(field, data) //滑鼠最初移入的欄位依然作為資料emit出去
+
+                //push, 儲存需離開事件資訊
+                vo.eRowMouseLeaves.push({
+                    field,
+                    data,
+                })
+
+                //update vRowMouseLeave, 因一進列可能在同列儲存格間移動, 故需先儲存更新列數據, 若移動到相鄰儲存格時, 則可判斷因數據相同故不用觸發rowLeave
+                vo.vRowMouseLeave = {
+                    data: cloneDeep(param.data),
+                }
+
+            }
+
+        },
+
+        agCellMouseLeave: function(param) {
+            //console.log('methods agCellMouseLeave', param)
+
+            let vo = this
+            // console.log('target 離開元素', param.event.target)
+            // console.log('relatedTarget 進入元素', param.event.relatedTarget)
+            // console.log('relatedTarget.contains(target)', param.event.relatedTarget.contains(param.event.target))
+
+            //check
+            if (param.event.target.contains(param.event.relatedTarget)) { //離開元素包含進入元素時則跳出, 因可能為父元素進入內元素而觸發
+                //console.log('進入元素包含離開元素時則跳出')
+                return
+            }
+
+            //role
+            let role = null
+            try {
+                role = param.event.target.getAttribute('role') //離開元素的role
+            }
+            catch (err) {
+            }
+
+            //check
+            if (role !== 'gridcell') { //離開元素的role不是gridcell則跳出, 因有可能是cell內元素觸發
+                //console.log('離開元素的role不是gridcell則跳出', param.event.target)
+                return
+            }
+
+            //tvCellMouseLeave
+            let tvCellMouseLeave = {
+                field: cloneDeep(param.colDef.field),
+                data: cloneDeep(param.data),
+            }
+
+            //tvRowMouseLeave
+            let tvRowMouseLeave = {
+                data: cloneDeep(param.data),
+            }
+
+            //emitCellMouseLeaves
+            if (!isEqual(vo.vCellMouseLeave, tvCellMouseLeave)) {
+                vo.vCellMouseLeave = tvCellMouseLeave
+                vo.emitCellMouseLeaves()
+            }
+
+            //emitRowMouseLeaves
+            // console.log('vo.vRowMouseLeave', JSON.stringify(vo.vRowMouseLeave))
+            // console.log('tvRowMouseLeave', JSON.stringify(tvRowMouseLeave))
+            // console.log('是否需觸發rowMouseLeaves', !isEqual(vo.vRowMouseLeave, tvRowMouseLeave))
+            if (!isEqual(vo.vRowMouseLeave, tvRowMouseLeave)) {
+                vo.vRowMouseLeave = tvRowMouseLeave
+                vo.emitRowMouseLeaves()
+            }
+
+        },
+
         refresh: async function() {
             //console.log('methods refresh')
 
@@ -328,11 +523,11 @@ export default {
                 return
             }
             if (!isearr(get(vo, 'opt.keys'))) {
-                console.log('no keys')
+                console.log('invalid opt.keys')
                 return
             }
             if (!isearr(get(vo, 'opt.rows'))) {
-                console.log('no rows')
+                console.log('invalid opt.rows')
                 return
             }
 
@@ -551,6 +746,18 @@ export default {
                 vo.rowChange = vo.opt.rowChange
             }
 
+            //rowMouseEnter
+            vo.rowMouseEnter = function() {}
+            if (isfun(vo.opt.rowMouseEnter)) {
+                vo.rowMouseEnter = vo.opt.rowMouseEnter
+            }
+
+            //rowMouseLeave
+            vo.rowMouseLeave = function() {}
+            if (isfun(vo.opt.rowMouseLeave)) {
+                vo.rowMouseLeave = vo.opt.rowMouseLeave
+            }
+
             //cellClick
             vo.cellClick = function() {}
             if (isfun(vo.opt.cellClick)) {
@@ -569,6 +776,18 @@ export default {
             vo.cellChange = function() {}
             if (isfun(vo.opt.cellChange)) {
                 vo.cellChange = vo.opt.cellChange
+            }
+
+            //cellMouseEnter
+            vo.cellMouseEnter = function() {}
+            if (isfun(vo.opt.cellMouseEnter)) {
+                vo.cellMouseEnter = vo.opt.cellMouseEnter
+            }
+
+            //cellMouseLeave
+            vo.cellMouseLeave = function() {}
+            if (isfun(vo.opt.cellMouseLeave)) {
+                vo.cellMouseLeave = vo.opt.cellMouseLeave
             }
 
             //columns, 需放在給予rows之前, 避免給予rows沒有column設定

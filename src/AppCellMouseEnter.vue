@@ -6,9 +6,9 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;" title>cellChange</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-cellChange.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-cellChange.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;" title>cellMouseEnter</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-cellMouseEnter.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-cellMouseEnter.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
@@ -45,19 +45,12 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpCellEditable: {
-                    'make': true,
-                    'model': true,
-                    'price': true,
-                },
-                cellChange: function(k, r) {
-                    document.querySelector('#ckmsg').innerHTML = 'trigger: cellChange\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
+                cellMouseEnter: function(k, r) {
+                    document.querySelector('#ckmsg').innerHTML = 'trigger: cellMouseEnter\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
-                { 'mode': 'click', 'x1': 309, 'y1': 87 },
-                { 'mode': 'type', 'str': 'Acilec' }
             ],
         }
     },
