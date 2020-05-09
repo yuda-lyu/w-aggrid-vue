@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "author": "yuda-lyu(semisphere)",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -16,7 +16,7 @@
     "lodash": "^4.17.15",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^8.4.2",
-    "wsemi": "^1.4.11"
+    "wsemi": "^1.4.13"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.3.1",
