@@ -6,7 +6,7 @@
     >
 
         <div
-            :style="`width:${width}%; height:${height}px; ${transition}; opacity:${opacity};`"
+            :style="`width:${width}%; height:${height}px; transition:all 0.5s; opacity:${opacity};`"
             @mouseleave="leaveTable"
         >
 
@@ -104,6 +104,7 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Function} [opt.cellChange={}] 輸入cell change之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellMouseEnter={}] 輸入cell mouseenter之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellMouseLeave={}] 輸入cell mouseleave之觸發事件，預設為function(){}
+ * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬，預設false
  * @vue-prop {Number} [height=300] 表格高度，預設300(px)
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
  * @vue-event {Null} refresh 刷新表格，無輸入與回傳
@@ -161,7 +162,6 @@ export default {
             kpHeadFixLeft: {},
             defHeadFilter: null,
             kpHeadFilter: {},
-            hideHeadFilter: null,
             defHeadDrag: null,
             kpHeadDrag: {},
             kpRowStyle: {},
@@ -197,7 +197,7 @@ export default {
 
             gridOptions: {
                 animateRows: true,
-                floatingFilter: true,
+                // floatingFilter: true,
                 rowDragManaged: true,
                 singleClickEdit: true, //單點即可變更
                 localeText: { noRowsToShow: '無數據' },
@@ -690,11 +690,6 @@ export default {
                 vo.opt.kpHeadFilter
             )
 
-            //hideHeadFilter
-            vo.hideHeadFilter = every(values(vo.kpHeadFilter), function(v) {
-                return v === false
-            })
-
             //defHeadDrag
             vo.defHeadDrag = true
             if (isbol(vo.opt.defHeadDrag)) {
@@ -862,11 +857,6 @@ export default {
 
             let vo = this
 
-            //hideHeadFilter
-            if (vo.hideHeadFilter) {
-                vo.gridOptions.floatingFilter = false
-            }
-
             let r = map(keys, function(key) {
                 let o = {}
 
@@ -880,7 +870,8 @@ export default {
                 o.sortable = vo.kpHeadSort[key]
 
                 //filter
-                o.filter = vo.kpHeadFilter[key] //若開啟欄位標題右邊的選單按鈕, 可使用文字過濾器'agTextColumnFilter'
+                o.filter = vo.kpHeadFilter[key] //欄位標題右邊的選單按鈕, 可使用文字過濾器'agTextColumnFilter'
+                o.floatingFilter = vo.kpHeadFilter[key] //欄位標題下方的文字過濾輸入區, 因ag-grid 23.1已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
                 //o.suppressMenu = true //關閉欄位標題右邊的選單按鈕
 
                 //filterParams
@@ -1057,14 +1048,17 @@ export default {
                 vo.fitColumns()
 
             }
-            else {
+            // else {
 
-                //show, 假如transition沒被清空, 就代表沒有fitColumns執行中, 可直接顯示
-                if (vo.transition !== '') {
-                    vo.opacity = 1
-                }
+            //     //show, 假如transition沒被清空, 就代表沒有fitColumns執行中, 可直接顯示
+            //     if (vo.transition !== '') {
+            //         vo.opacity = 1
+            //     }
 
-            }
+            // }
+
+            //show
+            vo.opacity = 1
 
         },
 
@@ -1215,13 +1209,6 @@ export default {
                 }
             }
 
-            //hide
-            vo.transition = ''
-            vo.opacity = 0
-
-            //delay
-            await delay(1)
-
             //先微縮小fit
             await fit(99.5)
 
@@ -1231,12 +1218,28 @@ export default {
             //還原再fit
             await fit(100)
 
-            //delay
-            await delay(1)
+            // //hide
+            // vo.transition = ''
+            // vo.opacity = 0
 
-            //show
-            vo.transition = 'transition:all 0.5s'
-            vo.opacity = 1
+            // //delay
+            // await delay(1)
+
+            // //先微縮小fit
+            // await fit(99.5)
+
+            // //delay
+            // await delay(1)
+
+            // //還原再fit
+            // await fit(100)
+
+            // //delay
+            // await delay(1)
+
+            // //show
+            // vo.transition = 'transition:all 0.5s'
+            // vo.opacity = 1
 
         },
 
