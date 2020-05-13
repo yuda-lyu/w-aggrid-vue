@@ -36,13 +36,13 @@ import each from 'lodash/each'
 import filter from 'lodash/filter'
 import isEqual from 'lodash/isEqual'
 import find from 'lodash/find'
-import every from 'lodash/every'
 import merge from 'lodash/merge'
 import get from 'lodash/get'
 import join from 'lodash/join'
 import values from 'lodash/values'
 import cloneDeep from 'lodash/cloneDeep'
 import difference from 'lodash/difference'
+import genID from 'wsemi/src/genID.mjs'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrhas from 'wsemi/src/arrhas.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
@@ -55,6 +55,8 @@ import binstr from 'wsemi/src/binstr.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
 import delay from 'wsemi/src/delay.mjs'
+import debounce from 'wsemi/src/debounce.mjs'
+import domDetect from 'wsemi/src/domDetect.mjs'
 import onTooltip from 'wsemi/src/onTooltip.mjs'
 import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator
 import 'ag-grid-community/dist/styles/ag-grid.css'
@@ -136,17 +138,12 @@ export default {
     data: function() {
         let vo = this
         return {
+            mmkey: null,
+            de: null,
 
             width: 100,
-            transition: 'transition:all 0.5s',
             opacity: 0,
 
-            //因ag-grid顯示區可能會改變大小或顯隱, 通過timer偵測, 進而提供autoFitColumn功能
-            detectSize: {
-                w: 0,
-                h: 0,
-            },
-            detectTimer: null,
             autoFitColumn: false,
 
             rows: [],
@@ -212,44 +209,27 @@ export default {
 
         let vo = this
 
-        function getSize() {
-            let r = {
-                w: 0,
-                h: 0,
-            }
-            let ele = get(vo, '$refs.shell', null)
-            if (ele) {
-                try {
-                    r = ele.getBoundingClientRect()
-                    r = {
-                        w: r.width,
-                        h: r.height,
-                    }
-                }
-                catch (err) { }
-            }
-            if (r.w === 0 || r.h === 0) {
-                return null
-            }
-            return r
+        //mmkey
+        if (vo.mmkey === null) {
+            vo.mmkey = genID()
         }
 
-        vo.detectTimer = setInterval(() => {
-            let s = getSize()
-            if (s && !isEqual(vo.detectSize, s)) {
-                //console.log('resize', JSON.stringify(vo.detectSize))
-                vo.detectSize = s
-
-                if (vo.autoFitColumn) {
-
-                    //fitColumns
-                    vo.fitColumns()
-
-                }
-
+        //監聽dom
+        vo.de = domDetect(() => {
+            return get(vo, '$refs.shell', null)
+        })
+        vo.de.on('resize', (s) => {
+            //console.log('resize', s)
+            if (vo.autoFitColumn) {
+                vo.fitColumns()
             }
-        }
-        , 100)
+        })
+        vo.de.on('display', (s) => {
+            //console.log('display', s)
+            if (vo.autoFitColumn) {
+                vo.fitColumns()
+            }
+        })
 
     },
     beforeDestroy: function() {
@@ -257,8 +237,8 @@ export default {
 
         let vo = this
 
-        //clearTimeout
-        clearTimeout(vo.detectTimer)
+        //釋放監聽
+        vo.de.clear()
 
     },
     computed: {
@@ -1048,14 +1028,6 @@ export default {
                 vo.fitColumns()
 
             }
-            // else {
-
-            //     //show, 假如transition沒被清空, 就代表沒有fitColumns執行中, 可直接顯示
-            //     if (vo.transition !== '') {
-            //         vo.opacity = 1
-            //     }
-
-            // }
 
             //show
             vo.opacity = 1
@@ -1209,37 +1181,24 @@ export default {
                 }
             }
 
-            //先微縮小fit
-            await fit(99.5)
+            //core
+            async function core() {
 
-            //delay
-            await delay(1)
+                //先微縮小fit
+                await fit(99.5)
 
-            //還原再fit
-            await fit(100)
+                //delay
+                await delay(50) //不能過短, 否則先縮小再放大機制會失效
 
-            // //hide
-            // vo.transition = ''
-            // vo.opacity = 0
+                //還原fit
+                await fit(100)
 
-            // //delay
-            // await delay(1)
+            }
 
-            // //先微縮小fit
-            // await fit(99.5)
-
-            // //delay
-            // await delay(1)
-
-            // //還原再fit
-            // await fit(100)
-
-            // //delay
-            // await delay(1)
-
-            // //show
-            // vo.transition = 'transition:all 0.5s'
-            // vo.opacity = 1
+            //debounce, 避免高頻觸發
+            debounce(`${vo.mmkey}|fitColumns`, () => {
+                core()
+            })
 
         },
 
