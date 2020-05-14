@@ -1025,7 +1025,7 @@ export default {
             if (vo.autoFitColumn) {
 
                 //fitColumns
-                vo.fitColumns()
+                vo.fitColumns(false)
 
             }
 
@@ -1157,7 +1157,7 @@ export default {
             return vo.gridOptions
         },
 
-        fitColumns: async function() {
+        fitColumns: async function(bDebounce = true) {
             //console.log('methods fitColumns')
 
             let vo = this
@@ -1188,17 +1188,23 @@ export default {
                 await fit(99.5)
 
                 //delay
-                await delay(50) //不能過短, 否則先縮小再放大機制會失效
+                await delay(50) //不能過短, 否則先縮小再還原機制會失效
 
                 //還原fit
                 await fit(100)
 
             }
 
-            //debounce, 避免高頻觸發
-            debounce(`${vo.mmkey}|fitColumns`, () => {
+            //core
+            if (bDebounce) {
+                //debounce, 避免高頻觸發
+                debounce(`${vo.mmkey}|fitColumns`, () => {
+                    core()
+                })
+            }
+            else {
                 core()
-            })
+            }
 
         },
 
