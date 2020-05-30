@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for kpRowStyle</title>
+    <title>example for defHeadSortMethod</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -102,14 +102,14 @@
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
                         title
-                    >kpRowStyle</span>
+                    >defHeadSortMethod</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpRowStyle.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadSortMethod.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpRowStyle.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadSortMethod.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
@@ -141,25 +141,11 @@
     data: function() {
       return {
         opt: {
-          keys: ["make", "model", "price"],
-          kpRowStyle: {
-            make: function(v) {
-              if (v.indexOf("Audi") >= 0) {
-                return { background: "#af6" };
-              }
-              return {};
-            },
-            model: function(v) {
-              if (v.indexOf("Sedan") >= 0) {
-                return { background: "#afb" };
-              }
-              return {};
-            }
-            //'price':false,
-          },
-          rows: JSON.parse(JSON.stringify(window.dataEasy))
+          keys: ["make", "field1", "field2"],
+          defHeadSortMethod: "auto",
+          rows: JSON.parse(JSON.stringify(window.dataLikeNumber))
         },
-        action: []
+        action: [{ mode: "drag", x1: 507, y1: 25, x2: 307, y2: 25 }]
       };
     },
     mounted: function() {

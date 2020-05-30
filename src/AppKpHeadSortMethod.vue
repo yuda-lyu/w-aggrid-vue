@@ -6,9 +6,9 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;" title>kpHeadHide</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadHide.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadHide.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;" title>kpHeadSortMethod</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadSortMethod.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadSortMethod.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
@@ -44,18 +44,18 @@ export default {
     data: function() {
         return {
             'opt': {
-                keys: ['make', 'model', 'price'],
+                keys: ['make', 'field1', 'field2'],
                 kpHead: {
-                    'make': 'make(false)',
-                    'model': 'model(true)',
-                    'price': 'price(false)',
+                    'make': 'make',
+                    'field1': 'field1(auto)',
+                    'field2': 'field2(auto)',
                 },
-                kpHeadHide: { //default: false
+                kpHeadSortMethod: { //default: false
                     //'make':false,
-                    'model': true,
-                    //'price':false,
+                    'field1': 'auto',
+                    'field2': 'auto',
                 },
-                rows: JSON.parse(JSON.stringify(window.dataEasy)),
+                rows: JSON.parse(JSON.stringify(window.dataLikeNumber)),
             },
             'action': [
             ],

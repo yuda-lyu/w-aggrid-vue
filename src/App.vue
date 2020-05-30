@@ -87,6 +87,8 @@
 
                     <AppDefHeadSort v-if="showCmp==='defHeadSort'"></AppDefHeadSort>
 
+                    <AppDefHeadSortMethod v-if="showCmp==='defHeadSortMethod'"></AppDefHeadSortMethod>
+
                     <AppFilterAllData v-if="showCmp==='filterAllData'"></AppFilterAllData>
 
                     <AppGetDisplayData v-if="showCmp==='getDisplayData'"></AppGetDisplayData>
@@ -122,6 +124,8 @@
                     <AppKpHeadFixLeft v-if="showCmp==='kpHeadFixLeft'"></AppKpHeadFixLeft>
 
                     <AppKpHeadSort v-if="showCmp==='kpHeadSort'"></AppKpHeadSort>
+
+                    <AppKpHeadSortMethod v-if="showCmp==='kpHeadSortMethod'"></AppKpHeadSortMethod>
 
                     <AppKpHeadTooltip v-if="showCmp==='kpHeadTooltip'"></AppKpHeadTooltip>
 
@@ -180,6 +184,7 @@ import AppDefHeadAlighH from './AppDefHeadAlighH.vue'
 import AppDefHeadDrag from './AppDefHeadDrag.vue'
 import AppDefHeadFilter from './AppDefHeadFilter.vue'
 import AppDefHeadSort from './AppDefHeadSort.vue'
+import AppDefHeadSortMethod from './AppDefHeadSortMethod.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
 import AppGetDisplayData from './AppGetDisplayData.vue'
 import AppFitColumns from './AppFitColumns.vue'
@@ -198,6 +203,7 @@ import AppKpHeadHide from './AppKpHeadHide.vue'
 import AppKpHeadFilter from './AppKpHeadFilter.vue'
 import AppKpHeadFixLeft from './AppKpHeadFixLeft.vue'
 import AppKpHeadSort from './AppKpHeadSort.vue'
+import AppKpHeadSortMethod from './AppKpHeadSortMethod.vue'
 import AppKpHeadTooltip from './AppKpHeadTooltip.vue'
 import AppKpRowDrag from './AppKpRowDrag.vue'
 import AppKpRowStyle from './AppKpRowStyle.vue'
@@ -233,6 +239,7 @@ export default {
         AppDefHeadDrag,
         AppDefHeadFilter,
         AppDefHeadSort,
+        AppDefHeadSortMethod,
         AppFilterAllData,
         AppGetDisplayData,
         AppFitColumns,
@@ -251,6 +258,7 @@ export default {
         AppKpHeadFilter,
         AppKpHeadFixLeft,
         AppKpHeadSort,
+        AppKpHeadSortMethod,
         AppKpHeadTooltip,
         AppKpRowDrag,
         AppKpRowStyle,
@@ -314,11 +322,13 @@ export default {
                     'kpHeadFilter',
                     'kpHeadFixLeft',
                     'kpHeadSort',
+                    'kpHeadSortMethod',
                     'kpHeadTooltip',
                     'defHeadAlighH',
                     'defHeadDrag',
                     'defHeadFilter',
                     'defHeadSort',
+                    'defHeadSortMethod',
                 ],
                 kpRow: [
                     'kpRowDrag',

@@ -33,6 +33,7 @@
 <script>
 import map from 'lodash/map'
 import each from 'lodash/each'
+import size from 'lodash/size'
 import filter from 'lodash/filter'
 import isEqual from 'lodash/isEqual'
 import find from 'lodash/find'
@@ -45,12 +46,15 @@ import difference from 'lodash/difference'
 import genID from 'wsemi/src/genID.mjs'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrhas from 'wsemi/src/arrhas.mjs'
+import iser from 'wsemi/src/iser.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
 import iseobj from 'wsemi/src/iseobj.mjs'
 import isearr from 'wsemi/src/isearr.mjs'
+import isestr from 'wsemi/src/isestr.mjs'
 import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
+import cdbl from 'wsemi/src/cdbl.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
@@ -77,14 +81,16 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Array} opt.rows 輸入資料列，各列為物件，內含各欄位keys之值，例[{},{},...,{}]
  * @vue-prop {Object} [opt.kpHead={}] 輸入key對應head物件，預設為keys
  * @vue-prop {Object} [opt.kpHeadTooltip={}] 輸入key對應需tooltip的html字串物件，於各head處滑鼠移入時觸發，預設為{}
- * @vue-prop {Object} [opt.defHeadAlighH='center'] 輸入head預設之左右對齊字串，預設為'center'
+ * @vue-prop {String} [opt.defHeadAlighH='center'] 輸入head預設之左右對齊字串，預設為'center'
  * @vue-prop {Object} [opt.kpHeadAlighH={}] 輸入key對應head之左右對齊字串物件，預設為各key值為defHeadAlighH
- * @vue-prop {Object} [opt.defHeadSort=true] 輸入head預設之是否允許排序布林值，預設為true
+ * @vue-prop {Boolean} [opt.defHeadSort=true] 輸入head預設之是否允許排序布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadSort={}] 輸入key對應head之是否允許排序物件，預設為各key值為defHeadSort
+ * @vue-prop {Function|String} [opt.defHeadSortMethod=null] 輸入head預設之排序方式函數或字串，若需自行定義則給予函數，若需使用內建的自動轉型判斷方式則給予'auto'字串，預設為null
+ * @vue-prop {Object} [opt.kpHeadSortMethod={}] 輸入key對應head之是否允許排序物件，預設為各key值為defHeadSortMethod
  * @vue-prop {Object} [opt.kpHeadFixLeft={}] 輸入key對應head之是否固定於左側物件，預設為各key值為false
- * @vue-prop {Object} [opt.defHeadFilter=true] 輸入head預設之是否允許過濾布林值，預設為true
+ * @vue-prop {Boolean} [opt.defHeadFilter=true] 輸入head預設之是否允許過濾布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設為各key值為defHeadFilter
- * @vue-prop {Object} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
+ * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設為各key值為defHeadDrag
  * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定key欄之cell值所需對應之row style，預設為{}
  * @vue-prop {Object} [opt.kpRowDrag={}] [專有:ag-grid] 輸入key對應row之是否能拖曳排序物件，預設為各key值為false
@@ -92,9 +98,9 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Object} [opt.kpCellWidth=null] 輸入key對應cell之寬度物件，預設為各key值為null
  * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設為{}
  * @vue-prop {Object} [opt.kpCellTooltip={}] 輸入key對應cell之tooltip的html字串物件，於各cell處滑鼠移入時觸發，預設為{}
- * @vue-prop {Object} [opt.defCellAlighH='center'] 輸入cell預設之左右對齊字串，預設為'center'
+ * @vue-prop {String} [opt.defCellAlighH='center'] 輸入cell預設之左右對齊字串，預設為'center'
  * @vue-prop {Object} [opt.kpCellAlighH={}] 輸入key對應cell之左右對齊字串物件，預設為各key值為defCellAlighH
- * @vue-prop {Object} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
+ * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設為各key值為defCellEditable
  * @vue-prop {Function} [opt.rowClick={}] 輸入row click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.rowDbClick={}] 輸入row double click之觸發事件，預設為function(){}
@@ -107,7 +113,7 @@ window.ttWAgGridVue = function(ele, kmsg) {
  * @vue-prop {Function} [opt.cellMouseEnter={}] 輸入cell mouseenter之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellMouseLeave={}] 輸入cell mouseleave之觸發事件，預設為function(){}
  * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬，預設false
- * @vue-prop {Number} [height=300] 表格高度，預設300(px)
+ * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
  * @vue-event {Null} refresh 刷新表格，無輸入與回傳
  * @vue-event {Array} showKeys 指定欲顯示欄位的keys，數量最多為原本初始化的keys，可更改順序，無回傳
@@ -156,6 +162,8 @@ export default {
             kpHeadAlighH: {},
             defHeadSort: null,
             kpHeadSort: {},
+            defHeadSortMethod: null,
+            kpHeadSortMethod: {},
             kpHeadFixLeft: {},
             defHeadFilter: null,
             kpHeadFilter: {},
@@ -632,6 +640,20 @@ export default {
                 vo.opt.kpHeadSort
             )
 
+            //defHeadSortMethod
+            vo.defHeadSortMethod = null
+            if (isfun(vo.opt.defHeadSortMethod) || isestr(vo.opt.defHeadSortMethod)) {
+                vo.defHeadSortMethod = vo.opt.defHeadSortMethod
+            }
+
+            //kpHeadSortMethod
+            vo.kpHeadSortMethod = setobj(vo.keys,
+                function(key) {
+                    return vo.defHeadSortMethod
+                },
+                vo.opt.kpHeadSortMethod
+            )
+
             //kpHeadFixLeft
             vo.kpHeadFixLeft = setobj(vo.keys,
                 function(key) {
@@ -836,6 +858,48 @@ export default {
                 //sort
                 o.sortable = vo.kpHeadSort[key]
 
+                //comparator
+                let funHeadSortMethod = vo.kpHeadSortMethod[key]
+                if (isfun(funHeadSortMethod)) {
+                    o.comparator = funHeadSortMethod
+                }
+                else if (funHeadSortMethod === 'auto') {
+                    o.comparator = function(valueA, valueB, nodeA, nodeB, isInverted) {
+
+                        //若值無效
+                        let sA = iser(valueA)
+                        let sB = iser(valueB)
+                        if (sA && sB) {
+                            return 0
+                        }
+                        if (sA) {
+                            return -1
+                        }
+                        if (sB) {
+                            return 1
+                        }
+
+                        //若值為數字
+                        if (isnum(valueA) && isnum(valueB)) {
+                            return cdbl(valueA) - cdbl(valueB)
+                        }
+
+                        //若值為字串, 先比長度越小越前面, 長度相同則用localeCompare比較
+                        if (isestr(valueA) && isestr(valueB)) {
+                            let lenA = size(valueA)
+                            let lenB = size(valueB)
+                            if (lenA !== lenB) {
+                                return lenA - lenB
+                            }
+                            else {
+                                return valueA.localeCompare(valueB)
+                            }
+                        }
+
+                        return 0 //不比較
+                    }
+                }
+
                 //filter
                 o.filter = vo.kpHeadFilter[key] //欄位標題右邊的選單按鈕, 可使用文字過濾器'agTextColumnFilter'
                 o.floatingFilter = vo.kpHeadFilter[key] //欄位標題下方的文字過濾輸入區, 因ag-grid 23.1已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
@@ -855,7 +919,7 @@ export default {
                 //filter plus, 欄位標題下方加入文字過濾輸入框, 需gridOptions內floatingFilter=true
                 o.floatingFilterComponentParams = { suppressFilterButton: true } //關閉文字過濾輸入框右邊按鈕, 需suppressFilterButton=true
 
-                //lockPosition, 會強制置左故不使用
+                //lockPosition, 若不拖曳而設定欄位lockPosition為true時, 該欄位會強制置左, 故不使用
                 //o.lockPosition = !vo.kpHeadDrag[key]
 
                 //suppressMovable, 指定欄位不能拖曳, 但會被其他欄位拖曳而改變位置

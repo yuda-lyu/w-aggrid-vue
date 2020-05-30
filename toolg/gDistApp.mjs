@@ -20,12 +20,14 @@ let opt = {
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.min.js"></script>
 
     <!-- data -->
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEasy.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.1/res/data/dataEduagency.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataEasy.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataEduagency.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataLikeNumber.js"></script>
     <script>
         //save in window
         window.dataEasy=dataEasy
         window.dataEduagency=dataEduagency
+        window.dataLikeNumber=dataLikeNumber
     </script>
 
     `,
