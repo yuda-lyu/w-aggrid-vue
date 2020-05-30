@@ -161,6 +161,7 @@ export default {
             kpHeadFilter: {},
             defHeadDrag: null,
             kpHeadDrag: {},
+            kpHeadHide: {},
             kpRowStyle: {},
             kpRowDrag: {}, //ag-grid才有
             defCellMinWidth: null,
@@ -487,9 +488,6 @@ export default {
             //console.log('methods agCellMouseLeave', param)
 
             let vo = this
-            // console.log('target 離開元素', param.event.target)
-            // console.log('relatedTarget 進入元素', param.event.relatedTarget)
-            // console.log('relatedTarget.contains(target)', param.event.relatedTarget.contains(param.event.target))
 
             //check
             if (param.event.target.contains(param.event.relatedTarget)) { //離開元素包含進入元素時則跳出, 因可能為父元素進入內元素而觸發
@@ -529,9 +527,6 @@ export default {
             }
 
             //emitRowMouseLeaves
-            // console.log('vo.vRowMouseLeave', JSON.stringify(vo.vRowMouseLeave))
-            // console.log('tvRowMouseLeave', JSON.stringify(tvRowMouseLeave))
-            // console.log('是否需觸發rowMouseLeaves', !isEqual(vo.vRowMouseLeave, tvRowMouseLeave))
             if (!isEqual(vo.vRowMouseLeave, tvRowMouseLeave)) {
                 vo.vRowMouseLeave = tvRowMouseLeave
                 vo.emitRowMouseLeaves()
@@ -571,16 +566,10 @@ export default {
             }
 
             //setobj
-            function setobj(keys, defEvalKey = true, def, kpobj) {
+            function setobj(keys, def, kpobj) {
                 let o = {}
                 each(keys, function(key) {
-                    let h
-                    if (defEvalKey) {
-                        h = def(key)
-                    }
-                    else {
-                        h = def
-                    }
+                    let h = def(key)
                     if (isobj(kpobj)) {
                         if (haskey(kpobj, key)) {
                             h = kpobj[key]
@@ -603,7 +592,6 @@ export default {
 
             //kpHead
             vo.kpHead = setobj(vo.keys,
-                true,
                 function(key) {
                     return key //預設使用key做head
                 },
@@ -624,7 +612,6 @@ export default {
 
             //kpHeadAlighH
             vo.kpHeadAlighH = setobj(vo.keys,
-                true,
                 function(key) {
                     return vo.defHeadAlighH
                 },
@@ -639,7 +626,6 @@ export default {
 
             //kpHeadSort
             vo.kpHeadSort = setobj(vo.keys,
-                true,
                 function(key) {
                     return vo.defHeadSort
                 },
@@ -648,7 +634,6 @@ export default {
 
             //kpHeadFixLeft
             vo.kpHeadFixLeft = setobj(vo.keys,
-                true,
                 function(key) {
                     return false //預設false
                 },
@@ -663,7 +648,6 @@ export default {
 
             //kpHeadFilter
             vo.kpHeadFilter = setobj(vo.keys,
-                true,
                 function(key) {
                     return vo.defHeadFilter
                 },
@@ -678,11 +662,18 @@ export default {
 
             //kpHeadDrag
             vo.kpHeadDrag = setobj(vo.keys,
-                true,
                 function(key) {
                     return vo.defHeadDrag
                 },
                 vo.opt.kpHeadDrag
+            )
+
+            //kpHeadHide
+            vo.kpHeadHide = setobj(vo.keys,
+                function(key) {
+                    return false //預設false
+                },
+                vo.opt.kpHeadHide
             )
 
             //kpRowStyle
@@ -693,7 +684,6 @@ export default {
 
             //kpRowDrag, ag-grid才有
             vo.kpRowDrag = setobj(vo.keys,
-                true,
                 function(key) {
                     return false //預設false
                 },
@@ -708,7 +698,6 @@ export default {
 
             //kpCellWidth
             vo.kpCellWidth = setobj(vo.keys,
-                true,
                 function(key) {
                     return null //預設null
                 },
@@ -735,7 +724,6 @@ export default {
 
             //kpCellAlighH
             vo.kpCellAlighH = setobj(vo.keys,
-                true,
                 function(key) {
                     return vo.defCellAlighH
                 },
@@ -750,7 +738,6 @@ export default {
 
             //kpCellEditable
             vo.kpCellEditable = setobj(vo.keys,
-                true,
                 function(key) {
                     return vo.defCellEditable
                 },
@@ -971,7 +958,7 @@ export default {
                 o.checkboxSelection = false
 
                 //fix
-                if (vo.kpHeadFixLeft[key]) {
+                if (isbol(vo.kpHeadFixLeft[key])) {
 
                     //pinned
                     o.pinned = vo.kpHeadFixLeft[key] ? 'left' : ''
@@ -1007,6 +994,9 @@ export default {
 
                 //hide
                 o.hide = false
+                if (isbol(vo.kpHeadHide[key])) {
+                    o.hide = vo.kpHeadHide[key]
+                }
 
                 return o
             })

@@ -115,6 +115,8 @@
 
                     <AppKpHeadDrag v-if="showCmp==='kpHeadDrag'"></AppKpHeadDrag>
 
+                    <AppKpHeadHide v-if="showCmp==='kpHeadHide'"></AppKpHeadHide>
+
                     <AppKpHeadFilter v-if="showCmp==='kpHeadFilter'"></AppKpHeadFilter>
 
                     <AppKpHeadFixLeft v-if="showCmp==='kpHeadFixLeft'"></AppKpHeadFixLeft>
@@ -192,6 +194,7 @@ import AppKpCellWidth from './AppKpCellWidth.vue'
 import AppKpHead from './AppKpHead.vue'
 import AppKpHeadAlighH from './AppKpHeadAlighH.vue'
 import AppKpHeadDrag from './AppKpHeadDrag.vue'
+import AppKpHeadHide from './AppKpHeadHide.vue'
 import AppKpHeadFilter from './AppKpHeadFilter.vue'
 import AppKpHeadFixLeft from './AppKpHeadFixLeft.vue'
 import AppKpHeadSort from './AppKpHeadSort.vue'
@@ -244,6 +247,7 @@ export default {
         AppKpHead,
         AppKpHeadAlighH,
         AppKpHeadDrag,
+        AppKpHeadHide,
         AppKpHeadFilter,
         AppKpHeadFixLeft,
         AppKpHeadSort,
@@ -306,6 +310,7 @@ export default {
                     'kpHead',
                     'kpHeadAlighH',
                     'kpHeadDrag',
+                    'kpHeadHide',
                     'kpHeadFilter',
                     'kpHeadFixLeft',
                     'kpHeadSort',
