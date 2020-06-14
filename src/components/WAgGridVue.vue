@@ -283,7 +283,7 @@ export default {
             vo.dataPasted = clipboardData.getData('Text')
 
         }
-        window.addEventListener('paste', vo.evPaste, false)
+        window.addEventListener('paste', vo.evPaste)
 
     },
     beforeDestroy: function() {
@@ -648,13 +648,17 @@ export default {
                 return
             }
 
-            //kpHide
+            //kpHide, kpPinned
             let cs = vo.gridOptions.columnApi.getColumnState()
+            //console.log('cs', cs)
             let kpHide = {}
+            let kpPinned = {}
             each(cs, (v) => {
                 kpHide[v.colId] = v.hide
+                kpPinned[v.colId] = v.pinned !== null
             })
             //console.log('kpHide', kpHide)
+            //console.log('kpPinned', kpPinned)
 
             //check
             if (kpHide[showColKeyNow]) {
@@ -662,8 +666,16 @@ export default {
                 return
             }
 
+            //pasteOnPinned
+            let pasteOnPinned = null
+            if (kpPinned[showColKeyNow]) {
+                pasteOnPinned = showColKeyNow
+            }
+            //console.log('pasteOnPinned', pasteOnPinned)
+
             //kpEditable
             let cd = vo.gridOptions.columnDefs
+            //console.log('cd', cd)
             let kpEditable = {}
             each(cd, (v) => {
                 kpEditable[v.field] = v.editable
@@ -709,7 +721,34 @@ export default {
 
                 //check
                 if (kpHide[v]) {
-                    continue //隱藏欄位故跳過, 貼上欄位showColKeyNow是在前面已先檢查, 故不會由右邊欄位開始貼
+                    continue //數據貼到隱藏欄位故跳過
+                }
+
+                //check
+                if (pasteOnPinned) { //貼於固定欄位時
+                    if (kpPinned[v]) {
+                        if (pasteOnPinned === v) { //v !== pasteOnPinned
+                            //console.log('已貼到固定欄位')
+                            pasteOnPinned = true //已貼到固定欄位, 強制修改為true
+                        }
+                        else if (pasteOnPinned === true) {
+                            //console.log('已貼過固定欄位, 允許貼至其他固定欄位')
+                        }
+                        else {
+                            //console.log('雖然是貼到固定欄位, 但尚未貼到原本固定欄位, 強制取消')
+                            continue
+                        }
+                    }
+                    else {
+                        //console.log('貼於固定欄位時, 數據只允許貼到該固定欄位上', pasteOnPinned, v)
+                        continue //貼於固定欄位時, 數據只允許貼到該固定欄位上
+                    }
+                }
+                else { //不是貼於固定欄位時
+                    if (kpPinned[v]) {
+                        //console.log('不是貼於固定欄位時, 數據貼到固定欄位則跳過', pasteOnPinned, v, kpPinned[v])
+                        continue //不是貼於固定欄位時, 數據貼到固定欄位則跳過
+                    }
                 }
 
                 //add i

@@ -44,31 +44,49 @@ export default {
     data: function() {
         return {
             'opt': {
-                keys: ['make', 'model', 'price', 'index'],
+                keys: ['make', 'model', 'price', 'index', 'int', 'tongue'],
                 kpHead: {
                     'make': 'make(true)',
                     'model': 'model(false)',
                     'price': 'price(true)',
                     'index': 'index(true)',
+                    'int': 'int(true)',
+                    'tongue': 'tongue(true)',
                 },
                 kpCellEditable: { //default: false
                     'make': true,
                     // 'model': false,
                     'price': true,
                     'index': true,
+                    'int': true,
+                    'tongue': true,
                 },
                 kpHeadHide: { //default: false
                     // 'make': false,
                     // 'model': false,
                     'price': true,
                     // 'index': false,
+                    // 'int': false,
+                    // 'tongue': false,
+                },
+                kpHeadFixLeft: { //default: false
+                    // 'make':false,
+                    // 'model': false,
+                    // 'price': false,
+                    'index': true,
+                    'int': true,
+                    // 'tongue': false,
                 },
                 rows: [
-                    { 'make': 'Toyota', 'model': 'Celica', 'price': 35000, 'index': 0 },
-                    { 'make': 'Ford', 'model': 'Mondeo', 'price': 32000, 'index': 1 },
-                    { 'make': 'Porsche', 'model': 'Boxter', 'price': 72000, 'index': 2 },
-                    { 'make': 'BMW', 'model': 'Sedan', 'price': 66000, 'index': 3 },
-                    { 'make': 'Nissan', 'model': 'March', 'price': 61000, 'index': 4 }],
+                    { 'make': 'Toyota', 'model': 'Celica', 'price': 35000, 'index': 0, 'int': 123, 'tongue': 'a' },
+                    { 'make': 'Ford', 'model': 'Mondeo', 'price': 32000, 'index': 1, 'int': 234, 'tongue': 'bc' },
+                    { 'make': 'Porsche', 'model': 'Boxter', 'price': 72000, 'index': 2, 'int': 345, 'tongue': 'def' },
+                    { 'make': 'BMW', 'model': 'Sedan', 'price': 66000, 'index': 3, 'int': 456, 'tongue': 'ghij' },
+                    { 'make': 'Nissan', 'model': 'March', 'price': 61000, 'index': 4, 'int': 567, 'tongue': 'klmno' },
+                    { 'make': 'Lexus', 'model': 'RX', 'price': 56000, 'index': 5, 'int': 678, 'tongue': 'oprs' },
+                    { 'make': 'Audi', 'model': 'A6 Allroad', 'price': 45000, 'index': 6, 'int': 789, 'tongue': 'tuv' },
+                    { 'make': 'Mazda', 'model': 'MX-5', 'price': 36000, 'index': 7, 'int': 890, 'tongue': 'wx' },
+                ],
             },
             'action': [
             ],
@@ -78,14 +96,32 @@ export default {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
 
+        let text1 = 'pt1:col1-row1\tpt1:col2-row1\tpt1:col3-row1\tpt1:col4-row1\tpt1:col5-row1\npt1:col1-row2\tpt1:col2-row2\tpt1:col3-row2\tpt1:col4-row2\tpt1:col5-row2\n'
+        let text2 = text1.replace(/pt1/g, 'pt2')
+
         //pasteText
         setTimeout(function() {
             try {
-                let text = 'pt-col1-row1\tpt-col2-row1\tpt-col3-row1\npt-col1-row2\tpt-col2-row2\tpt-col3-row2\n'
-                vo.$refs.rftable.pasteText(text, 2, 'make')
+                vo.$refs.rftable.pasteText(text1, 1, 'make')
             }
             catch (err) { }
         }, 1000)
+
+        //pasteText
+        setTimeout(function() {
+            try {
+                vo.$refs.rftable.pasteText(text2, 4, 'index')
+            }
+            catch (err) { }
+        }, 2000)
+
+        //pasteText
+        setTimeout(function() {
+            try {
+                vo.$refs.rftable.pasteText(text2, 7, 'int')
+            }
+            catch (err) { }
+        }, 3000)
 
     },
 }
