@@ -16,6 +16,9 @@
     <script
         src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"
     ></script>
+    <script
+        _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/dist/ag-grid-enterprise.min.noStyle.js"
+    ></script>
     <link
         rel="stylesheet"
         _href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css"
@@ -31,7 +34,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.43/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.44/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -173,8 +176,8 @@
         try {
           o.api.setFilterModel({
             model: { type: "contains", filter: "m" },
-            price: { type: "contains", filter: 3 }
-          });
+            price: { type: "contains", filter: "3" }
+          }); //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串, 故此處原本為3需改為'3'
         } catch (err) {}
       }, 3000);
     },
