@@ -26,6 +26,7 @@ let h = `
 
     <!-- ag-grid-community, do not include css -->
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <script _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/dist/ag-grid-enterprise.min.noStyle.js"></script>
     <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css">
     <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-theme-balham.css">
 

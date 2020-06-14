@@ -17,12 +17,18 @@
                 :rowData="filterRows"
                 :rowStyle="getRowsStyle"
                 :gridOptions="gridOptions"
+                _enableRangeSelection="true"
+                _copyHeadersToClipboard="true"
+                _rowSelection="'multiple'"
+                _modules="AllModules"
                 @cellClicked="agCellClick"
                 @cellDoubleClicked="agCellDbClick"
                 @cellValueChanged="agCellChange"
                 @cellMouseOver="agCellMouseEnter"
                 @cellMouseOut="agCellMouseLeave"
                 @grid-ready="onGridReady"
+
+                @cell-key-down="agCellKeyDown"
             ></ag-grid-vue>
 
         </div>
@@ -40,12 +46,15 @@ import find from 'lodash/find'
 import merge from 'lodash/merge'
 import get from 'lodash/get'
 import join from 'lodash/join'
+import split from 'lodash/split'
 import values from 'lodash/values'
 import cloneDeep from 'lodash/cloneDeep'
 import difference from 'lodash/difference'
+import trim from 'lodash/trim'
 import genID from 'wsemi/src/genID.mjs'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrhas from 'wsemi/src/arrhas.mjs'
+import sep from 'wsemi/src/sep.mjs'
 import iser from 'wsemi/src/iser.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
 import iseobj from 'wsemi/src/iseobj.mjs'
@@ -55,16 +64,19 @@ import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
 import cdbl from 'wsemi/src/cdbl.mjs'
+import cstr from 'wsemi/src/cstr.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
 import delay from 'wsemi/src/delay.mjs'
+import replace from 'wsemi/src/replace.mjs'
 import debounce from 'wsemi/src/debounce.mjs'
 import domDetect from 'wsemi/src/domDetect.mjs'
 import onTooltip from 'wsemi/src/onTooltip.mjs'
 import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator
 import 'ag-grid-community/dist/styles/ag-grid.css'
 import 'ag-grid-community/dist/styles/ag-theme-balham.css'
+// import { AllModules } from '@ag-grid-enterprise/all-modules' //ag-gird-enterprise雖可使用modules擴充支援剪貼簿貼上excel range數據, 不過由excel複製的數據會有換行字元, 此導致ag-grid解析多一列的空數據而覆蓋到原數據, 無法用
 
 
 //tooltip, 通過key查msg避免特殊html符號無法顯示
@@ -72,6 +84,22 @@ let dtmsg = {}
 window.ttWAgGridVue = function(ele, kmsg) {
     let msg = dtmsg[kmsg]
     onTooltip(ele, msg)
+}
+
+
+function parseText(contentPaste) {
+    contentPaste = trim(contentPaste)
+    contentPaste = replace(contentPaste, '\r\n', '\n')
+    contentPaste = replace(contentPaste, '\r', '\n')
+    let pRows = sep(contentPaste, '\n')
+    let pData = []
+    each(pRows, (v) => {
+        if (trim(v) !== '') {
+            let s = split(v, '\t')
+            pData.push(s)
+        }
+    })
+    return pData
 }
 
 
@@ -147,6 +175,9 @@ export default {
             mmkey: null,
             de: null,
 
+            evPaste: null,
+            dataPasted: '',
+
             width: 100,
             opacity: 0,
 
@@ -201,9 +232,10 @@ export default {
             vCellMouseLeave: null,
             eCellMouseLeaves: [],
 
+            // AllModules,
             gridOptions: {
                 animateRows: true,
-                // floatingFilter: true,
+                // floatingFilter: true, //ag-grid 23.1已改為由column給予floatingFilter
                 rowDragManaged: true,
                 singleClickEdit: true, //單點即可變更
                 localeText: { noRowsToShow: '無數據' },
@@ -240,6 +272,19 @@ export default {
             }
         })
 
+        //paste
+        vo.evPaste = (e) => {
+            //console.log('paste', e)
+
+            //clipboardData
+            let clipboardData = event.clipboardData || window.clipboardData
+
+            //save dataPasted
+            vo.dataPasted = clipboardData.getData('Text')
+
+        }
+        window.addEventListener('paste', vo.evPaste, false)
+
     },
     beforeDestroy: function() {
         //console.log('beforeMount')
@@ -248,6 +293,9 @@ export default {
 
         //釋放監聽
         vo.de.clear()
+
+        //removeEventListener
+        window.removeEventListener('paste', vo.evPaste)
 
     },
     computed: {
@@ -259,13 +307,12 @@ export default {
 
             //opt for trigger
             let opt = vo.opt
+            vo.__temp__ = { opt }
 
             //changeOpt
             vo.changeOpt()
 
-            return {
-                opt: opt
-            }
+            return ''
         },
 
         getRowsStyle: function(params) {
@@ -539,6 +586,177 @@ export default {
                 vo.vRowMouseLeave = tvRowMouseLeave
                 vo.emitRowMouseLeaves()
             }
+
+        },
+
+        agCellKeyDown: function(param) {
+            //console.log('methods agCellKeyDown', param)
+
+            let vo = this
+
+            //check, 由剪貼簿貼上
+            if (!(param.event.ctrlKey && param.event.code === 'KeyV')) {
+                return
+            }
+            //console.log('param', param)
+
+            //showRowIndNow , showColKeyNow
+            let showRowIndNow = param.rowIndex
+            // console.log('showRowIndNow', showRowIndNow)
+
+            //showColKeyNow
+            let showColKeyNow = param.column.colId
+            // console.log('showColKeyNow', showColKeyNow)
+
+            //pasteText
+            vo.pasteText(vo.dataPasted, showRowIndNow, showColKeyNow)
+
+        },
+
+        pasteText: function(text, showRowIndNow = null, showColKeyNow = null) {
+            //console.log('methods pasteText', text, showRowIndNow, showColKeyNow)
+
+            let vo = this
+
+            //mShowRowInds
+            let mShowRowInds = []
+            let mData = []
+            vo.gridOptions.api.forEachNodeAfterFilterAndSort(function(node, k) {
+                //console.log('node', node)
+                mShowRowInds.push(node.id)
+                mData.push(node.data)
+            })
+            // console.log('mShowRowInds', mShowRowInds)
+            // console.log('mData', mData)
+
+            //check
+            if (size(mShowRowInds) === 0) {
+                //console.log('無有效之當前顯示數據')
+                return
+            }
+
+            //mShowColKeys
+            let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
+            mShowColKeys = map(mShowColKeys, (v, k) => {
+                return v.getId()
+            })
+            //console.log('mShowColKeys', mShowColKeys)
+
+            //check
+            if (size(mShowColKeys) === 0) {
+                //console.log('無有效之當前顯示數據')
+                return
+            }
+
+            //kpHide
+            let cs = vo.gridOptions.columnApi.getColumnState()
+            let kpHide = {}
+            each(cs, (v) => {
+                kpHide[v.colId] = v.hide
+            })
+            //console.log('kpHide', kpHide)
+
+            //check
+            if (kpHide[showColKeyNow]) {
+                //console.log('貼於禁止編輯的儲存格, 強制取消')
+                return
+            }
+
+            //kpEditable
+            let cd = vo.gridOptions.columnDefs
+            let kpEditable = {}
+            each(cd, (v) => {
+                kpEditable[v.field] = v.editable
+            })
+            //console.log('kpEditable', kpEditable)
+
+            //dataPaste
+            let dataPaste = parseText(text)
+            //console.log('dataPaste', dataPaste)
+
+            //default
+            if (showRowIndNow === null) {
+                showRowIndNow = 0
+            }
+            if (showColKeyNow === null) {
+                showColKeyNow = mShowColKeys[0]
+            }
+
+            //pasteRowMax, pasteColMax
+            let pasteRowMax = null
+            let pasteColMax = null
+            try {
+                pasteRowMax = size(dataPaste)
+            }
+            catch (err) {
+                //console.log('無法計算貼上數據列的總量', err)
+                return
+            }
+            try {
+                pasteColMax = size(dataPaste[0])
+            }
+            catch (err) {
+                //console.log('無法計算貼上數據行的總量', err)
+                return
+            }
+
+            //paste
+            let i = -1
+            let rowsTemp = cloneDeep(vo.rows)
+            for (let ii = 0; ii < size(mShowColKeys); ii++) {
+                let v = mShowColKeys[ii]
+                //console.log('v', v)
+
+                //check
+                if (kpHide[v]) {
+                    continue //隱藏欄位故跳過, 貼上欄位showColKeyNow是在前面已先檢查, 故不會由右邊欄位開始貼
+                }
+
+                //add i
+                if (v === showColKeyNow) {
+                    i = 0
+                }
+                else if (i >= 0) { //當出現>=0就代表已經找到showColKey
+                    i += 1
+                }
+
+                //modify data
+                if (i >= 0 && i < pasteColMax) {
+                    let pasteColInd = i
+                    let trueColKey = v
+                    // console.log('pasteColInd', pasteColInd, 'trueColKey', trueColKey)
+
+                    //check
+                    if (!kpEditable[trueColKey]) {
+                        continue //禁止編輯欄位故跳過, i的增加還是得照常處理, 也就是只有不能編輯欄位的數據不變更
+                    }
+
+                    for (let j = 0; j < pasteRowMax; j++) {
+                        let pasteRowInd = j
+                        if (showRowIndNow + j < size(mShowRowInds)) {
+                            let trueRowInd = mShowRowInds[showRowIndNow + j]
+                            // console.log('pasteRowInd', pasteRowInd, 'trueRowInd', trueRowInd)
+
+                            // //pasteValue
+                            // let pasteValue = dataPaste[pasteRowInd][pasteColInd]
+                            // console.log('pasteValue', pasteValue)
+
+                            // //trueValue
+                            // let trueValue = rowsTemp[trueRowInd][trueColKey]
+                            // console.log('trueValue', trueValue)
+
+                            //save
+                            rowsTemp[trueRowInd][trueColKey] = dataPaste[pasteRowInd][pasteColInd]
+
+                        }
+
+                    }
+                }
+
+            }
+
+            //update
+            vo.rows = rowsTemp
 
         },
 
@@ -931,6 +1149,9 @@ export default {
                 //editable
                 o.editable = vo.kpCellEditable[key]
 
+                //flex
+                // o.flex = 1
+
                 //funHeadTooltip
                 let funHeadTooltip = vo.kpHeadTooltip[key]
 
@@ -1172,7 +1393,7 @@ export default {
             //setModel
             ft.setModel({
                 type: type,
-                filter: value
+                filter: cstr(value), //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串
             })
 
             //fire onFilterChanged
@@ -1273,13 +1494,13 @@ export default {
 .CompCssWAgGridVue .ag-theme-balham .ag-header {
     font-family: inherit;
 }
-.CompCssWAgGridVue .ag-input-field-input {
+.CompCssWAgGridVue .ag-header-cell .ag-input-field-input, .ag-filter .ag-input-field-input {
     transition: all 0.5s;
     padding: 3px 8px;
     box-shadow: inherit !important;
     background-color: #fff;
     border: 1px solid #ccc;
-    border-radius: 10px;
+    border-radius: 5px;
 }
 .CompCssWAgGridVue .ag-input-field-input:focus {
     border: 1px solid #777;

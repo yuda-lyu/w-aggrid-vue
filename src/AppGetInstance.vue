@@ -78,7 +78,7 @@ export default {
         //use api filter model and price
         setTimeout(function() {
             try {
-                o.api.setFilterModel({ model: { type: 'contains', filter: 'm' }, price: { type: 'contains', filter: 3 } })
+                o.api.setFilterModel({ model: { type: 'contains', filter: 'm' }, price: { type: 'contains', filter: '3' } }) //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串, 故此處原本為3需改為'3'
             }
             catch (err) {}
         }, 3000)

@@ -93,6 +93,8 @@
 
                     <AppGetDisplayData v-if="showCmp==='getDisplayData'"></AppGetDisplayData>
 
+                    <AppPasteText v-if="showCmp==='pasteText'"></AppPasteText>
+
                     <AppFitColumns v-if="showCmp==='fitColumns'"></AppFitColumns>
 
                     <AppAutoFitColumns v-if="showCmp==='autoFitColumns'"></AppAutoFitColumns>
@@ -187,6 +189,7 @@ import AppDefHeadSort from './AppDefHeadSort.vue'
 import AppDefHeadSortMethod from './AppDefHeadSortMethod.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
 import AppGetDisplayData from './AppGetDisplayData.vue'
+import AppPasteText from './AppPasteText.vue'
 import AppFitColumns from './AppFitColumns.vue'
 import AppAutoFitColumns from './AppAutoFitColumns.vue'
 import AppGetInstance from './AppGetInstance.vue'
@@ -242,6 +245,7 @@ export default {
         AppDefHeadSortMethod,
         AppFilterAllData,
         AppGetDisplayData,
+        AppPasteText,
         AppFitColumns,
         AppAutoFitColumns,
         AppGetInstance,
@@ -337,6 +341,7 @@ export default {
                 funcs: [
                     'filterAllData',
                     'getDisplayData',
+                    'pasteText',
                     'fitColumns',
                     'autoFitColumns',
                     'operateData',

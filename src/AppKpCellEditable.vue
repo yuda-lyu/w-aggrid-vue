@@ -45,6 +45,11 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
+                kpHead: {
+                    'make': 'make(false)',
+                    'model': 'model(false)',
+                    'price': 'price(true)',
+                },
                 kpCellEditable: { //default: false
                     //'make':false,
                     //'model':false,
