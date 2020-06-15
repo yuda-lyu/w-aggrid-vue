@@ -6,9 +6,9 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;" title>kpRowStyle</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpRowStyle.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpRowStyle.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;" title>kpColStyle</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpColStyle.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpColStyle.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
@@ -45,25 +45,14 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpRowStyle: {
-                    'make': function(v) {
-                        if (v.indexOf('Audi') >= 0) {
-                            return { 'background': '#af6' }
-                        }
-                        return {}
+                kpColStyle: {
+                    'price': function() {
+                        return { 'background': '#2ca', 'color': '#fff' }
                     },
-                    'model': function(v) {
-                        if (v.indexOf('Sedan') >= 0) {
-                            return { 'background': '#afb' }
-                        }
-                        return {}
-                    },
-                    //'price': null,
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
-
             ],
         }
     },

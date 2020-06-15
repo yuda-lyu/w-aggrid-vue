@@ -26,9 +26,8 @@
                 @cellValueChanged="agCellChange"
                 @cellMouseOver="agCellMouseEnter"
                 @cellMouseOut="agCellMouseLeave"
-                @grid-ready="onGridReady"
-
                 @cell-key-down="agCellKeyDown"
+                @grid-ready="onGridReady"
             ></ag-grid-vue>
 
         </div>
@@ -120,8 +119,9 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設為各key值為defHeadFilter
  * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設為各key值為defHeadDrag
- * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定key欄之cell值所需對應之row style，預設為{}
- * @vue-prop {Object} [opt.kpRowDrag={}] [專有:ag-grid] 輸入key對應row之是否能拖曳排序物件，預設為各key值為false
+ * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定各key欄之函數，函數給予cell值需回傳之row style，預設為{}
+ * @vue-prop {Object} [opt.kpRowDrag={}] 輸入key對應col之是否能拖曳排序物件，預設為各key值為false
+ * @vue-prop {Object} [opt.kpColStyle={}] 輸入key對應row style之物件，可設定各key欄之col style，預設為{}
  * @vue-prop {Number} [opt.defCellMinWidth=null] 輸入cell預設最小寬度數字，預設為null
  * @vue-prop {Object} [opt.kpCellWidth=null] 輸入key對應cell之寬度物件，預設為各key值為null
  * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設為{}
@@ -202,7 +202,8 @@ export default {
             kpHeadDrag: {},
             kpHeadHide: {},
             kpRowStyle: {},
-            kpRowDrag: {}, //ag-grid才有
+            kpRowDrag: {},
+            kpColStyle: {},
             defCellMinWidth: null,
             kpCellWidth: {},
             kpCellRender: {},
@@ -961,12 +962,20 @@ export default {
                 vo.kpRowStyle = vo.opt.kpRowStyle
             }
 
-            //kpRowDrag, ag-grid才有
+            //kpRowDrag
             vo.kpRowDrag = setobj(vo.keys,
                 function(key) {
                     return false //預設false
                 },
                 vo.opt.kpRowDrag
+            )
+
+            //kpColStyle
+            vo.kpColStyle = setobj(vo.keys,
+                function(key) {
+                    return null //預設null
+                },
+                vo.opt.kpColStyle
             )
 
             //defCellMinWidth
@@ -1248,7 +1257,10 @@ export default {
 
                 //render
                 o.cellRenderer = function(params) {
-                    //console.log('cellRenderer', params)
+                    // console.log('cellRenderer', params)
+
+                    //待加入於編輯cell後可顯示編輯後值的tooltip
+                    // console.log('trueRowId', params.node.id, 'trueColKey', params.column.colId)
 
                     //funCellTooltip
                     if (isfun(funCellTooltip)) {
@@ -1265,6 +1277,15 @@ export default {
                         //onmouseenter
                         params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
 
+                    }
+
+                    //kpColStyle
+                    let funColStyle = vo.kpColStyle[params.column.colId]
+                    if (isfun(funColStyle)) {
+                        let s = funColStyle()
+                        each(s, (v, k) => {
+                            params.eGridCell.style[k] = v
+                        })
                     }
 
                     //h

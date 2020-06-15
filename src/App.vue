@@ -135,6 +135,8 @@
 
                     <AppKpRowStyle v-if="showCmp==='kpRowStyle'"></AppKpRowStyle>
 
+                    <AppKpColStyle v-if="showCmp==='kpColStyle'"></AppKpColStyle>
+
                     <AppLargeData v-if="showCmp==='largeData'"></AppLargeData>
 
                     <AppOperateData v-if="showCmp==='operateData'"></AppOperateData>
@@ -210,6 +212,7 @@ import AppKpHeadSortMethod from './AppKpHeadSortMethod.vue'
 import AppKpHeadTooltip from './AppKpHeadTooltip.vue'
 import AppKpRowDrag from './AppKpRowDrag.vue'
 import AppKpRowStyle from './AppKpRowStyle.vue'
+import AppKpColStyle from './AppKpColStyle.vue'
 import AppLargeData from './AppLargeData.vue'
 import AppOperateData from './AppOperateData.vue'
 import AppRowChange from './AppRowChange.vue'
@@ -266,6 +269,7 @@ export default {
         AppKpHeadTooltip,
         AppKpRowDrag,
         AppKpRowStyle,
+        AppKpColStyle,
         AppLargeData,
         AppOperateData,
         AppRowChange,
@@ -337,6 +341,9 @@ export default {
                 kpRow: [
                     'kpRowDrag',
                     'kpRowStyle',
+                ],
+                kpCol: [
+                    'kpColStyle',
                 ],
                 funcs: [
                     'filterAllData',
