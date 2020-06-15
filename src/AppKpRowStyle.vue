@@ -70,6 +70,24 @@ export default {
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
+
+        //slice data
+        setTimeout(function() {
+            try {
+
+                //cloneDeep
+                let rows = JSON.parse(JSON.stringify(window.dataEasy))
+
+                //slice
+                rows = rows.slice(2, 9)
+
+                //set
+                vo.opt.rows = rows
+
+            }
+            catch (err) {}
+        }, 1000)
+
     },
 }
 </script>

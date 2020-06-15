@@ -365,7 +365,7 @@ export default {
             each(vo.kpRowStyle, function(v, k) {
                 let f = v
                 let d = get(params.data, k)
-                if (isfun(f) && d) {
+                if (isfun(f)) {
                     style = merge(style, f(d))
                 }
             })
@@ -809,7 +809,11 @@ export default {
             await delay(1)
 
             //redrawRows, 因資料變更不會觸發getRowStyle, 給自行redrawRows
-            vo.gridOptions.api.redrawRows()
+            //可能因使用者切換組件被destroy, 故需try catch
+            try {
+                vo.gridOptions.api.redrawRows()
+            }
+            catch (err) {}
 
         },
 
@@ -1279,15 +1283,6 @@ export default {
 
                     }
 
-                    //kpColStyle
-                    let funColStyle = vo.kpColStyle[params.column.colId]
-                    if (isfun(funColStyle)) {
-                        let s = funColStyle()
-                        each(s, (v, k) => {
-                            params.eGridCell.style[k] = v
-                        })
-                    }
-
                     //h
                     let h = params.value
 
@@ -1298,6 +1293,16 @@ export default {
 
                     return h
                 }
+
+                //cellStyle
+                let cellStyle = {
+                    'text-align': vo.kpCellAlighH[key] //add align
+                }
+                let funColStyle = vo.kpColStyle[key]
+                if (isfun(funColStyle)) {
+                    cellStyle = merge(cellStyle, funColStyle()) //add col style
+                }
+                o.cellStyle = cellStyle
 
                 //selectable
                 o.checkboxSelection = false
@@ -1311,11 +1316,6 @@ export default {
                     //suppressSizeToFit, 禁止被sizeColumnsToFit
                     o.suppressSizeToFit = true
 
-                }
-
-                //align
-                o.cellStyle = {
-                    'text-align': vo.kpCellAlighH[key],
                 }
 
                 //width, 內容物超過width不會自動撐開
