@@ -71,7 +71,7 @@ import delay from 'wsemi/src/delay.mjs'
 import replace from 'wsemi/src/replace.mjs'
 import debounce from 'wsemi/src/debounce.mjs'
 import domDetect from 'wsemi/src/domDetect.mjs'
-import onTooltip from 'wsemi/src/onTooltip.mjs'
+import domTooltip from 'wsemi/src/domTooltip.mjs'
 import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator
 import 'ag-grid-community/dist/styles/ag-grid.css'
 import 'ag-grid-community/dist/styles/ag-theme-balham.css'
@@ -82,7 +82,7 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css'
 let dtmsg = {}
 window.ttWAgGridVue = function(ele, kmsg) {
     let msg = dtmsg[kmsg]
-    onTooltip(ele, msg)
+    domTooltip(ele, msg)
 }
 
 
