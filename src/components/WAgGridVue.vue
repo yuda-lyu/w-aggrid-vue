@@ -1313,8 +1313,10 @@ export default {
                     //pinned
                     o.pinned = vo.kpHeadFixLeft[key] ? 'left' : ''
 
-                    //suppressSizeToFit, 禁止被sizeColumnsToFit
-                    o.suppressSizeToFit = true
+                    // //suppressSizeToFit, true代表禁止欄位被sizeColumnsToFit, 因有pinned也需能resize與自動調整寬度, 故取消此功能
+                    // if (vo.kpHeadFixLeft[key]) {
+                    //     o.suppressSizeToFit = true
+                    // }
 
                 }
 
@@ -1518,12 +1520,14 @@ export default {
 
             //core
             async function core() {
+                //ag-grid 23.2.1已能正常fit至100%, 不會因微小差距而出現水平捲軸, 故關閉先縮小再還原機制
+                //但縮放第3次時有些欄位header會爆版, 故還是得使用先縮小再還原機制
 
                 //先微縮小fit
                 await fit(99.5)
 
                 //delay
-                await delay(50) //不能過短, 否則先縮小再還原機制會失效
+                await delay(30) //不能過短, 否則先縮小再還原機制會失效, header會爆版
 
                 //還原fit
                 await fit(100)
@@ -1535,7 +1539,7 @@ export default {
                 //debounce, 避免高頻觸發
                 debounce(`${vo.mmkey}|fitColumns`, () => {
                     core()
-                })
+                }, 50)
             }
             else {
                 core()
