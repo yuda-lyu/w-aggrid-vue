@@ -1261,7 +1261,7 @@ export default {
 
                 //render
                 o.cellRenderer = function(params) {
-                    // console.log('cellRenderer', params)
+                    //console.log('cellRenderer', params)
 
                     //待加入於編輯cell後可顯示編輯後值的tooltip
                     // console.log('trueRowId', params.node.id, 'trueColKey', params.column.colId)
@@ -1270,7 +1270,7 @@ export default {
                     if (isfun(funCellTooltip)) {
 
                         //tooltip
-                        let t = funCellTooltip(params.value)
+                        let t = funCellTooltip(params.value, params.colDef.field, cloneDeep(params.data))
 
                         //kmsg
                         let kmsg = str2md5(t)
@@ -1288,7 +1288,7 @@ export default {
 
                     //funCellRender
                     if (isfun(funCellRender)) {
-                        h = funCellRender(params.value, cloneDeep(params.data))
+                        h = funCellRender(params.value, params.colDef.field, cloneDeep(params.data))
                     }
 
                     return h
