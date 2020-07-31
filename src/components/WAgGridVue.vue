@@ -81,6 +81,9 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css'
 //tooltip, 通過key查msg避免特殊html符號無法顯示
 let dtmsg = {}
 window.ttWAgGridVue = function(ele, kmsg) {
+    if (!isestr(kmsg)) {
+        return
+    }
     let msg = dtmsg[kmsg]
     domTooltip(ele, msg)
 }
@@ -130,27 +133,28 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpCellAlighH={}] 輸入key對應cell之左右對齊字串物件，預設為各key值為defCellAlighH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設為各key值為defCellEditable
- * @vue-prop {Function} [opt.rowClick={}] 輸入row click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowDbClick={}] 輸入row double click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowChange={}] 輸入row change之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowMouseEnter={}] 輸入row mouseenter之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowMouseLeave={}] 輸入row mouseleave之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellClick={}] 輸入cell click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellDbClick={}] 輸入cell double click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellChange={}] 輸入cell change之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellMouseEnter={}] 輸入cell mouseenter之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellMouseLeave={}] 輸入cell mouseleave之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowClick=function(){}] 輸入row click之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowDbClick=function(){}] 輸入row double click之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowChange=function(){}] 輸入row change之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowMouseEnter=function(){}] 輸入row mouseenter之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowMouseLeave=function(){}] 輸入row mouseleave之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.cellClick=function(){}] 輸入cell click之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.cellDbClick=function(){}] 輸入cell double click之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.cellChange=function(){}] 輸入cell change之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.cellMouseEnter=function(){}] 輸入cell mouseenter之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.cellMouseLeave=function(){}] 輸入cell mouseleave之觸發事件，預設為function(){}
  * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬，預設false
  * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
- * @vue-event {Null} refresh 刷新表格，無輸入與回傳
- * @vue-event {Array} showKeys 指定欲顯示欄位的keys，數量最多為原本初始化的keys，可更改順序，無回傳
- * @vue-event {Array} setHeadFilter 指定欄位的key與要過濾的值value，會於界面上指定欄進行過濾
- * @vue-event {Array} clearHeadFilter 指定欄位的key並清除當前所使用的過濾值
- * @vue-event {Array} clearHeadFilterAll 清除當前所有欄位所使用的過濾值
- * @vue-event {Null} getDisplayData 無輸入，會回傳目前表格所顯示之數據
- * @vue-event {Null} getInstance 無輸入，會回傳ag-grid表格實例物件
- * @vue-event {Null} fitColumns 無輸入，會進行擴充版的sizeColumnsToFit
+ * @vue-method {Null} refresh 無輸入與回傳，刷新表格
+ * @vue-method {Array} showKeys 輸入指定欲顯示欄位的keys，數量最多為原本初始化的keys，可更改順序，無回傳
+ * @vue-method {Array} setHeadFilter 輸入指定欄位的key與要過濾的值value，會於界面上指定欄進行過濾
+ * @vue-method {Array} clearHeadFilter 輸入指定欄位的key並清除當前所使用的過濾值
+ * @vue-method {Array} clearHeadFilterAll 無輸入與回傳，清除當前所有欄位所使用的過濾值
+ * @vue-method {Null} getDisplayData 無輸入，會回傳目前表格所顯示之數據
+ * @vue-method {Null} getInstance 無輸入，會回傳ag-grid表格實例物件
+ * @vue-method {Null} fitColumns 無輸入與回傳，自動調整欄寬
+ * @vue-method {String} pasteText 輸入text為欲貼上的文字，showRowIndNow為貼上的列指標整數，預設null，showColKeyNow為貼上的欄位key值字串，預設null
  */
 export default {
     components: {
@@ -1214,6 +1218,9 @@ export default {
                     //tooltip
                     let t = funHeadTooltip(vo.kpHead[key])
 
+                    //cstr
+                    t = cstr(t)
+
                     //kmsg
                     let kmsg = str2md5(t)
 
@@ -1271,6 +1278,9 @@ export default {
 
                         //tooltip
                         let t = funCellTooltip(params.value, params.colDef.field, cloneDeep(params.data))
+
+                        //cstr
+                        t = cstr(t)
 
                         //kmsg
                         let kmsg = str2md5(t)
