@@ -6,7 +6,7 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;" title>kpColStyle</span>
+                    <span style="font-size:1.5rem; margin-right:20px;">kpColStyle</span>
                     <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpColStyle.html" target="_blank" class="item-link item-shadow">example</a>
                     <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpColStyle.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>

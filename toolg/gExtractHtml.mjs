@@ -25,10 +25,10 @@ let h = `
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
 
     <!-- ag-grid-community, do not include css -->
-    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
-    <script _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/dist/ag-grid-enterprise.min.noStyle.js"></script>
-    <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-grid.css">
-    <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/styles/ag-theme-balham.css">
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@23.2.1/dist/ag-grid-community.min.noStyle.js"></script>
+    <script _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@23.2.1/dist/ag-grid-enterprise.min.noStyle.js"></script>
+    <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community@23.2.1/dist/styles/ag-grid.min.css">
+    <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community@23.2.1/dist/styles/ag-theme-balham.min.css">
 
     <!-- ag-grid-vue -->
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue/dist/ag-grid-vue.umd.min.js"></script>

@@ -643,9 +643,17 @@ export default {
             //mShowColKeys
             let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
             mShowColKeys = map(mShowColKeys, (v, k) => {
+                // console.log('v', v.getId)
+                // let fGetId = get(v, 'getId')
+                // if (isfun(fGetId)) {
+                //     return fGetId()
+                // }
+                // else {
+                //     return null
+                // }
                 return v.getId()
             })
-            //console.log('mShowColKeys', mShowColKeys)
+            console.log('mShowColKeys', mShowColKeys)
 
             //check
             if (size(mShowColKeys) === 0) {
@@ -1519,8 +1527,11 @@ export default {
                     //getInstance
                     let o = vo.getInstance()
 
-                    //sizeColumnsToFit
-                    o.api.sizeColumnsToFit()
+                    //sizeColumnsToFit, 有可能於高頻初始化與解構時, 例如切換分頁, 導致可能取不到sizeColumnsToFit
+                    let funSizeColumnsToFit = get(o, 'api.sizeColumnsToFit')
+                    if (isfun(funSizeColumnsToFit)) {
+                        o.api.sizeColumnsToFit()
+                    }
 
                 }
                 catch (err) {

@@ -6,7 +6,7 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;" title>rowClick</span>
+                    <span style="font-size:1.5rem; margin-right:20px;">rowClick</span>
                     <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-rowClick.html" target="_blank" class="item-link item-shadow">example</a>
                     <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-rowClick.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
