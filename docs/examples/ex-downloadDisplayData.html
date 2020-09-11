@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for clearHeadFilterAll</title>
+    <title>example for downloadDisplayData</title>
 
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
@@ -104,14 +104,14 @@
                 <div style="margin:20px 0px;">
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
-                    >clearHeadFilterAll</span>
+                    >downloadDisplayData</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearHeadFilterAll.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-downloadDisplayData.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearHeadFilterAll.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-downloadDisplayData.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
@@ -144,7 +144,12 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
-          rows: JSON.parse(JSON.stringify(window.dataEasy))
+          rows: JSON.parse(JSON.stringify(window.dataEasy)),
+          kpHead: {
+            make: "make(製作)",
+            model: "model(モデル)",
+            price: "price(价钱)"
+          }
         },
         action: []
       };
@@ -153,24 +158,37 @@
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
 
-      //setHeadFilter
+      //hide 'model' column and reverse keys order
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("price", 6);
+          vo.$refs.rftable.showKeys(["price", "make"]);
         } catch (err) {}
       }, 1000);
 
       //setHeadFilter
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("model", "m");
+          vo.$refs.rftable.setHeadFilter("price", 5);
         } catch (err) {}
       }, 2000);
 
-      //clearHeadFilterAll
+      //downloadDisplayData
       setTimeout(function() {
         try {
-          vo.$refs.rftable.clearHeadFilterAll();
+          let ddata = vo.$refs.rftable.downloadDisplayData({
+            funGetKeysHook: function(keys) {
+              //can modify keys
+              return keys;
+            },
+            //useHead: true, //default: false
+            fileName: "data.xlsx",
+            sheetName: null, //default: data
+            pathItems: null //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js'
+          });
+          document.querySelector("#ckmsg").innerHTML =
+            "trigger: downloadDisplayData\n\n" +
+            "data: " +
+            JSON.stringify(ddata, null, 2);
         } catch (err) {}
       }, 3000);
     },

@@ -31,7 +31,7 @@
 
                                     <div
                                         style="position:absolute; top:-5px; right:-10px; padding:1px 7px; opacity:0.8; font-size:0.5rem; color:#fff; background-color:#f26; border-radius:10px;"
-                                        v-if="cmp[0]==='d'"
+                                        v-if="cmp.substring(0, 3)==='def'"
                                     >
                                         def
                                     </div>
@@ -92,6 +92,12 @@
                     <AppFilterAllData v-if="showCmp==='filterAllData'"></AppFilterAllData>
 
                     <AppGetDisplayData v-if="showCmp==='getDisplayData'"></AppGetDisplayData>
+
+                    <AppDownloadData v-if="showCmp==='downloadData'"></AppDownloadData>
+
+                    <AppDownloadDisplayData v-if="showCmp==='downloadDisplayData'"></AppDownloadDisplayData>
+
+                    <AppUploadData v-if="showCmp==='uploadData'"></AppUploadData>
 
                     <AppPasteText v-if="showCmp==='pasteText'"></AppPasteText>
 
@@ -191,6 +197,9 @@ import AppDefHeadSort from './AppDefHeadSort.vue'
 import AppDefHeadSortMethod from './AppDefHeadSortMethod.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
 import AppGetDisplayData from './AppGetDisplayData.vue'
+import AppDownloadData from './AppDownloadData.vue'
+import AppDownloadDisplayData from './AppDownloadDisplayData.vue'
+import AppUploadData from './AppUploadData.vue'
 import AppPasteText from './AppPasteText.vue'
 import AppFitColumns from './AppFitColumns.vue'
 import AppAutoFitColumns from './AppAutoFitColumns.vue'
@@ -248,6 +257,9 @@ export default {
         AppDefHeadSortMethod,
         AppFilterAllData,
         AppGetDisplayData,
+        AppDownloadData,
+        AppDownloadDisplayData,
+        AppUploadData,
         AppPasteText,
         AppFitColumns,
         AppAutoFitColumns,
@@ -348,6 +360,9 @@ export default {
                 funcs: [
                     'filterAllData',
                     'getDisplayData',
+                    'downloadData',
+                    'downloadDisplayData',
+                    'uploadData',
                     'pasteText',
                     'fitColumns',
                     'autoFitColumns',

@@ -6,14 +6,18 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">autoFitColumns</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-autoFitColumns.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-autoFitColumns.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">uploadData</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-uploadData.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-uploadData.html" target="_blank" class="item-link item-shadow">code</a>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <button @click="upload">Upload excel file (with key for head)</button>
                 </div>
 
                 <WAgGridVue
+                    style="width:620px;"
                     ref="rftable"
-                    :style="`width:${opt.width}px;`"
                     :opt="opt"
                 ></WAgGridVue>
 
@@ -44,10 +48,13 @@ export default {
     data: function() {
         return {
             'opt': {
-                width: 620,
                 keys: ['make', 'model', 'price'],
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
-                autoFitColumn: true,
+                kpHead: {
+                    'make': 'make(製作)',
+                    'model': 'model(モデル)',
+                    'price': 'price(价钱)',
+                },
             },
             'action': [
 
@@ -57,31 +64,23 @@ export default {
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
-
-        //change width
-        setTimeout(function() {
+    },
+    methods: {
+        upload: function() {
+            let vo = this
             try {
-                vo.opt.width = 400
+                vo.$refs.rftable.uploadData({
+                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js'
+                })
+                    .then(function(ddata) {
+                        document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)
+                    })
+                    .catch(function (err) {
+                        console.log(err)
+                    })
             }
             catch (err) { }
-        }, 1000)
-
-        //change width
-        setTimeout(function() {
-            try {
-                vo.opt.width = 800
-            }
-            catch (err) { }
-        }, 2000)
-
-        //change width
-        setTimeout(function() {
-            try {
-                vo.opt.width = 620
-            }
-            catch (err) { }
-        }, 3000)
-
+        },
     },
 }
 </script>

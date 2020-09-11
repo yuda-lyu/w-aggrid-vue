@@ -1,15 +1,14 @@
 <template>
     <div>
 
-
         <div style="display:flex;">
 
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">defHeadAlighH</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadAlighH.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadAlighH.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">downloadData</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-downloadData.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-downloadData.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
@@ -46,8 +45,12 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                defHeadAlighH: 'left',
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
+                kpHead: {
+                    'make': 'make(製作)',
+                    'model': 'model(モデル)',
+                    'price': 'price(价钱)',
+                },
             },
             'action': [
 
@@ -57,6 +60,22 @@ export default {
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
+
+        try {
+            let ddata = vo.$refs.rftable.downloadData({
+                funGetKeysHook: function(keys) {
+                    //can modify keys
+                    return keys
+                },
+                //useHead: true, //default: false
+                fileName: 'data.xlsx',
+                sheetName: null, //default: data
+                pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js'
+            })
+            document.querySelector('#ckmsg').innerHTML = 'trigger: downloadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)
+        }
+        catch (err) { }
+
     },
 }
 </script>

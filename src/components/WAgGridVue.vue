@@ -48,6 +48,7 @@ import join from 'lodash/join'
 import split from 'lodash/split'
 import values from 'lodash/values'
 import cloneDeep from 'lodash/cloneDeep'
+import concat from 'lodash/concat'
 import difference from 'lodash/difference'
 import trim from 'lodash/trim'
 import genID from 'wsemi/src/genID.mjs'
@@ -66,6 +67,10 @@ import cdbl from 'wsemi/src/cdbl.mjs'
 import cstr from 'wsemi/src/cstr.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
+import ltdtkeys2mat from 'wsemi/src/ltdtkeys2mat.mjs'
+import downloadExcelFileFromDataDyn from 'wsemi/src/downloadExcelFileFromDataDyn.mjs'
+import domShowInputAndGetFilesU8Arrs from 'wsemi/src/domShowInputAndGetFilesU8Arrs.mjs'
+import getDataFromExcelFileU8ArrDyn from 'wsemi/src/getDataFromExcelFileU8ArrDyn.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
 import delay from 'wsemi/src/delay.mjs'
 import replace from 'wsemi/src/replace.mjs'
@@ -248,6 +253,10 @@ export default {
             },
 
             ag: null,
+
+            pathItems: [
+                'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js',
+            ],
 
         }
     },
@@ -1481,6 +1490,20 @@ export default {
 
         },
 
+        getDisplayDataKeys: function() {
+            //console.log('methods getDisplayDataKeys')
+
+            let vo = this
+
+            //cs
+            let cs = vo.gridOptions.columnApi.getColumnState()
+
+            //show keys
+            let keys = map(filter(cs, { 'hide': false }), 'colId')
+
+            return keys
+        },
+
         getDisplayData: function() {
             //console.log('methods getDisplayData')
 
@@ -1492,16 +1515,13 @@ export default {
                 rs.push(cloneDeep(node.data))
             })
 
-            //cs
-            let cs = vo.gridOptions.columnApi.getColumnState()
-
             //show keys
-            let keys = map(filter(cs, { 'hide': false }), 'colId')
+            let keys = vo.getDisplayDataKeys()
 
             //ltdtmapping
-            rs = ltdtmapping(rs, keys)
+            let data = ltdtmapping(rs, keys)
 
-            return rs
+            return data
         },
 
         getInstance: function() {
@@ -1566,6 +1586,152 @@ export default {
                 core()
             }
 
+        },
+
+        downloadDisplayData: function(opt = {}) {
+            //console.log('methods downloadData', opt)
+
+            let vo = this
+
+            //funGetKeysHook, useHead, fileName, sheetName, pathItems
+            let { funGetKeysHook = null, useHead = false, fileName = 'data.xlsx', sheetName = null, pathItems = null } = opt
+
+            //pathItems
+            if (!isearr(pathItems)) {
+                pathItems = vo.pathItems
+            }
+
+            //show keys
+            let keys = vo.getDisplayDataKeys()
+
+            //useKeys
+            let useKeys = cloneDeep(keys)
+            if (isfun(funGetKeysHook)) {
+                useKeys = funGetKeysHook(useKeys)
+            }
+            if (!isearr(useKeys)) {
+                useKeys = cloneDeep(keys)
+            }
+
+            //check
+            if (!isearr(useKeys)) {
+                console.log('invalid useKeys')
+                return
+            }
+
+            //data, 僅組件顯示資料
+            let data = vo.getDisplayData()
+
+            //ltdtkeys2mat
+            let mat = ltdtkeys2mat(data, useKeys) //依照funGetKeysHook回傳的keys再次提取數據
+
+            //heads
+            let heads = keys
+            if (useHead) {
+                heads = map(keys, (v) => {
+                    return vo.kpHead[v]
+                })
+            }
+
+            //concat
+            mat = concat([heads], mat)
+
+            //downloadExcelFileFromDataDyn
+            downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
+
+            return mat
+        },
+
+        downloadData: function(opt = {}) {
+            //console.log('methods downloadData', opt)
+
+            let vo = this
+
+            //funGetKeysHook, useHead, fileName, sheetName, pathItems
+            let { funGetKeysHook = null, useHead = false, fileName = 'data.xlsx', sheetName = null, pathItems = null } = opt
+
+            //pathItems
+            if (!isearr(pathItems)) {
+                pathItems = vo.pathItems
+            }
+
+            //keys
+            let keys = vo.keys
+
+            //useKeys
+            let useKeys = cloneDeep(keys)
+            if (isfun(funGetKeysHook)) {
+                useKeys = funGetKeysHook(useKeys)
+            }
+            if (!isearr(useKeys)) {
+                useKeys = cloneDeep(keys)
+            }
+
+            //check
+            if (!isearr(useKeys)) {
+                console.log('invalid useKeys')
+                return
+            }
+
+            //ltdtmapping
+            let data = ltdtmapping(vo.rows, useKeys)
+
+            //ltdtkeys2mat
+            let mat = ltdtkeys2mat(data, useKeys)
+
+            //heads
+            let heads = useKeys
+            if (useHead) {
+                heads = map(useKeys, (v) => {
+                    return vo.kpHead[v]
+                })
+            }
+
+            //concat
+            mat = concat([heads], mat)
+
+            //downloadExcelFileFromDataDyn
+            downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
+
+            return mat
+        },
+
+        uploadData: async function(opt = {}) {
+            //console.log('methods uploadData', opt)
+
+            let vo = this
+
+            //pathItems
+            let { pathItems = null } = opt
+
+            //pathItems
+            if (!isearr(pathItems)) {
+                pathItems = vo.pathItems
+            }
+
+            //domShowInputAndGetFilesU8Arrs
+            let d = await domShowInputAndGetFilesU8Arrs()
+
+            //取第一個檔案
+            let file = d[0]
+
+            //getDataFromExcelFileU8ArrDyn
+            let r = await getDataFromExcelFileU8ArrDyn(file.u8a, 'ltdt', false, pathItems)
+
+            //sh
+            let sh = r[0] //取第一個分頁
+            //console.log('data', sh.data)
+
+            //rows
+            let rows = sh.data
+
+            //ltdtmapping
+            rows = ltdtmapping(rows, vo.keys)
+
+            //save
+            vo.rows = rows
+
+            return rows
         },
 
     },

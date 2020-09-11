@@ -11,6 +11,7 @@
                     <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html" target="_blank" class="item-link item-shadow">example</a>
                     <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
+
                 <WAgGridVue
                     style="width:620px;"
                     ref="rftable"

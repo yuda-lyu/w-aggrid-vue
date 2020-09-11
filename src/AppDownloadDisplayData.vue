@@ -6,14 +6,14 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">autoFitColumns</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-autoFitColumns.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-autoFitColumns.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">downloadDisplayData</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-downloadDisplayData.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-downloadDisplayData.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
+                    style="width:620px;"
                     ref="rftable"
-                    :style="`width:${opt.width}px;`"
                     :opt="opt"
                 ></WAgGridVue>
 
@@ -44,10 +44,13 @@ export default {
     data: function() {
         return {
             'opt': {
-                width: 620,
                 keys: ['make', 'model', 'price'],
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
-                autoFitColumn: true,
+                kpHead: {
+                    'make': 'make(製作)',
+                    'model': 'model(モデル)',
+                    'price': 'price(价钱)',
+                },
             },
             'action': [
 
@@ -58,26 +61,36 @@ export default {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
 
-        //change width
+        //hide 'model' column and reverse keys order
         setTimeout(function() {
             try {
-                vo.opt.width = 400
+                vo.$refs.rftable.showKeys(['price', 'make'])
             }
             catch (err) { }
         }, 1000)
 
-        //change width
+        //setHeadFilter
         setTimeout(function() {
             try {
-                vo.opt.width = 800
+                vo.$refs.rftable.setHeadFilter('price', 5)
             }
             catch (err) { }
         }, 2000)
 
-        //change width
+        //downloadDisplayData
         setTimeout(function() {
             try {
-                vo.opt.width = 620
+                let ddata = vo.$refs.rftable.downloadDisplayData({
+                    funGetKeysHook: function(keys) {
+                        //can modify keys
+                        return keys
+                    },
+                    //useHead: true, //default: false
+                    fileName: 'data.xlsx',
+                    sheetName: null, //default: data
+                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js'
+                })
+                document.querySelector('#ckmsg').innerHTML = 'trigger: downloadDisplayData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)
             }
             catch (err) { }
         }, 3000)
