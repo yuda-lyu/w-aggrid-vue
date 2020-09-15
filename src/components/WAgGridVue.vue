@@ -885,7 +885,7 @@ export default {
                 return
             }
             if (!isearr(get(vo, 'opt.rows'))) {
-                console.log('invalid opt.rows')
+                vo.refresh() //因可能刪除數據使rows為[], 得要refresh才能顯示無數據樣式
                 return
             }
 
