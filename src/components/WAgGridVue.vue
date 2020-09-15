@@ -45,6 +45,7 @@ import isEqual from 'lodash/isEqual'
 import find from 'lodash/find'
 import merge from 'lodash/merge'
 import get from 'lodash/get'
+import set from 'lodash/set'
 import join from 'lodash/join'
 import split from 'lodash/split'
 import values from 'lodash/values'
@@ -1786,8 +1787,9 @@ export default {
             //ltdtmapping
             rows = ltdtmapping(rows, vo.keys)
 
-            //save
-            vo.rows = rows
+            //save, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+            // vo.rows = rows
+            set(vo, `opt.rows`, rows)
 
             return rows
         },
