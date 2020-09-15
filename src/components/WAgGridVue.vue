@@ -59,6 +59,7 @@ import sep from 'wsemi/src/sep.mjs'
 import iser from 'wsemi/src/iser.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
 import iseobj from 'wsemi/src/iseobj.mjs'
+import isarr from 'wsemi/src/isarr.mjs'
 import isearr from 'wsemi/src/isearr.mjs'
 import isestr from 'wsemi/src/isestr.mjs'
 import isnum from 'wsemi/src/isnum.mjs'
@@ -880,12 +881,18 @@ export default {
             if (!iseobj(vo.opt)) {
                 return
             }
-            if (!isearr(get(vo, 'opt.keys'))) {
+
+            //check keys
+            let tKeys = get(vo, 'opt.keys')
+            if (!isearr(tKeys)) {
                 console.log('invalid opt.keys')
                 return
             }
-            if (!isearr(get(vo, 'opt.rows'))) {
-                vo.refresh() //因可能刪除數據使rows為[], 得要refresh才能顯示無數據樣式
+
+            //check rows
+            let tRows = get(vo, 'opt.rows')
+            if (!isarr(tRows)) {
+                console.log('invalid opt.rows')
                 return
             }
 

@@ -98,6 +98,17 @@ export default {
             catch (err) {}
         }, 2000)
 
+        //delete all data
+        setTimeout(function() {
+            try {
+
+                //set
+                vo.opt.rows = []
+
+            }
+            catch (err) {}
+        }, 3000)
+
     },
 }
 </script>
