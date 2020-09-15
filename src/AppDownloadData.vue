@@ -45,15 +45,14 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                rows: JSON.parse(JSON.stringify(window.dataEasy)),
                 kpHead: {
                     'make': 'make(製作)',
                     'model': 'model(モデル)',
                     'price': 'price(价钱)',
                 },
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
-
             ],
         }
     },

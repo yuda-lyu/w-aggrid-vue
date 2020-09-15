@@ -57,7 +57,6 @@ export default {
                 rows: JSON.parse(JSON.stringify(window.dataEduagency)),
             },
             'action': [
-
             ],
         }
     },

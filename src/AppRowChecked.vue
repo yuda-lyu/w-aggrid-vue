@@ -6,9 +6,9 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">getInstance</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getInstance.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getInstance.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">rowChecked</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-rowChecked.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-rowChecked.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
@@ -45,6 +45,19 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
+                kpHead: {
+                    'make': 'make(true)',
+                    'model': 'model(false)',
+                    'price': 'price(true)',
+                },
+                kpHeadCheckBox: { //default: false
+                    'make': true,
+                    // 'model': false,
+                    // 'price': false,
+                },
+                rowChecked: function(rs) {
+                    document.querySelector('#ckmsg').innerHTML = 'trigger: rowChecked\n\n' + 'rows: ' + JSON.stringify(rs, null, 2)
+                },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
@@ -54,34 +67,6 @@ export default {
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
-
-        //getInstance
-        let o = vo.$refs.rftable.getInstance()
-
-        //use api sort price(asc)
-        setTimeout(function() {
-            try {
-                o.api.setSortModel([{ colId: 'price', sort: 'asc' }])
-            }
-            catch (err) {}
-        }, 1000)
-
-        //use api sort price(desc)
-        setTimeout(function() {
-            try {
-                o.api.setSortModel([{ colId: 'price', sort: 'desc' }])
-            }
-            catch (err) {}
-        }, 2000)
-
-        //use api filter model and price
-        setTimeout(function() {
-            try {
-                o.api.setFilterModel({ model: { type: 'contains', filter: 'm' }, price: { type: 'contains', filter: '3' } }) //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串, 故此處原本為3需改為'3'
-            }
-            catch (err) {}
-        }, 3000)
-
     },
 }
 </script>

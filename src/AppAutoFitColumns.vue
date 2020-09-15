@@ -50,7 +50,6 @@ export default {
                 autoFitColumn: true,
             },
             'action': [
-
             ],
         }
     },

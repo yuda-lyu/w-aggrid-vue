@@ -62,7 +62,6 @@ export default {
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
-
             ],
         }
     },

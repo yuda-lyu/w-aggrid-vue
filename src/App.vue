@@ -125,6 +125,8 @@
 
                     <AppKpHeadDrag v-if="showCmp==='kpHeadDrag'"></AppKpHeadDrag>
 
+                    <AppKpHeadCheckBox v-if="showCmp==='kpHeadCheckBox'"></AppKpHeadCheckBox>
+
                     <AppKpHeadHide v-if="showCmp==='kpHeadHide'"></AppKpHeadHide>
 
                     <AppKpHeadFilter v-if="showCmp==='kpHeadFilter'"></AppKpHeadFilter>
@@ -148,6 +150,8 @@
                     <AppOperateData v-if="showCmp==='operateData'"></AppOperateData>
 
                     <AppRowChange v-if="showCmp==='rowChange'"></AppRowChange>
+
+                    <AppRowChecked v-if="showCmp==='rowChecked'"></AppRowChecked>
 
                     <AppRowMouseEnter v-if="showCmp==='rowMouseEnter'"></AppRowMouseEnter>
 
@@ -213,6 +217,7 @@ import AppKpCellWidth from './AppKpCellWidth.vue'
 import AppKpHead from './AppKpHead.vue'
 import AppKpHeadAlighH from './AppKpHeadAlighH.vue'
 import AppKpHeadDrag from './AppKpHeadDrag.vue'
+import AppKpHeadCheckBox from './AppKpHeadCheckBox.vue'
 import AppKpHeadHide from './AppKpHeadHide.vue'
 import AppKpHeadFilter from './AppKpHeadFilter.vue'
 import AppKpHeadFixLeft from './AppKpHeadFixLeft.vue'
@@ -225,6 +230,7 @@ import AppKpColStyle from './AppKpColStyle.vue'
 import AppLargeData from './AppLargeData.vue'
 import AppOperateData from './AppOperateData.vue'
 import AppRowChange from './AppRowChange.vue'
+import AppRowChecked from './AppRowChecked.vue'
 import AppRowMouseEnter from './AppRowMouseEnter.vue'
 import AppRowMouseLeave from './AppRowMouseLeave.vue'
 import AppRowClick from './AppRowClick.vue'
@@ -273,6 +279,7 @@ export default {
         AppKpHead,
         AppKpHeadAlighH,
         AppKpHeadDrag,
+        AppKpHeadCheckBox,
         AppKpHeadHide,
         AppKpHeadFilter,
         AppKpHeadFixLeft,
@@ -285,6 +292,7 @@ export default {
         AppLargeData,
         AppOperateData,
         AppRowChange,
+        AppRowChecked,
         AppRowMouseEnter,
         AppRowMouseLeave,
         AppRowClick,
@@ -319,6 +327,7 @@ export default {
                 ],
                 row: [
                     'rowChange',
+                    'rowChecked',
                     'rowMouseEnter',
                     'rowMouseLeave',
                     'rowClick',
@@ -338,6 +347,7 @@ export default {
                     'kpHead',
                     'kpHeadAlighH',
                     'kpHeadDrag',
+                    'kpHeadCheckBox',
                     'kpHeadHide',
                     'kpHeadFilter',
                     'kpHeadFixLeft',
