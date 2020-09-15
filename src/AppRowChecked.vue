@@ -53,7 +53,7 @@ export default {
                 kpHeadCheckBox: { //default: false
                     'make': true,
                     // 'model': false,
-                    // 'price': false,
+                    'price': true,
                 },
                 rowChecked: function(rs) {
                     document.querySelector('#ckmsg').innerHTML = 'trigger: rowChecked\n\n' + 'rows: ' + JSON.stringify(rs, null, 2)

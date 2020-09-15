@@ -48,7 +48,7 @@ export default {
                 kpHead: {
                     'make': 'make(true)',
                     'model': 'model(false)',
-                    'price': 'price(true)',
+                    'price': 'price(false)',
                 },
                 kpHeadCheckBox: { //default: false
                     'make': true,
