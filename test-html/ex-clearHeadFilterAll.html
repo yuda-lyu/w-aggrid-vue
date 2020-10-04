@@ -157,21 +157,27 @@
       setTimeout(function() {
         try {
           vo.$refs.rftable.setHeadFilter("price", 6);
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 1000);
 
       //setHeadFilter
       setTimeout(function() {
         try {
           vo.$refs.rftable.setHeadFilter("model", "m");
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 2000);
 
       //clearHeadFilterAll
       setTimeout(function() {
         try {
           vo.$refs.rftable.clearHeadFilterAll();
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 3000);
     },
     computed: {},

@@ -605,6 +605,7 @@ export default {
                 role = param.event.target.getAttribute('role') //離開元素的role
             }
             catch (err) {
+                //console.log(err)
             }
 
             //check
@@ -869,7 +870,9 @@ export default {
             try {
                 vo.gridOptions.api.redrawRows()
             }
-            catch (err) {}
+            catch (err) {
+                //console.log(err)
+            }
 
         },
 

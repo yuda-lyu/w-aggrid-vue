@@ -34,7 +34,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.59/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.60/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -178,7 +178,9 @@
 
           //set for vue detect
           vo.opt.rows = t;
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 1000);
     },
     computed: {},

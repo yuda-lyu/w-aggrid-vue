@@ -69,7 +69,9 @@ export default {
                 vo.opt.rows = rows
 
             }
-            catch (err) {}
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //push data
@@ -95,7 +97,9 @@ export default {
                 vo.opt.rows = rows
 
             }
-            catch (err) {}
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
         //delete all data
@@ -106,7 +110,9 @@ export default {
                 vo.opt.rows = []
 
             }
-            catch (err) {}
+            catch (err) {
+                console.log(err)
+            }
         }, 3000)
 
     },

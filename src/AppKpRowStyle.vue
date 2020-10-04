@@ -84,7 +84,9 @@ export default {
                 vo.opt.rows = rows
 
             }
-            catch (err) {}
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
     },

@@ -104,7 +104,9 @@ export default {
             try {
                 vo.$refs.rftable.pasteText(text1, 1, 'make')
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //pasteText
@@ -112,7 +114,9 @@ export default {
             try {
                 vo.$refs.rftable.pasteText(text2, 4, 'index')
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
         //pasteText
@@ -120,7 +124,9 @@ export default {
             try {
                 vo.$refs.rftable.pasteText(text2, 7, 'int')
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 3000)
 
     },

@@ -34,7 +34,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.59/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.60/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -164,7 +164,9 @@
 
           //set
           vo.opt.rows = rows;
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 1000);
 
       //push data
@@ -187,7 +189,9 @@
 
           //set
           vo.opt.rows = rows;
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 2000);
 
       //delete all data
@@ -195,7 +199,9 @@
         try {
           //set
           vo.opt.rows = [];
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 3000);
     },
     computed: {},

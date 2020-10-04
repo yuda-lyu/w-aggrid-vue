@@ -62,7 +62,9 @@ export default {
             try {
                 vo.opt.width = 400
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //change width
@@ -70,7 +72,9 @@ export default {
             try {
                 vo.opt.width = 800
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
         //change width
@@ -78,7 +82,9 @@ export default {
             try {
                 vo.opt.width = 620
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 3000)
 
     },

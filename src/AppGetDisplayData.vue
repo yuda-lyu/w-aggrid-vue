@@ -61,7 +61,9 @@ export default {
             try {
                 vo.$refs.rftable.showKeys(['price', 'make'])
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //setHeadFilter
@@ -69,7 +71,9 @@ export default {
             try {
                 vo.$refs.rftable.setHeadFilter('price', 5)
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
         //getDisplayData
@@ -78,7 +82,9 @@ export default {
                 let ddata = vo.$refs.rftable.getDisplayData()
                 document.querySelector('#ckmsg').innerHTML = 'trigger: getDisplayData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 3000)
 
     },

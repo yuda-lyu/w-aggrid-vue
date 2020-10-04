@@ -60,7 +60,9 @@ export default {
             try {
                 vo.$refs.rftable.setHeadFilter('price', 6)
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //setHeadFilter
@@ -68,7 +70,9 @@ export default {
             try {
                 vo.$refs.rftable.setHeadFilter('model', 'm')
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
         //clearHeadFilterAll
@@ -76,7 +80,9 @@ export default {
             try {
                 vo.$refs.rftable.clearHeadFilterAll()
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 3000)
 
     },

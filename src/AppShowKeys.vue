@@ -60,7 +60,9 @@ export default {
             try {
                 vo.$refs.rftable.showKeys(['price', 'make', 'model'])
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //shift keys and hide 'model' key
@@ -68,7 +70,9 @@ export default {
             try {
                 vo.$refs.rftable.showKeys(['make', 'price'])
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
     },

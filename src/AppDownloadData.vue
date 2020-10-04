@@ -73,7 +73,9 @@ export default {
             })
             document.querySelector('#ckmsg').innerHTML = 'trigger: downloadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)
         }
-        catch (err) { }
+        catch (err) {
+            console.log(err)
+        }
 
     },
 }

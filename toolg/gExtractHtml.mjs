@@ -116,7 +116,7 @@ let h = `
 `
 
 
-function writeHtml({ fn, casename, tmp, mounted, data, computed, methods, action }) {
+function writeHtml({ fn, casename, tmp, data, mounted, computed, methods, action }) {
 
     //c
     let c = h
@@ -133,7 +133,6 @@ function writeHtml({ fn, casename, tmp, mounted, data, computed, methods, action
     //replace mounted
     c = c.replace('{{mounted}}', mounted)
 
-    //prettyhtml
     //replace computed
     c = c.replace('{{computed}}', computed)
 
@@ -168,7 +167,7 @@ function extractApp(fn) {
     let hh = fs.readFileSync(fdSrc + fn, 'utf8')
 
     //parseVueCode
-    let { tmp, mounted, data, computed, methods, action } = parseVueCode(hh)
+    let { tmp, data, mounted, computed, methods, action } = parseVueCode(hh)
 
     //tmp, change cmp name
     tmp = w.replace(tmp, 'WAgGridVue', 'w-aggrid-vue')
@@ -178,8 +177,8 @@ function extractApp(fn) {
         fn: fdTestHtml + `ex-${casename}.html`,
         casename,
         tmp,
-        mounted,
         data,
+        mounted,
         computed,
         methods,
         action,

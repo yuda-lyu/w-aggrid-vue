@@ -63,7 +63,9 @@ export default {
                 vo.opt.width = 400
                 vo.$refs.rftable.fitColumns()
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //fitColumns
@@ -72,7 +74,9 @@ export default {
                 vo.opt.width = 800
                 vo.$refs.rftable.fitColumns()
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
         //fitColumns
@@ -81,7 +85,9 @@ export default {
                 vo.opt.width = 620
                 vo.$refs.rftable.fitColumns()
             }
-            catch (err) { }
+            catch (err) {
+                console.log(err)
+            }
         }, 3000)
 
     },

@@ -61,17 +61,27 @@ export default {
         //use api sort price(asc)
         setTimeout(function() {
             try {
-                o.api.setSortModel([{ colId: 'price', sort: 'asc' }])
+                o.columnApi.applyColumnState({
+                    state: [{ colId: 'price', sort: 'asc' }],
+                    defaultState: { sort: null },
+                })
             }
-            catch (err) {}
+            catch (err) {
+                console.log(err)
+            }
         }, 1000)
 
         //use api sort price(desc)
         setTimeout(function() {
             try {
-                o.api.setSortModel([{ colId: 'price', sort: 'desc' }])
+                o.columnApi.applyColumnState({
+                    state: [{ colId: 'price', sort: 'desc' }],
+                    defaultState: { sort: null },
+                })
             }
-            catch (err) {}
+            catch (err) {
+                console.log(err)
+            }
         }, 2000)
 
         //use api filter model and price
@@ -79,7 +89,9 @@ export default {
             try {
                 o.api.setFilterModel({ model: { type: 'contains', filter: 'm' }, price: { type: 'contains', filter: '3' } }) //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串, 故此處原本為3需改為'3'
             }
-            catch (err) {}
+            catch (err) {
+                console.log(err)
+            }
         }, 3000)
 
     },

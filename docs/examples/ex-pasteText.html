@@ -34,7 +34,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.59/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.60/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -259,21 +259,27 @@
       setTimeout(function() {
         try {
           vo.$refs.rftable.pasteText(text1, 1, "make");
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 1000);
 
       //pasteText
       setTimeout(function() {
         try {
           vo.$refs.rftable.pasteText(text2, 4, "index");
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 2000);
 
       //pasteText
       setTimeout(function() {
         try {
           vo.$refs.rftable.pasteText(text2, 7, "int");
-        } catch (err) {}
+        } catch (err) {
+          console.log(err);
+        }
       }, 3000);
     },
     computed: {},
