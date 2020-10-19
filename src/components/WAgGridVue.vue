@@ -688,17 +688,9 @@ export default {
             //mShowColKeys
             let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
             mShowColKeys = map(mShowColKeys, (v, k) => {
-                // console.log('v', v.getId)
-                // let fGetId = get(v, 'getId')
-                // if (isfun(fGetId)) {
-                //     return fGetId()
-                // }
-                // else {
-                //     return null
-                // }
+                // console.log('v', v, v.getId)
                 return v.getId()
             })
-            console.log('mShowColKeys', mShowColKeys)
 
             //check
             if (size(mShowColKeys) === 0) {
@@ -851,9 +843,11 @@ export default {
                 }
 
             }
+            console.log('rowsTemp', cloneDeep(rowsTemp))
 
-            //update
-            vo.rows = rowsTemp
+            //update, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+            //vo.rows = rowsTemp
+            set(vo, `opt.rows`, rowsTemp)
 
         },
 
