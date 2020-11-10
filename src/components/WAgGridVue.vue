@@ -843,7 +843,7 @@ export default {
                 }
 
             }
-            console.log('rowsTemp', cloneDeep(rowsTemp))
+            // console.log('rowsTemp', cloneDeep(rowsTemp))
 
             //update, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             //vo.rows = rowsTemp
