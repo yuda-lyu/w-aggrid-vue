@@ -28,7 +28,6 @@
                 @cellMouseOver="agCellMouseEnter"
                 @cellMouseOut="agCellMouseLeave"
                 @cellKeyDown="agCellKeyDown"
-                @cellFocused="agCellFocused"
                 @gridReady="agReady"
             ></ag-grid-vue>
 
@@ -1434,18 +1433,6 @@ export default {
             })
 
             return r
-        },
-
-        agCellFocused: function(param) {
-            console.log('methods agCellFocused', param)
-
-            let vo = this
-
-            //editable
-            let editable = param.column.colDef.editable
-            console.log('editable', editable)
-            console.log(param.column.colDef, param.data)
-
         },
 
         agReady: function(params) {
