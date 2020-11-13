@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "author": "yuda-lyu(semisphere)",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -11,8 +11,8 @@
   },
   "main": "dist/w-aggrid-vue.umd.js",
   "dependencies": {
-    "ag-grid-community": "24.1.0",
-    "ag-grid-vue": "24.1.1",
+    "ag-grid-community": "^24.1.0",
+    "ag-grid-vue": "^24.1.1",
     "lodash": "^4.17.20",
     "vue-class-component": "^7.2.6",
     "vue-property-decorator": "^9.0.2",

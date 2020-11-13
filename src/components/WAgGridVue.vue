@@ -28,7 +28,8 @@
                 @cellMouseOver="agCellMouseEnter"
                 @cellMouseOut="agCellMouseLeave"
                 @cellKeyDown="agCellKeyDown"
-                @gridReady="onGridReady"
+                @cellFocused="agCellFocused"
+                @gridReady="agReady"
             ></ag-grid-vue>
 
         </div>
@@ -261,6 +262,7 @@ export default {
                 rowDragManaged: true,
                 suppressRowClickSelection: true, //若開啟checkboxSelection
                 singleClickEdit: true, //單點即可變更
+                stopEditingWhenGridLosesFocus: true,
                 localeText: { noRowsToShow: '無數據' },
                 getRowStyle: vo.agGetRowStyle,
             },
@@ -1434,8 +1436,20 @@ export default {
             return r
         },
 
-        onGridReady: function(params) {
-            //console.log('methods onGridReady', params)
+        agCellFocused: function(param) {
+            console.log('methods agCellFocused', param)
+
+            let vo = this
+
+            //editable
+            let editable = param.column.colDef.editable
+            console.log('editable', editable)
+            console.log(param.column.colDef, param.data)
+
+        },
+
+        agReady: function(params) {
+            //console.log('methods agReady', params)
 
             let vo = this
 
