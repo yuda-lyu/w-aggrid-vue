@@ -34,7 +34,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.5/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.6/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -169,13 +169,13 @@
       upload: function() {
         let vo = this;
 
-        function beforUpload(rows) {
-          console.log("beforUpload", rows);
+        function beforeUpload(rows) {
+          console.log("beforeUpload", rows);
           return rows;
         }
 
-        // async function beforUploadAsync(rows) {
-        //     console.log('beforUploadAsync', rows)
+        // async function beforeUploadAsync(rows) {
+        //     console.log('beforeUploadAsync', rows)
         //     return rows
         // }
 
@@ -183,8 +183,8 @@
           vo.$refs.rftable
             .uploadData({
               pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js'
-              beforUpload: beforUpload
-              // beforUploadAsync: beforUploadAsync,
+              beforeUpload: beforeUpload
+              // beforeUploadAsync: beforeUploadAsync,
             })
             .then(function(ddata) {
               document.querySelector("#ckmsg").innerHTML =
