@@ -68,21 +68,21 @@ export default {
         upload: function() {
             let vo = this
 
-            function beforUpload(rows) {
-                console.log('beforUpload', rows)
+            function beforeUpload(rows) {
+                console.log('beforeUpload', rows)
                 return rows
             }
 
-            // async function beforUploadAsync(rows) {
-            //     console.log('beforUploadAsync', rows)
+            // async function beforeUploadAsync(rows) {
+            //     console.log('beforeUploadAsync', rows)
             //     return rows
             // }
 
             try {
                 vo.$refs.rftable.uploadData({
                     pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js'
-                    beforUpload: beforUpload,
-                    // beforUploadAsync: beforUploadAsync,
+                    beforeUpload: beforeUpload,
+                    // beforeUploadAsync: beforeUploadAsync,
                 })
                     .then(function(ddata) {
                         document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)

@@ -1760,7 +1760,7 @@ export default {
             let vo = this
 
             //params
-            let { pathItems = null, beforUpload = null, beforUploadAsync = null } = opt
+            let { pathItems = null, beforeUpload = null, beforeUploadAsync = null } = opt
 
             //pathItems
             if (!isearr(pathItems)) {
@@ -1786,14 +1786,14 @@ export default {
             //ltdtmapping
             rows = ltdtmapping(rows, vo.keys)
 
-            //beforUpload
-            if (isfun(beforUpload)) {
-                rows = beforUpload(rows)
+            //beforeUpload
+            if (isfun(beforeUpload)) {
+                rows = beforeUpload(rows)
             }
 
-            //beforUploadAsync
-            if (ispm(beforUploadAsync)) {
-                rows = await beforUploadAsync(rows)
+            //beforeUploadAsync
+            if (ispm(beforeUploadAsync)) {
+                rows = await beforeUploadAsync(rows)
             }
 
             //save, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
