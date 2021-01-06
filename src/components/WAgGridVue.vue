@@ -1800,6 +1800,7 @@ export default {
             // vo.rows = rows
             set(vo, `opt.rows`, rows)
 
+            return rows
         },
 
     },
