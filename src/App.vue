@@ -30,7 +30,7 @@
                                     <span>{{cmp}}</span>
 
                                     <div
-                                        style="position:absolute; top:-5px; right:-10px; padding:1px 7px; opacity:0.8; font-size:0.5rem; color:#fff; background-color:#f26; border-radius:10px;"
+                                        style="position:absolute; top:-9px; right:-10px; padding:0px 7px; opacity:0.8; font-size:0.7rem; color:#fff; background-color:#f26; border-radius:10px;"
                                         v-if="cmp.substring(0, 3)==='def'"
                                     >
                                         def

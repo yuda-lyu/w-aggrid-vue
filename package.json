@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "author": "yuda-lyu(semisphere)",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -15,14 +15,14 @@
     "ag-grid-vue": "^24.1.1",
     "lodash": "^4.17.20",
     "vue-class-component": "^7.2.6",
-    "vue-property-decorator": "^9.0.2",
-    "wsemi": "^1.5.35"
+    "vue-property-decorator": "^9.1.2",
+    "wsemi": "^1.5.42"
   },
   "devDependencies": {
     "@starptech/prettyhtml": "^0.10.0",
-    "@vue/cli-plugin-babel": "^4.5.8",
-    "@vue/cli-plugin-eslint": "^4.5.8",
-    "@vue/cli-service": "^4.5.8",
+    "@vue/cli-plugin-babel": "^4.5.10",
+    "@vue/cli-plugin-eslint": "^4.5.10",
+    "@vue/cli-service": "^4.5.10",
     "vue": "^2.6.12",
     "w-jsonview-tree": "^1.0.24",
     "w-package-tools": "^1.0.30"

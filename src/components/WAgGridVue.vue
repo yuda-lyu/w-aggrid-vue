@@ -65,6 +65,7 @@ import isearr from 'wsemi/src/isearr.mjs'
 import isestr from 'wsemi/src/isestr.mjs'
 import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
+import ispm from 'wsemi/src/ispm.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
 import cdbl from 'wsemi/src/cdbl.mjs'
 import cstr from 'wsemi/src/cstr.mjs'
@@ -1758,8 +1759,8 @@ export default {
 
             let vo = this
 
-            //pathItems
-            let { pathItems = null } = opt
+            //params
+            let { pathItems = null, beforUpload = null, beforUploadAsync = null } = opt
 
             //pathItems
             if (!isearr(pathItems)) {
@@ -1785,11 +1786,20 @@ export default {
             //ltdtmapping
             rows = ltdtmapping(rows, vo.keys)
 
+            //beforUpload
+            if (isfun(beforUpload)) {
+                rows = beforUpload(rows)
+            }
+
+            //beforUploadAsync
+            if (ispm(beforUploadAsync)) {
+                rows = await beforUploadAsync(rows)
+            }
+
             //save, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             // vo.rows = rows
             set(vo, `opt.rows`, rows)
 
-            return rows
         },
 
     },
