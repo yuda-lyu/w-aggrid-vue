@@ -9,7 +9,7 @@ let opt = {
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 
     <!-- vue -->
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
 
     <!-- ag-grid-community, do not include css -->
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@23.2.1/dist/ag-grid-community.min.noStyle.js"></script>

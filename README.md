@@ -20,13 +20,13 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** w-aggrid-vue depends on `ag-grid-community` and `ag-grid-vue`.
+> **Note:** w-aggrid-vue is mainly dependent on `ag-grid-community` and `ag-grid-vue`.
 ```alias
 npm i w-aggrid-vue
 ```
 
 ### In a browser(UMD module):
-> **Note:** w-aggrid-vue depends on `vue`, `ag-grid-community` and `ag-grid-vue`.
+> **Note:** w-aggrid-vue is mainly dependent on `vue`, `ag-grid-community` and `ag-grid-vue`.
 
 > **Note:** umd file includes with `lodash` and `wsemi`, by using tree-shaking for dead-code elimination.
 
@@ -36,7 +36,7 @@ npm i w-aggrid-vue
 ```
 [Necessary] Add script for vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
 ```
 [Necessary] Add script for ag-grid-community and don't need to include css, because has included them by umd file.
 ```alias
@@ -50,5 +50,5 @@ or
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.7/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.8/dist/w-aggrid-vue.umd.js"></script>
 ```
