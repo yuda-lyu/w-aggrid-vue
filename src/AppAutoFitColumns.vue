@@ -13,7 +13,7 @@
 
                 <WAgGridVue
                     ref="rftable"
-                    :style="`width:${opt.width}px;`"
+                    :style="'width:'+opt.width+'px;'"
                     :opt="opt"
                 ></WAgGridVue>
 

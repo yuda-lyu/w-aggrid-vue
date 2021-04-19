@@ -270,7 +270,7 @@ export default {
             ag: null,
 
             pathItems: [
-                'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js',
+                'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js',
             ],
 
         }
@@ -1619,7 +1619,7 @@ export default {
 
             //core
             async function core() {
-                //ag-grid 23.2.1已能正常fit至100%, 不會因微小差距而出現水平捲軸, 故關閉先縮小再還原機制
+                //ag-grid 24.1.0已能正常fit至100%, 不會因微小差距而出現水平捲軸, 故關閉先縮小再還原機制
                 //但縮放第3次時有些欄位header會爆版, 故還是得使用先縮小再還原機制
 
                 //先微縮小fit
