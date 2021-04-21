@@ -5,11 +5,7 @@ let opt = {
     title: `w-aggrid-vue`,
     head: `
 
-    <!-- @babel/polyfill -->
-    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
-
-    <!-- vue -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
+    <!-- rollupVueToHtml已自動添加@babel/polyfill與vue -->
 
     <!-- ag-grid-community, do not include css -->
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@24.1.0/dist/ag-grid-community.min.noStyle.js"></script>

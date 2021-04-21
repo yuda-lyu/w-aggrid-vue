@@ -18,6 +18,8 @@
     <!-- vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
 
+    <!-- extractHtml已自動添加@babel/polyfill與vue -->
+
     <!-- ag-grid-community, do not include css -->
     <script
         src="https://cdn.jsdelivr.net/npm/ag-grid-community@24.1.0/dist/ag-grid-community.min.noStyle.js"
@@ -40,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.9/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.10/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -102,9 +104,9 @@
     </style>
 </head>
 <body
-    style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px 30px; margin:0px;"
+    style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px; margin:0px;"
 >
-    <div id="app">
+    <div id="app" style="padding:0px 30px;">
         <div style="display:flex;">
             <div>
                 <div style="margin:20px 0px;">
@@ -146,12 +148,13 @@
     </div>
 
     <script>
-  //install w-aggrid-vue
+  //install
   Vue.component("w-aggrid-vue", window["w-aggrid-vue"]);
 
   //initialize
   new Vue({
     el: "#app",
+
     data: function() {
       return {
         opt: {

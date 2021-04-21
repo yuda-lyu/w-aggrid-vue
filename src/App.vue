@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <div>
 
 
         <template v-if="!isNarrow">
@@ -244,7 +244,6 @@ import AppTableWidthFull from './AppTableWidthFull.vue'
 
 
 export default {
-    name: 'app',
     components: {
         AppCellChange,
         AppCellMouseEnter,
