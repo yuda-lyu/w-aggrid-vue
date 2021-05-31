@@ -266,6 +266,7 @@ export default {
                 stopEditingWhenCellsLoseFocus: true, //ag-grid 25.2.2改為此設定
                 localeText: { noRowsToShow: '無數據' },
                 getRowStyle: vo.agGetRowStyle,
+                // debounceVerticalScrollbar: true,
             },
 
             ag: null,
@@ -767,7 +768,8 @@ export default {
 
             //paste
             let i = -1
-            let rowsTemp = cloneDeep(vo.rows)
+            // let rowsTemp = cloneDeep(vo.rows)
+            let rows = vo.rows //記憶體得用原始記憶體, 否則applyTransaction會無法找到原始數據物件進行更新
             for (let ii = 0; ii < size(mShowColKeys); ii++) {
                 let v = mShowColKeys[ii]
                 //console.log('v', v)
@@ -838,7 +840,7 @@ export default {
                             // console.log('trueValue', trueValue)
 
                             //save
-                            rowsTemp[trueRowInd][trueColKey] = dataPaste[pasteRowInd][pasteColInd]
+                            rows[trueRowInd][trueColKey] = dataPaste[pasteRowInd][pasteColInd]
 
                         }
 
@@ -846,11 +848,13 @@ export default {
                 }
 
             }
-            // console.log('rowsTemp', cloneDeep(rowsTemp))
 
-            //update, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
-            //vo.rows = rowsTemp
-            set(vo, `opt.rows`, rowsTemp)
+            //applyTransaction, update rows
+            vo.gridOptions.api.applyTransaction({ update: rows })
+            // console.log('applyTransaction res', res)
+
+            //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+            set(vo, `opt.rows`, rows)
 
         },
 
