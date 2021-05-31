@@ -662,6 +662,9 @@ export default {
             let showColKeyNow = param.column.colId
             // console.log('showColKeyNow', showColKeyNow)
 
+            //stopEditing, 停止cell的編輯狀態
+            vo.gridOptions.api.stopEditing()
+
             //pasteText
             vo.pasteText(vo.dataPasted, showRowIndNow, showColKeyNow)
 
