@@ -262,7 +262,8 @@ export default {
                 rowDragManaged: true,
                 suppressRowClickSelection: true, //若開啟checkboxSelection
                 singleClickEdit: true, //單點即可變更
-                stopEditingWhenGridLosesFocus: true,
+                // stopEditingWhenGridLosesFocus: true,
+                stopEditingWhenCellsLoseFocus: true, //ag-grid 25.2.2改為此設定
                 localeText: { noRowsToShow: '無數據' },
                 getRowStyle: vo.agGetRowStyle,
             },
