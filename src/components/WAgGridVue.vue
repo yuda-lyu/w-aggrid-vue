@@ -1804,23 +1804,18 @@ export default {
 
             //kpConvertKeysWhenUploadData
             if (iseobj(vo.kpConvertKeysWhenUploadData)) {
-                console.log('vo.kpConvertKeysWhenUploadData', vo.kpConvertKeysWhenUploadData)
                 rows = map(rows, (row) => {
-                    console.log('row', row)
                     let t = {}
                     each(row, (v, k) => {
-                        console.log('v k', v, k)
                         let rk = k
                         let rv = v
                         if (haskey(vo.kpConvertKeysWhenUploadData, k)) {
                             rk = vo.kpConvertKeysWhenUploadData[k]
-                            console.log(k, ' to ', rk)
                         }
                         t[rk] = rv
                     })
                     return t
                 })
-                console.log('asd rows', rows)
             }
 
             //beforeUpload
