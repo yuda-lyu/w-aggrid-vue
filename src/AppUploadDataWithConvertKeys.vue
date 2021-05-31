@@ -6,13 +6,13 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">uploadData</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-uploadData.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-uploadData.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">uploadDataWithConvertKeys</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-uploadDataWithConvertKeys.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-uploadDataWithConvertKeys.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <button @click="upload">Upload excel file</button>
+                    <button @click="upload">Upload excel file with kpConvertKeysWhenUploadData</button>
                     <span style="font-size:0.8rem; color:#f26;"> :: The first row of the file needs keys</span>
                 </div>
 
@@ -50,10 +50,10 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpHead: {
-                    'make': 'make(製作)',
-                    'model': 'model(モデル)',
-                    'price': 'price(价钱)',
+                kpConvertKeysWhenUploadData: {
+                    id: 'make',
+                    mappingId: 'model',
+                    order: 'price',
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
@@ -69,23 +69,9 @@ export default {
         upload: function() {
             let vo = this
 
-            function beforeUpload(rows) {
-                console.log('beforeUpload', rows)
-                return rows
-            }
-
-            function beforeUploadAsync(rows) {
-                console.log('beforeUploadAsync', rows)
-                return new Promise(function(resolve, reject) {
-                    resolve(rows)
-                })
-            }
-
             try {
                 vo.$refs.rftable.uploadData({
                     pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js'
-                    beforeUpload: beforeUpload,
-                    // beforeUpload: beforeUploadAsync,
                 })
                     .then(function(ddata) {
                         document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)

@@ -233,6 +233,7 @@ export default {
             kpCellAlighH: {},
             defCellEditable: null,
             kpCellEditable: {},
+            kpConvertKeysWhenUploadData: null,
 
             tableClickEnable: false,
             rowChange: function() {},
@@ -1190,6 +1191,12 @@ export default {
                 vo.cellMouseLeave = vo.opt.cellMouseLeave
             }
 
+            //kpConvertKeysWhenUploadData
+            vo.kpConvertKeysWhenUploadData = {}
+            if (iseobj(vo.opt.kpConvertKeysWhenUploadData)) {
+                vo.kpConvertKeysWhenUploadData = vo.opt.kpConvertKeysWhenUploadData
+            }
+
             //columns, 需放在給予rows之前, 避免給予rows沒有column設定
             vo.columns = vo.keys2columns(vo.keys)
 
@@ -1772,7 +1779,7 @@ export default {
             let vo = this
 
             //params
-            let { pathItems = null, beforeUpload = null, beforeUploadAsync = null } = opt
+            let { pathItems = null, beforeUpload = null } = opt
 
             //pathItems
             if (!isearr(pathItems)) {
@@ -1795,18 +1802,40 @@ export default {
             //rows
             let rows = sh.data
 
-            //ltdtmapping
-            rows = ltdtmapping(rows, vo.keys)
+            //kpConvertKeysWhenUploadData
+            if (iseobj(vo.kpConvertKeysWhenUploadData)) {
+                console.log('vo.kpConvertKeysWhenUploadData', vo.kpConvertKeysWhenUploadData)
+                rows = map(rows, (row) => {
+                    console.log('row', row)
+                    let t = {}
+                    each(row, (v, k) => {
+                        console.log('v k', v, k)
+                        let rk = k
+                        let rv = v
+                        if (haskey(vo.kpConvertKeysWhenUploadData, k)) {
+                            rk = vo.kpConvertKeysWhenUploadData[k]
+                            console.log(k, ' to ', rk)
+                        }
+                        t[rk] = rv
+                    })
+                    return t
+                })
+                console.log('asd rows', rows)
+            }
 
             //beforeUpload
             if (isfun(beforeUpload)) {
-                rows = beforeUpload(rows)
+                let r = beforeUpload(rows)
+                if (ispm(r)) {
+                    rows = await r
+                }
+                else {
+                    rows = r
+                }
             }
 
-            //beforeUploadAsync
-            if (ispm(beforeUploadAsync)) {
-                rows = await beforeUploadAsync(rows)
-            }
+            //ltdtmapping
+            rows = ltdtmapping(rows, vo.keys)
 
             //save, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             // vo.rows = rows

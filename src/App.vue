@@ -99,6 +99,8 @@
 
                     <AppUploadData v-if="showCmp==='uploadData'"></AppUploadData>
 
+                    <AppUploadDataWithConvertKeys v-if="showCmp==='uploadDataWithkpConvertKeys'"></AppUploadDataWithConvertKeys>
+
                     <AppPasteText v-if="showCmp==='pasteText'"></AppPasteText>
 
                     <AppFitColumns v-if="showCmp==='fitColumns'"></AppFitColumns>
@@ -204,6 +206,7 @@ import AppGetDisplayData from './AppGetDisplayData.vue'
 import AppDownloadData from './AppDownloadData.vue'
 import AppDownloadDisplayData from './AppDownloadDisplayData.vue'
 import AppUploadData from './AppUploadData.vue'
+import AppUploadDataWithConvertKeys from './AppUploadDataWithConvertKeys.vue'
 import AppPasteText from './AppPasteText.vue'
 import AppFitColumns from './AppFitColumns.vue'
 import AppAutoFitColumns from './AppAutoFitColumns.vue'
@@ -265,6 +268,7 @@ export default {
         AppDownloadData,
         AppDownloadDisplayData,
         AppUploadData,
+        AppUploadDataWithConvertKeys,
         AppPasteText,
         AppFitColumns,
         AppAutoFitColumns,
@@ -372,6 +376,7 @@ export default {
                     'downloadData',
                     'downloadDisplayData',
                     'uploadData',
+                    'uploadDataWithkpConvertKeys',
                     'pasteText',
                     'fitColumns',
                     'autoFitColumns',

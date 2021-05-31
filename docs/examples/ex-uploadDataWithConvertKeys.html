@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for getDisplayData</title>
+    <title>example for uploadDataWithConvertKeys</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -112,17 +112,26 @@
                 <div style="margin:20px 0px;">
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
-                    >getDisplayData</span>
+                    >uploadDataWithConvertKeys</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getDisplayData.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-uploadDataWithConvertKeys.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getDisplayData.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-uploadDataWithConvertKeys.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <button
+                        @click="upload"
+                    >Upload excel file with kpConvertKeysWhenUploadData</button>
+                    <span
+                        style="font-size:0.8rem; color:#f26;"
+                    >:: The first row of the file needs keys</span>
                 </div>
 
                 <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
@@ -153,6 +162,11 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
+          kpConvertKeysWhenUploadData: {
+            id: "make",
+            mappingId: "model",
+            order: "price"
+          },
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
         action: []
@@ -161,40 +175,31 @@
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
-
-      //hide 'model' column and reverse keys order
-      setTimeout(function() {
-        try {
-          vo.$refs.rftable.showKeys(["price", "make"]);
-        } catch (err) {
-          console.log(err);
-        }
-      }, 1000);
-
-      //setHeadFilter
-      setTimeout(function() {
-        try {
-          vo.$refs.rftable.setHeadFilter("price", 5);
-        } catch (err) {
-          console.log(err);
-        }
-      }, 2000);
-
-      //getDisplayData
-      setTimeout(function() {
-        try {
-          let ddata = vo.$refs.rftable.getDisplayData();
-          document.querySelector("#ckmsg").innerHTML =
-            "trigger: getDisplayData\n\n" +
-            "data: " +
-            JSON.stringify(ddata, null, 2);
-        } catch (err) {
-          console.log(err);
-        }
-      }, 3000);
     },
     computed: {},
-    methods: {}
+    methods: {
+      upload: function() {
+        let vo = this;
+
+        try {
+          vo.$refs.rftable
+            .uploadData({
+              pathItems: null //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js'
+            })
+            .then(function(ddata) {
+              document.querySelector("#ckmsg").innerHTML =
+                "trigger: uploadData\n\n" +
+                "data: " +
+                JSON.stringify(ddata, null, 2);
+            })
+            .catch(function(err) {
+              console.log(err);
+            });
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    }
   });
     </script>
 </body>

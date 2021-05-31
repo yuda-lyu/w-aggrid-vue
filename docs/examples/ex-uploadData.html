@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.16/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.17/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -126,9 +126,10 @@
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <button
-                        @click="upload"
-                    >Upload excel file (with key for head)</button>
+                    <button @click="upload">Upload excel file</button>
+                    <span
+                        style="font-size:0.8rem; color:#f26;"
+                    >:: The first row of the file needs keys</span>
                 </div>
 
                 <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
@@ -183,17 +184,19 @@
           return rows;
         }
 
-        // async function beforeUploadAsync(rows) {
-        //     console.log('beforeUploadAsync', rows)
-        //     return rows
-        // }
+        function beforeUploadAsync(rows) {
+          console.log("beforeUploadAsync", rows);
+          return new Promise(function(resolve, reject) {
+            resolve(rows);
+          });
+        }
 
         try {
           vo.$refs.rftable
             .uploadData({
               pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js'
               beforeUpload: beforeUpload
-              // beforeUploadAsync: beforeUploadAsync,
+              // beforeUpload: beforeUploadAsync,
             })
             .then(function(ddata) {
               document.querySelector("#ckmsg").innerHTML =
