@@ -857,7 +857,6 @@ export default {
             }
 
             //applyTransaction, 只變更必要資料加速
-            console.log('updateRows', updateRows)
             vo.gridOptions.api.applyTransaction({ update: updateRows })
             // console.log('applyTransaction res', res)
 
