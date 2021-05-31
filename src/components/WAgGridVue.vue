@@ -770,6 +770,7 @@ export default {
             let i = -1
             // let rowsTemp = cloneDeep(vo.rows)
             let rows = vo.rows //記憶體得用原始記憶體, 否則applyTransaction會無法找到原始數據物件進行更新
+            let updateRows = []
             for (let ii = 0; ii < size(mShowColKeys); ii++) {
                 let v = mShowColKeys[ii]
                 //console.log('v', v)
@@ -842,6 +843,9 @@ export default {
                             //save
                             rows[trueRowInd][trueColKey] = dataPaste[pasteRowInd][pasteColInd]
 
+                            //push, 只紀錄需變更的rows
+                            updateRows.push(rows[trueRowInd])
+
                         }
 
                     }
@@ -849,8 +853,9 @@ export default {
 
             }
 
-            //applyTransaction, update rows
-            vo.gridOptions.api.applyTransaction({ update: rows })
+            //applyTransaction, 只變更必要資料加速
+            console.log('updateRows', updateRows)
+            vo.gridOptions.api.applyTransaction({ update: updateRows })
             // console.log('applyTransaction res', res)
 
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
