@@ -273,7 +273,7 @@ export default {
             ag: null,
 
             pathItems: [
-                'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js',
+                'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js',
             ],
 
         }

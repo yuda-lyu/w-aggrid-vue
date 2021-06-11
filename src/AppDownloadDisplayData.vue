@@ -91,7 +91,7 @@ export default {
                     //useHead: true, //default: false
                     fileName: 'data.xlsx',
                     sheetName: null, //default: data
-                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js'
+                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js'
                 })
                 document.querySelector('#ckmsg').innerHTML = 'trigger: downloadDisplayData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)
             }

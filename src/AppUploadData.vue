@@ -83,7 +83,7 @@ export default {
 
             try {
                 vo.$refs.rftable.uploadData({
-                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js'
+                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js'
                     beforeUpload: beforeUpload,
                     // beforeUpload: beforeUploadAsync,
                 })
