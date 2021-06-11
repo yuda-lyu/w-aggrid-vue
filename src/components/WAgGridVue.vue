@@ -1808,7 +1808,7 @@ export default {
             //sh
             let sh = null
             try {
-                sh = r[parseSheetInd] //取第parseSheetInd個分頁
+                sh = r[parseSheetInd] //取第parseSheetInd個sheet
             }
             catch (err) {
                 return Promise.reject({
