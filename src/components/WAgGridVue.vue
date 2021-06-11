@@ -67,6 +67,7 @@ import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
 import ispm from 'wsemi/src/ispm.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
+import isp0int from 'wsemi/src/isp0int.mjs'
 import cdbl from 'wsemi/src/cdbl.mjs'
 import cstr from 'wsemi/src/cstr.mjs'
 import cint from 'wsemi/src/cint.mjs'
@@ -1779,7 +1780,14 @@ export default {
             let vo = this
 
             //params
-            let { pathItems = null, beforeUpload = null } = opt
+            let { pathItems = null, beforeUpload = null, parseSheetInd = 0 } = opt
+
+            //parseSheetInd
+            if (!isp0int(parseSheetInd)) {
+                parseSheetInd = 0
+            }
+            parseSheetInd = cint(parseSheetInd)
+            // console.log('parseSheetInd', parseSheetInd)
 
             //pathItems
             if (!isearr(pathItems)) {
@@ -1788,6 +1796,7 @@ export default {
 
             //domShowInputAndGetFilesU8Arrs
             let d = await domShowInputAndGetFilesU8Arrs()
+            // console.log('d', d)
 
             //取第一個檔案
             let file = d[0]
@@ -1796,7 +1805,7 @@ export default {
             let r = await getDataFromExcelFileU8ArrDyn(file.u8a, 'ltdt', false, pathItems)
 
             //sh
-            let sh = r[0] //取第一個分頁
+            let sh = r[parseSheetInd] //取第parseSheetInd個分頁
             //console.log('data', sh.data)
 
             //rows

@@ -12,7 +12,8 @@
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <button @click="upload">Upload excel file</button>
+                    <button @click="upload(0)">Upload excel file(use first sheet)</button>
+                    <button @click="upload(1)">Upload excel file(use second sheet)</button>
                     <span style="font-size:0.8rem; color:#f26;"> :: The first row of the file needs keys</span>
                 </div>
 
@@ -66,7 +67,7 @@ export default {
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
     },
     methods: {
-        upload: function() {
+        upload: function(parseSheetInd) {
             let vo = this
 
             function beforeUpload(rows) {
@@ -86,6 +87,7 @@ export default {
                     pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js'
                     beforeUpload: beforeUpload,
                     // beforeUpload: beforeUploadAsync,
+                    parseSheetInd: parseSheetInd,
                 })
                     .then(function(ddata) {
                         document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)
@@ -97,6 +99,7 @@ export default {
             catch (err) {
                 console.log(err)
             }
+
         },
     },
 }
