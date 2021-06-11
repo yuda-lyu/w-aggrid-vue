@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.18/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.19/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -126,7 +126,12 @@
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <button @click="upload">Upload excel file</button>
+                    <button
+                        @click="upload(0)"
+                    >Upload excel file(use first sheet)</button>
+                    <button
+                        @click="upload(1)"
+                    >Upload excel file(use second sheet)</button>
                     <span
                         style="font-size:0.8rem; color:#f26;"
                     >:: The first row of the file needs keys</span>
@@ -176,7 +181,7 @@
     },
     computed: {},
     methods: {
-      upload: function() {
+      upload: function(parseSheetInd) {
         let vo = this;
 
         function beforeUpload(rows) {
@@ -194,9 +199,10 @@
         try {
           vo.$refs.rftable
             .uploadData({
-              pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js'
-              beforeUpload: beforeUpload
+              pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js'
+              beforeUpload: beforeUpload,
               // beforeUpload: beforeUploadAsync,
+              parseSheetInd: parseSheetInd
             })
             .then(function(ddata) {
               document.querySelector("#ckmsg").innerHTML =
