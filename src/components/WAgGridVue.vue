@@ -1806,11 +1806,29 @@ export default {
             let r = await getDataFromExcelFileU8ArrDyn(file.u8a, 'ltdt', false, pathItems)
 
             //sh
-            let sh = r[parseSheetInd] //取第parseSheetInd個分頁
-            //console.log('data', sh.data)
+            let sh = null
+            try {
+                sh = r[parseSheetInd] //取第parseSheetInd個分頁
+            }
+            catch (err) {
+                return Promise.reject({
+                    msg: 'invalid parseSheetInd',
+                    err,
+                })
+            }
+            // console.log('data', sh.data)
 
             //rows
-            let rows = sh.data
+            let rows = []
+            try {
+                rows = sh.data
+            }
+            catch (err) {
+                return Promise.reject({
+                    msg: 'can not get data from sheet',
+                    err,
+                })
+            }
 
             //kpConvertKeysWhenUploadData
             if (iseobj(vo.kpConvertKeysWhenUploadData)) {
