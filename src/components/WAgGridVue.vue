@@ -146,6 +146,7 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpCellAlighH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlighH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
+ * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
  * @vue-prop {Function} [opt.rowClick=function(){}] 輸入row click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.rowDbClick=function(){}] 輸入row double click之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.rowChange=function(){}] 輸入row change之觸發事件，預設為function(){}
