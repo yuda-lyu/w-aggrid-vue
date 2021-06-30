@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.20/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.21/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -126,15 +126,39 @@
                 </div>
 
                 <div style="margin-bottom:10px;">
+                    <div style="display:flex; align-items:center;">
+                        <div style="margin-right:5px;">uploadMode:</div>
+                        <label>
+                            <input
+                                type="radio"
+                                id="replace"
+                                value="replace"
+                                v-model="uploadMode"
+                            />
+                            <span>replace</span>
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                id="append"
+                                value="append"
+                                v-model="uploadMode"
+                            />
+                            <span>append</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px;">
                     <button
-                        @click="upload(0)"
+                        @click="upload(0,uploadMode)"
                     >Upload excel file(use first sheet)</button>
                     <button
-                        @click="upload(1)"
+                        @click="upload(1,uploadMode)"
                     >Upload excel file(use second sheet)</button>
-                    <span
+                    <div
                         style="font-size:0.8rem; color:#f26;"
-                    >:: The first row of the file needs keys</span>
+                    >:: The first row of the file needs keys</div>
                 </div>
 
                 <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
@@ -172,16 +196,20 @@
           },
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
+        uploadMode: "replace",
         action: []
       };
     },
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+      // setInterval(() => {
+      //     console.log(JSON.parse(JSON.stringify(vo.opt.rows)))
+      // }, 1000)
     },
     computed: {},
     methods: {
-      upload: function(parseSheetInd) {
+      upload: function(parseSheetInd, uploadMode) {
         let vo = this;
 
         function beforeUpload(rows) {
@@ -202,7 +230,8 @@
               pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js'
               beforeUpload: beforeUpload,
               // beforeUpload: beforeUploadAsync,
-              parseSheetInd: parseSheetInd
+              parseSheetInd: parseSheetInd,
+              uploadMode: uploadMode //replace append
             })
             .then(function(ddata) {
               document.querySelector("#ckmsg").innerHTML =
