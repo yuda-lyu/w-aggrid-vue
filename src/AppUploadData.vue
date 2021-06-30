@@ -12,9 +12,23 @@
                 </div>
 
                 <div style="margin-bottom:10px;">
-                    <button @click="upload(0)">Upload excel file(use first sheet)</button>
-                    <button @click="upload(1)">Upload excel file(use second sheet)</button>
-                    <span style="font-size:0.8rem; color:#f26;"> :: The first row of the file needs keys</span>
+                    <div style="display:flex; align-items:center;">
+                        <div style="margin-right:5px;">uploadMode:</div>
+                        <label>
+                            <input type="radio" id="replace" value="replace" v-model="uploadMode">
+                            <span>replace</span>
+                        </label>
+                        <label>
+                            <input type="radio" id="append" value="append" v-model="uploadMode">
+                            <span>append</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <button @click="upload(0,uploadMode)">Upload excel file(use first sheet)</button>
+                    <button @click="upload(1,uploadMode)">Upload excel file(use second sheet)</button>
+                    <div style="font-size:0.8rem; color:#f26;"> :: The first row of the file needs keys</div>
                 </div>
 
                 <WAgGridVue
@@ -58,6 +72,7 @@ export default {
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
+            'uploadMode': 'replace',
             'action': [
             ],
         }
@@ -65,9 +80,12 @@ export default {
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
+        // setInterval(() => {
+        //     console.log(JSON.parse(JSON.stringify(vo.opt.rows)))
+        // }, 1000)
     },
     methods: {
-        upload: function(parseSheetInd) {
+        upload: function(parseSheetInd, uploadMode) {
             let vo = this
 
             function beforeUpload(rows) {
@@ -88,6 +106,7 @@ export default {
                     beforeUpload: beforeUpload,
                     // beforeUpload: beforeUploadAsync,
                     parseSheetInd: parseSheetInd,
+                    uploadMode: uploadMode, //replace append
                 })
                     .then(function(ddata) {
                         document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)

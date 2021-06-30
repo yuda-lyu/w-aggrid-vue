@@ -158,7 +158,7 @@ function parseText(contentPaste) {
  * @vue-prop {Function} [opt.cellChange=function(){}] 輸入cell change之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellMouseEnter=function(){}] 輸入cell mouseenter之觸發事件，預設為function(){}
  * @vue-prop {Function} [opt.cellMouseLeave=function(){}] 輸入cell mouseleave之觸發事件，預設為function(){}
- * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬，預設false
+ * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬布林值，預設false
  * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
  * @vue-event {Null} refresh 指調用組件的method，無輸入與回傳，刷新表格
@@ -1781,7 +1781,7 @@ export default {
             let vo = this
 
             //params
-            let { pathItems = null, beforeUpload = null, parseSheetInd = 0 } = opt
+            let { pathItems = null, beforeUpload = null, parseSheetInd = 0, uploadMode = 'replace' } = opt
 
             //parseSheetInd
             if (!isp0int(parseSheetInd)) {
@@ -1859,6 +1859,37 @@ export default {
 
             //ltdtmapping
             rows = ltdtmapping(rows, vo.keys)
+
+            //uploadMode
+            if (uploadMode === 'replace') {
+                // rows=rows
+            }
+            else if (uploadMode === 'append') {
+
+                //rowsTemp
+                let rowsTemp = get(vo, 'opt.rows', [])
+                rowsTemp = cloneDeep(rowsTemp)
+
+                //push
+                each(rows, (v) => {
+                    rowsTemp.push(v)
+                })
+
+                //save
+                rows = rowsTemp
+
+                // //setTimeout, 變更數據後頁面會先渲染, delay後才能調捲軸, 否則太快執行會被頁面渲染蓋掉
+                // setTimeout(() => {
+
+                //     //getInstance
+                //     let o = vo.getInstance()
+
+                //     //ensureIndexVisible, scrollTo(index)
+                //     o.api.ensureIndexVisible(size(rowsTemp) - 1, 'bottom') //捲到最下
+
+                // }, 1)
+
+            }
 
             //save, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             // vo.rows = rows
