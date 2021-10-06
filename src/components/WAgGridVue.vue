@@ -55,7 +55,7 @@ import difference from 'lodash/difference'
 import trim from 'lodash/trim'
 import genID from 'wsemi/src/genID.mjs'
 import haskey from 'wsemi/src/haskey.mjs'
-import arrhas from 'wsemi/src/arrhas.mjs'
+import arrHas from 'wsemi/src/arrHas.mjs'
 import sep from 'wsemi/src/sep.mjs'
 import iser from 'wsemi/src/iser.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
@@ -952,7 +952,7 @@ export default {
 
             //defHeadAlighH
             vo.defHeadAlighH = 'center'
-            if (arrhas(vo.opt.defHeadAlighH, ['left', 'center', 'right'])) {
+            if (arrHas(vo.opt.defHeadAlighH, ['left', 'center', 'right'])) {
                 vo.defHeadAlighH = vo.opt.defHeadAlighH
             }
 
@@ -1094,7 +1094,7 @@ export default {
 
             //defCellAlighH
             vo.defCellAlighH = 'center'
-            if (arrhas(vo.opt.defCellAlighH, ['left', 'center', 'right'])) {
+            if (arrHas(vo.opt.defCellAlighH, ['left', 'center', 'right'])) {
                 vo.defCellAlighH = vo.opt.defCellAlighH
             }
 
@@ -1544,7 +1544,7 @@ export default {
             let vo = this
 
             //check
-            if (!arrhas(type, ['equals', 'notEqual', 'contains', 'notContains', 'startsWith', 'endsWith'])) {
+            if (!arrHas(type, ['equals', 'notEqual', 'contains', 'notContains', 'startsWith', 'endsWith'])) {
                 type = 'contains'
             }
 
