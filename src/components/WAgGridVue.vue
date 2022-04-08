@@ -83,10 +83,25 @@ import replace from 'wsemi/src/replace.mjs'
 import debounce from 'wsemi/src/debounce.mjs'
 import domDetect from 'wsemi/src/domDetect.mjs'
 import domTooltip from 'wsemi/src/domTooltip.mjs'
-import { AgGridVue } from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator
+import * as agv from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator, 因無法被rollup編譯, 故須由外部引入cdn
 import 'ag-grid-community/dist/styles/ag-grid.css'
 import 'ag-grid-community/dist/styles/ag-theme-balham.css'
 // import { AllModules } from '@ag-grid-enterprise/all-modules' //ag-gird-enterprise雖可使用modules擴充支援剪貼簿貼上Excel range數據, 不過由Excel複製的數據會有換行字元, 此導致ag-grid解析多一列的空數據而覆蓋到原數據, 無法用
+
+
+//vcAgGridVue, vue-cli4引用可取到AgGridVue
+let vcAgGridVue=get(agv,'AgGridVue')
+// console.log('vcAgGridVue',vcAgGridVue)
+
+
+//wdAgGridVue, 因rollup無法編譯ag-grid-vue故動態加載時只能由外部引用cdn
+let wdAgGridVue=get(window,'agGridVue.AgGridVue')
+// console.log('wdAgGridVue',wdAgGridVue)
+
+
+//useAgGridVue
+let useAgGridVue=vcAgGridVue || wdAgGridVue
+// console.log('useAgGridVue',useAgGridVue)
 
 
 //tooltip, 通過key查msg避免特殊html符號無法顯示
@@ -176,7 +191,7 @@ function parseText(contentPaste) {
  */
 export default {
     components: {
-        AgGridVue,
+        AgGridVue: useAgGridVue,
     },
     props: {
         opt: {
@@ -260,22 +275,39 @@ export default {
 
             // AllModules,
             gridOptions: {
+
                 animateRows: true,
-                // floatingFilter: true, //ag-grid 23.1已改為由column給予floatingFilter
+
+                // rowHoverHighlight: true, //預設為true
+                suppressRowHoverHighlight: false, //預設為true, ag-grid 25.3.0已由rowHoverHighlight改為suppressRowHoverHighlight
+                
+                //欄位hover效果於ag-grid 25.3.0的cdn版不論columnHoverHighlight或suppressColumnHoverHighlight都失效
+                // columnHoverHighlight: false, //預設為false
+                // suppressColumnHoverHighlight: true, //預設為true
+
+                // floatingFilter: true, //ag-grid 23.1.0已改為由column給予floatingFilter
+
                 rowDragManaged: true,
+
                 suppressRowClickSelection: true, //若開啟checkboxSelection
+
                 singleClickEdit: true, //單點即可變更
+
                 // stopEditingWhenGridLosesFocus: true,
                 stopEditingWhenCellsLoseFocus: true, //ag-grid 25.2.2改為此設定
+
                 localeText: { noRowsToShow: '無數據' },
+
                 getRowStyle: vo.agGetRowStyle,
+
                 // debounceVerticalScrollbar: true,
+
             },
 
             ag: null,
 
             pathItems: [
-                'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js',
+                'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
             ],
 
         }
@@ -1268,7 +1300,7 @@ export default {
 
                 //filter
                 o.filter = vo.kpHeadFilter[key] //欄位標題右邊的選單按鈕, 可使用文字過濾器'agTextColumnFilter'
-                o.floatingFilter = vo.kpHeadFilter[key] //欄位標題下方的文字過濾輸入區, 因ag-grid 23.1已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
+                o.floatingFilter = vo.kpHeadFilter[key] //欄位標題下方的文字過濾輸入區, 因ag-grid 23.1.0已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
                 //o.suppressMenu = true //關閉欄位標題右邊的選單按鈕
 
                 //filterParams

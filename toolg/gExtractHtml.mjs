@@ -34,21 +34,21 @@ function writeHtml(v) {
         <!-- extractHtml已自動添加@babel/polyfill與vue -->
     
         <!-- ag-grid-community, do not include css -->
-        <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@25.3.0/dist/ag-grid-community.min.noStyle.js"></script>
-        <script _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@25.3.0/dist/ag-grid-enterprise.min.noStyle.js"></script>
-        <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community@25.3.0/dist/styles/ag-grid.min.css">
-        <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community@25.3.0/dist/styles/ag-theme-balham.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@27.1.0/dist/ag-grid-community.min.noStyle.js"></script>
+        <script _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@27.1.0/dist/ag-grid-enterprise.min.noStyle.js"></script>
+        <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community@27.1.0/dist/styles/ag-grid.min.css">
+        <link rel="stylesheet" _href="https://cdn.jsdelivr.net/npm/ag-grid-community@27.1.0/dist/styles/ag-theme-balham.min.css">
     
-        <!-- ag-grid-vue -->
-        <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue@25.3.0/dist/ag-grid-vue.umd.min.js"></script>
-    
+        <!-- ag-grid-vue, 因rollup無法簡單編譯ag-grid-vue故改引用 -->
+        <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue@27.1.0/dist/ag-grid-vue.umd.min.js"></script>
+
         <!-- w-aggrid-vue -->
         <script src="../dist/w-aggrid-vue.umd.js"></script>
-    
+        
         <!-- data -->
-        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataEasy.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataEduagency.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataLikeNumber.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEasy.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEduagency.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataLikeNumber.js"></script>
         <script>
             //save in window
             window.dataEasy=dataEasy

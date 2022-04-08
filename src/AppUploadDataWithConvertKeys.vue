@@ -71,7 +71,7 @@ export default {
 
             try {
                 vo.$refs.rftable.uploadData({
-                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js'
+                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
                 })
                     .then(function(ddata) {
                         document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)

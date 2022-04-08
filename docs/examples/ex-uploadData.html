@@ -22,37 +22,37 @@
 
     <!-- ag-grid-community, do not include css -->
     <script
-        src="https://cdn.jsdelivr.net/npm/ag-grid-community@25.3.0/dist/ag-grid-community.min.noStyle.js"
+        src="https://cdn.jsdelivr.net/npm/ag-grid-community@27.1.0/dist/ag-grid-community.min.noStyle.js"
     ></script>
     <script
-        _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@25.3.0/dist/ag-grid-enterprise.min.noStyle.js"
+        _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@27.1.0/dist/ag-grid-enterprise.min.noStyle.js"
     ></script>
     <link
         rel="stylesheet"
-        _href="https://cdn.jsdelivr.net/npm/ag-grid-community@25.3.0/dist/styles/ag-grid.min.css"
+        _href="https://cdn.jsdelivr.net/npm/ag-grid-community@27.1.0/dist/styles/ag-grid.min.css"
     />
     <link
         rel="stylesheet"
-        _href="https://cdn.jsdelivr.net/npm/ag-grid-community@25.3.0/dist/styles/ag-theme-balham.min.css"
+        _href="https://cdn.jsdelivr.net/npm/ag-grid-community@27.1.0/dist/styles/ag-theme-balham.min.css"
     />
 
-    <!-- ag-grid-vue -->
+    <!-- ag-grid-vue, 因rollup無法簡單編譯ag-grid-vue故改引用 -->
     <script
-        src="https://cdn.jsdelivr.net/npm/ag-grid-vue@25.3.0/dist/ag-grid-vue.umd.min.js"
+        src="https://cdn.jsdelivr.net/npm/ag-grid-vue@27.1.0/dist/ag-grid-vue.umd.min.js"
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.24/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.25/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
-        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataEasy.js"
+        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEasy.js"
     ></script>
     <script
-        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataEduagency.js"
+        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEduagency.js"
     ></script>
     <script
-        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.9/res/data/dataLikeNumber.js"
+        src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataLikeNumber.js"
     ></script>
     <script>
   //save in window
@@ -227,7 +227,7 @@
         try {
           vo.$refs.rftable
             .uploadData({
-              pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js'
+              pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
               beforeUpload: beforeUpload,
               // beforeUpload: beforeUploadAsync,
               parseSheetInd: parseSheetInd,
