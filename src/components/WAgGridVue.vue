@@ -90,17 +90,17 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css'
 
 
 //vcAgGridVue, vue-cli4引用可取到AgGridVue
-let vcAgGridVue=get(agv,'AgGridVue')
+let vcAgGridVue = get(agv, 'AgGridVue')
 // console.log('vcAgGridVue',vcAgGridVue)
 
 
 //wdAgGridVue, 因rollup無法編譯ag-grid-vue故動態加載時只能由外部引用cdn
-let wdAgGridVue=get(window,'agGridVue.AgGridVue')
+let wdAgGridVue = get(window, 'agGridVue.AgGridVue')
 // console.log('wdAgGridVue',wdAgGridVue)
 
 
 //useAgGridVue
-let useAgGridVue=vcAgGridVue || wdAgGridVue
+let useAgGridVue = vcAgGridVue || wdAgGridVue
 // console.log('useAgGridVue',useAgGridVue)
 
 
@@ -280,7 +280,7 @@ export default {
 
                 // rowHoverHighlight: true, //預設為true
                 suppressRowHoverHighlight: false, //預設為true, ag-grid 25.3.0已由rowHoverHighlight改為suppressRowHoverHighlight
-                
+
                 // columnHoverHighlight: false, //預設為false, ag-grid 26.2.0已由suppressColumnHoverHighlight改為columnHoverHighlight
                 // suppressColumnHoverHighlight: true, //預設為true
 
