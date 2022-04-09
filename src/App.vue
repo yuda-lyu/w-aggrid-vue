@@ -10,15 +10,31 @@
 
 
         <div
-            style="position:fixed; left:0; top:0; z-index:10;"
-            @mouseenter="showMenu=true"
-            @mouseleave="showMenu=false"
+            :style="`transition:background-color 0.2s; position:fixed; left:0; top:0; z-index:10; height:100vh; width:${showMenu?'100vw':widthMenu+'px'}; overflow-x:hidden; background-color:${showMenu?'rgba(0,0,0,0.5)':'transparent'};`"
+            @click="showMenu=false"
+            @mouseenter="showMenu=false"
         >
-            <div :class="`${showMenu?'item-shadow':''}`" :style="`transition:all 0.1s; padding:20px 0px 0px 0px; background-color:#fff; width:${showMenu?'100vw':'80px'}; ${showMenu?'':'overflow-x:hidden;'}`">
-                <template v-for="(mcmp,kmcmp) in mcmps">
-                    <div style="display:table; width:98.75vw;" :key="kmcmp">
-                        <div :style="`display:table-cell; padding-right:10px; width:65px; text-align:right; color:${showMenu?'#e7c':'#444'}; font-size:0.9rem; transition:all 0.2s; opacity:${showMenu?1:0.7};`">{{kmcmp}}</div>
-                        <div :style="`display:table-cell; padding-left:10px; transition:all 0.2s; opacity:${showMenu?1:0};`">
+
+            <div
+                :style="`transition:all 0.2s; height:100vh; width:${showMenu?'50vw':widthMenu+'px'}; overflow-x:hidden;`"
+                @click.stop="showMenu=true"
+                @mouseenter="showMenu=true"
+                @mouseleave="showMenu=false"
+            >
+
+                <div
+                    :style="`transition:all 0.2s; height:100%; width:50vw; overflow-y:auto; background-color:#fff`"
+                >
+
+                    <div
+                        :style="`transition:all 0.2s; display:table; width:100%;`"
+                        :key="kmcmp"
+                        v-for="(mcmp,kmcmp) in mcmps"
+                    >
+
+                        <div :style="`transition:all 0.2s; display:table-cell; padding-top:15px; padding-right:10px; width:65px; text-align:right; font-size:0.9rem; color:${showMenu?'#cbf':'#888'}; background-color:${showMenu?'#444':'#fff'}; border-bottom:1px solid ${showMenu?'#769':'#fff'};`">{{kmcmp}}</div>
+
+                        <div :style="`transition:all 0.2s; display:table-cell; padding-top:15px; padding-left:10px; padding-right:10px; border-bottom:1px solid ${showMenu?'#dcf':'#fff'};`">
                             <template v-for="(cmp,kcmp) in mcmp">
                                 <div
                                     :class="`item ${cmp===showCmp?'item-active':'item-inactive'}`"
@@ -39,16 +55,20 @@
                                 </div>
                             </template>
                         </div>
+
                     </div>
-                </template>
+
+                </div>
+
             </div>
+
         </div>
 
 
         <div style="display:flex;">
 
             <div
-                style="padding:0px 40px;"
+                :style="`padding-left:${widthMenu}px;`"
                 @mouseenter="showMenu=true"
             ></div>
 
@@ -309,6 +329,7 @@ export default {
     },
     data: function() {
         return {
+            widthMenu: 80,
             showMenu: false,
             showCmp: 'largeData',
             mcmps: {
@@ -405,7 +426,7 @@ export default {
 .item {
     transition: all 0.3s linear;
     display: inline-block;
-    margin: 0px 15px 20px 0px;
+    margin: 0px 15px 15px 0px;
     padding: 4px 15px;
     border-radius: 30px;
     cursor: pointer;
@@ -428,8 +449,5 @@ export default {
     border-radius:10px;
     cursor:pointer;
     text-decoration:none;
-}
-.item-shadow {
-    box-shadow:0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
 }
 </style>

@@ -281,7 +281,7 @@ export default {
                 // rowHoverHighlight: true, //預設為true
                 suppressRowHoverHighlight: false, //預設為true, ag-grid 25.3.0已由rowHoverHighlight改為suppressRowHoverHighlight
 
-                // columnHoverHighlight: false, //預設為false, ag-grid 26.2.0已由suppressColumnHoverHighlight改為columnHoverHighlight
+                columnHoverHighlight: false, //預設為false, ag-grid 26.2.0已由suppressColumnHoverHighlight改為columnHoverHighlight
                 // suppressColumnHoverHighlight: true, //預設為true
 
                 // floatingFilter: true, //ag-grid 23.1.0已改為由column給予floatingFilter
