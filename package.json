@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "2.0.27",
+  "version": "2.0.28",
   "author": "yuda-lyu(semisphere)",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -31,7 +31,7 @@
     "@vue/cli-plugin-babel": "^4.5.13",
     "@vue/cli-plugin-eslint": "^4.5.13",
     "@vue/cli-service": "^4.5.13",
-    "vue": "^2.6.12",
+    "vue": "^2.6.14",
     "w-jsonview-tree": "^1.0.27",
     "w-package-tools": "^1.0.65"
   },

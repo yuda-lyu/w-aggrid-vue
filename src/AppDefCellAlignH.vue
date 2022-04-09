@@ -6,9 +6,9 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">kpHeadAlighH</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadAlighH.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadAlighH.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">defCellAlignH</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defCellAlignH.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defCellAlignH.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
@@ -45,16 +45,7 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpHead: {
-                    'make': 'make(left)',
-                    'model': 'model(center)',
-                    'price': 'price(right)',
-                },
-                kpHeadAlighH: { //default: center
-                    'make': 'left',
-                    //'model':'center',
-                    'price': 'right',
-                },
+                defCellAlignH: 'left',
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [

@@ -7,9 +7,9 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">defHeadAlighH</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadAlighH.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadAlighH.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">defHeadAlignH</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadAlignH.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadAlignH.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
@@ -46,7 +46,7 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                defHeadAlighH: 'left',
+                defHeadAlignH: 'left',
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [

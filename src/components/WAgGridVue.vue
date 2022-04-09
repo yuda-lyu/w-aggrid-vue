@@ -137,8 +137,8 @@ function parseText(contentPaste) {
  * @vue-prop {Array} opt.rows 輸入資料列，各列為物件，內含各欄位keys之值，例[{},{},...,{}]
  * @vue-prop {Object} [opt.kpHead={}] 輸入key對應head物件，預設各key值為本身key值
  * @vue-prop {Object} [opt.kpHeadTooltip={}] 輸入key對應需tooltip的html字串物件，於各head處滑鼠移入時觸發，預設各key值為undefined
- * @vue-prop {String} [opt.defHeadAlighH='center'] 輸入head預設之左右對齊字串，預設為'center'
- * @vue-prop {Object} [opt.kpHeadAlighH={}] 輸入key對應head之左右對齊字串物件，預設各key值為defHeadAlighH
+ * @vue-prop {String} [opt.defHeadAlignH='center'] 輸入head預設之左右對齊字串，預設為'center'
+ * @vue-prop {Object} [opt.kpHeadAlignH={}] 輸入key對應head之左右對齊字串物件，預設各key值為defHeadAlignH
  * @vue-prop {Boolean} [opt.defHeadSort=true] 輸入head預設之是否允許排序布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadSort={}] 輸入key對應head之是否允許排序物件，預設各key值為defHeadSort
  * @vue-prop {Function|String} [opt.defHeadSortMethod=null] 輸入head預設之排序方式函數或字串，若需自行定義則給予函數，若需使用內建的自動轉型判斷方式則給予'auto'字串，預設為null
@@ -157,8 +157,8 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpCellWidth={}] 輸入key對應cell之寬度物件，預設各key值為undefined
  * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設各key值為undefined
  * @vue-prop {Object} [opt.kpCellTooltip={}] 輸入key對應cell之tooltip的html字串物件，於各cell處滑鼠移入時觸發，預設各key值為undefined
- * @vue-prop {String} [opt.defCellAlighH='center'] 輸入cell預設之左右對齊字串，預設為'center'
- * @vue-prop {Object} [opt.kpCellAlighH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlighH
+ * @vue-prop {String} [opt.defCellAlignH='center'] 輸入cell預設之左右對齊字串，預設為'center'
+ * @vue-prop {Object} [opt.kpCellAlignH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlignH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
  * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
@@ -226,8 +226,8 @@ export default {
 
             kpHead: {},
             kpHeadTooltip: {},
-            defHeadAlighH: null,
-            kpHeadAlighH: {},
+            defHeadAlignH: null,
+            kpHeadAlignH: {},
             defHeadSort: null,
             kpHeadSort: {},
             defHeadSortMethod: null,
@@ -246,8 +246,8 @@ export default {
             kpCellWidth: {},
             kpCellRender: {},
             kpCellTooltip: {},
-            defCellAlighH: null,
-            kpCellAlighH: {},
+            defCellAlignH: null,
+            kpCellAlignH: {},
             defCellEditable: null,
             kpCellEditable: {},
             kpConvertKeysWhenUploadData: null,
@@ -981,18 +981,18 @@ export default {
                 vo.kpHeadTooltip = vo.opt.kpHeadTooltip
             }
 
-            //defHeadAlighH
-            vo.defHeadAlighH = 'center'
-            if (arrHas(vo.opt.defHeadAlighH, ['left', 'center', 'right'])) {
-                vo.defHeadAlighH = vo.opt.defHeadAlighH
+            //defHeadAlignH
+            vo.defHeadAlignH = 'center'
+            if (arrHas(vo.opt.defHeadAlignH, ['left', 'center', 'right'])) {
+                vo.defHeadAlignH = vo.opt.defHeadAlignH
             }
 
-            //kpHeadAlighH
-            vo.kpHeadAlighH = setobj(vo.keys,
+            //kpHeadAlignH
+            vo.kpHeadAlignH = setobj(vo.keys,
                 function(key) {
-                    return vo.defHeadAlighH
+                    return vo.defHeadAlignH
                 },
-                vo.opt.kpHeadAlighH
+                vo.opt.kpHeadAlignH
             )
 
             //defHeadSort
@@ -1123,18 +1123,18 @@ export default {
                 vo.kpCellTooltip = vo.opt.kpCellTooltip
             }
 
-            //defCellAlighH
-            vo.defCellAlighH = 'center'
-            if (arrHas(vo.opt.defCellAlighH, ['left', 'center', 'right'])) {
-                vo.defCellAlighH = vo.opt.defCellAlighH
+            //defCellAlignH
+            vo.defCellAlignH = 'center'
+            if (arrHas(vo.opt.defCellAlignH, ['left', 'center', 'right'])) {
+                vo.defCellAlignH = vo.opt.defCellAlignH
             }
 
-            //kpCellAlighH
-            vo.kpCellAlighH = setobj(vo.keys,
+            //kpCellAlignH
+            vo.kpCellAlignH = setobj(vo.keys,
                 function(key) {
-                    return vo.defCellAlighH
+                    return vo.defCellAlignH
                 },
-                vo.opt.kpCellAlighH
+                vo.opt.kpCellAlignH
             )
 
             //defCellEditable
@@ -1363,7 +1363,7 @@ export default {
                 }
 
                 //text-align
-                let cTextAlign = vo.kpHeadAlighH[key]
+                let cTextAlign = vo.kpHeadAlignH[key]
 
                 //justify-content
                 let kpTA2JC = {
@@ -1436,7 +1436,7 @@ export default {
 
                 //cellStyle
                 let cellStyle = {
-                    'text-align': vo.kpCellAlighH[key] //add align
+                    'text-align': vo.kpCellAlignH[key] //add align
                 }
                 let funColStyle = vo.kpColStyle[key]
                 if (isfun(funColStyle)) {

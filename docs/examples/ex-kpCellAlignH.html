@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for defHeadAlighH</title>
+    <title>example for kpCellAlignH</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="../dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.28/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -112,14 +112,14 @@
                 <div style="margin:20px 0px;">
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
-                    >defHeadAlighH</span>
+                    >kpCellAlignH</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadAlighH.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellAlignH.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadAlighH.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellAlignH.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
@@ -153,7 +153,12 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
-          defHeadAlighH: "left",
+          kpCellAlignH: {
+            //default: center
+            make: "left",
+            //'model':'center',
+            price: "right"
+          },
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
         action: []
