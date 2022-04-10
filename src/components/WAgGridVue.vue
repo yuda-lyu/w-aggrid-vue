@@ -1748,6 +1748,9 @@ export default {
 
             //downloadExcelFileFromDataDyn
             downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
+                .catch((err) => {
+                    console.log(err)
+                })
 
             return mat
         },
@@ -1802,6 +1805,9 @@ export default {
 
             //downloadExcelFileFromDataDyn
             downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
+                .catch((err) => {
+                    console.log(err)
+                })
 
             return mat
         },
