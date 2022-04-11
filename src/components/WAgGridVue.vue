@@ -1535,8 +1535,8 @@ export default {
                 csn.push(c)
             })
 
-            //update
-            vo.gridOptions.columnApi.setColumnState(csn)
+            //update, ag-grid 23.1.0已廢棄applyColumnState改用applyColumnState
+            vo.gridOptions.columnApi.applyColumnState(csn)
 
         },
 
