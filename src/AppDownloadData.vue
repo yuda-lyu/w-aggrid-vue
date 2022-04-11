@@ -63,11 +63,22 @@ export default {
         try {
             let ddata = vo.$refs.rftable.downloadData({
                 funGetKeysHook: function(keys) {
-                    //can modify keys
+                    console.log('funGetKeysHook', keys)
+                    //modify keys
                     return keys
                 },
-                //useHead: true, //default: false
-                fileName: 'data.xlsx',
+                funGetLtdtHook: function(ltdt) {
+                    console.log('funGetLtdtHook', ltdt)
+                    //modify ltdt
+                    return ltdt
+                },
+                funGetMatHook: function(mat) {
+                    console.log('funGetMatHook', mat)
+                    //modify mat
+                    return mat
+                },
+                useHead: true, //default: false
+                fileName: null, //default: 'data.xlsx'
                 sheetName: null, //default: data
                 pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
             })

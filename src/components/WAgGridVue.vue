@@ -1699,14 +1699,32 @@ export default {
         },
 
         downloadDisplayData: function(opt = {}) {
-            //console.log('methods downloadData', opt)
+            //console.log('methods downloadDisplayData', opt)
 
             let vo = this
 
-            //funGetKeysHook, useHead, fileName, sheetName, pathItems
-            let { funGetKeysHook = null, useHead = false, fileName = 'data.xlsx', sheetName = null, pathItems = null } = opt
+            //spread
+            let {
+                funGetKeysHook,
+                funGetLtdtHook,
+                funGetMatHook,
+                useHead,
+                fileName,
+                sheetName,
+                pathItems
+            } = opt
 
-            //pathItems
+            //default useHead
+            if (!isbol(useHead)) {
+                useHead = false
+            }
+
+            //default fileName
+            if (!isestr(fileName)) {
+                fileName = 'data.xlsx'
+            }
+
+            //default pathItems
             if (!isearr(pathItems)) {
                 pathItems = vo.pathItems
             }
@@ -1732,6 +1750,11 @@ export default {
             //data, 僅組件顯示資料
             let data = vo.getDisplayData()
 
+            //funGetLtdtHook
+            if (isfun(funGetLtdtHook)) {
+                data = funGetLtdtHook(data)
+            }
+
             //ltdtkeys2mat
             let mat = ltdtkeys2mat(data, useKeys) //依照funGetKeysHook回傳的keys再次提取數據
 
@@ -1745,6 +1768,11 @@ export default {
 
             //concat
             mat = concat([heads], mat)
+
+            //funGetMatHook
+            if (isfun(funGetMatHook)) {
+                mat = funGetMatHook(mat)
+            }
 
             //downloadExcelFileFromDataDyn
             downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
@@ -1760,10 +1788,28 @@ export default {
 
             let vo = this
 
-            //funGetKeysHook, useHead, fileName, sheetName, pathItems
-            let { funGetKeysHook = null, useHead = false, fileName = 'data.xlsx', sheetName = null, pathItems = null } = opt
+            //spread
+            let {
+                funGetKeysHook,
+                funGetLtdtHook,
+                funGetMatHook,
+                useHead,
+                fileName,
+                sheetName,
+                pathItems
+            } = opt
 
-            //pathItems
+            //default useHead
+            if (!isbol(useHead)) {
+                useHead = false
+            }
+
+            //default fileName
+            if (!isestr(fileName)) {
+                fileName = 'data.xlsx'
+            }
+
+            //default pathItems
             if (!isearr(pathItems)) {
                 pathItems = vo.pathItems
             }
@@ -1774,7 +1820,7 @@ export default {
             //useKeys
             let useKeys = cloneDeep(keys)
             if (isfun(funGetKeysHook)) {
-                useKeys = funGetKeysHook(useKeys)
+                useKeys = funGetKeysHook(useKeys) //依照funGetKeysHook回傳的keys再次提取數據
             }
             if (!isearr(useKeys)) {
                 useKeys = cloneDeep(keys)
@@ -1789,6 +1835,11 @@ export default {
             //ltdtmapping
             let data = ltdtmapping(vo.rows, useKeys)
 
+            //funGetLtdtHook
+            if (isfun(funGetLtdtHook)) {
+                data = funGetLtdtHook(data)
+            }
+
             //ltdtkeys2mat
             let mat = ltdtkeys2mat(data, useKeys)
 
@@ -1802,6 +1853,11 @@ export default {
 
             //concat
             mat = concat([heads], mat)
+
+            //funGetMatHook
+            if (isfun(funGetMatHook)) {
+                mat = funGetMatHook(mat)
+            }
 
             //downloadExcelFileFromDataDyn
             downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
