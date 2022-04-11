@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.29/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.30/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -170,11 +170,22 @@
       try {
         let ddata = vo.$refs.rftable.downloadData({
           funGetKeysHook: function(keys) {
-            //can modify keys
+            console.log("funGetKeysHook", keys);
+            //modify keys
             return keys;
           },
-          //useHead: true, //default: false
-          fileName: "data.xlsx",
+          funGetLtdtHook: function(ltdt) {
+            console.log("funGetLtdtHook", ltdt);
+            //modify ltdt
+            return ltdt;
+          },
+          funGetMatHook: function(mat) {
+            console.log("funGetMatHook", mat);
+            //modify mat
+            return mat;
+          },
+          useHead: true, //default: false
+          fileName: null, //default: 'data.xlsx'
           sheetName: null, //default: data
           pathItems: null //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
         });
