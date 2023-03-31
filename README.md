@@ -49,5 +49,5 @@ or
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.31/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.32/dist/w-aggrid-vue.umd.js"></script>
 ```
