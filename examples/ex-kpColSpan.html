@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for clearHeadFilterAll</title>
+    <title>example for kpColSpan</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -110,16 +110,14 @@
         <div style="display:flex;">
             <div>
                 <div style="margin:20px 0px;">
-                    <span
-                        style="font-size:1.5rem; margin-right:20px;"
-                    >clearHeadFilterAll</span>
+                    <span style="font-size:1.5rem; margin-right:20px;">kpColSpan</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-clearHeadFilterAll.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpColSpan.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-clearHeadFilterAll.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpColSpan.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
@@ -153,6 +151,19 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
+          kpColSpan: {
+            make: function(value, key, row, parmas) {
+              console.log(value, key, row, parmas);
+              let vMake = value;
+              let vPrice = row.price;
+              if (vMake === "BMW") {
+                return 3;
+              } else if (vPrice <= 35000) {
+                return 2;
+              }
+              return 1;
+            }
+          },
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
         action: []
@@ -161,33 +172,6 @@
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
-
-      //setHeadFilter
-      setTimeout(function() {
-        try {
-          vo.$refs.rftable.setHeadFilter("price", 6);
-        } catch (err) {
-          console.log(err);
-        }
-      }, 1000);
-
-      //setHeadFilter
-      setTimeout(function() {
-        try {
-          vo.$refs.rftable.setHeadFilter("model", "m");
-        } catch (err) {
-          console.log(err);
-        }
-      }, 2000);
-
-      //clearHeadFilterAll
-      setTimeout(function() {
-        try {
-          vo.$refs.rftable.clearHeadFilterAll();
-        } catch (err) {
-          console.log(err);
-        }
-      }, 3000);
     },
     computed: {},
     methods: {}
