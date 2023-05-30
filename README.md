@@ -39,15 +39,15 @@ npm i w-aggrid-vue
 ```
 [Necessary] Add script for ag-grid-community and don't need to include css, because has included them by umd file.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@27.1.0/dist/ag-grid-community.min.noStyle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@27.3.0/dist/ag-grid-community.min.noStyle.js"></script>
 or
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@27.1.0/dist/ag-grid-enterprise.min.noStyle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@27.3.0/dist/ag-grid-enterprise.min.noStyle.js"></script>
 ```
 [Necessary] Add script for ag-grid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-vue@27.1.0/dist/ag-grid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-vue@27.3.0/dist/ag-grid-vue.umd.js"></script>
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.32/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.33/dist/w-aggrid-vue.umd.js"></script>
 ```

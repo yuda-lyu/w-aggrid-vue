@@ -152,7 +152,10 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpHeadHide={}] 輸入key對應head是否隱藏物件，預設各key值為false
  * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定各key欄之函數，函數給予cell值需回傳之row style，預設各key值為undefined
  * @vue-prop {Object} [opt.kpRowDrag={}] 輸入key對應col之是否能拖曳排序物件，預設各key值為false
- * @vue-prop {Object} [opt.kpColStyle={}] 輸入key對應row style之物件，可設定各key欄之col style，預設各key值為undefined
+ * @vue-prop {Function} [opt.genRowsPinnTop=null] 輸入產生置頂rows函數，輸入為表內全部數據，預設為null
+ * @vue-prop {Function} [opt.genRowsPinnBottom=null] 輸入產生置底rows函數，輸入為表內全部數據，預設為null
+ * @vue-prop {Object} [opt.kpColStyle={}] 輸入key對應col style之物件，可設定各key欄之col style，預設各key值為undefined
+ * @vue-prop {Object} [opt.kpColSpan={}] 輸入key對應col span之物件，可設定各key欄之col span，預設各key值為undefined
  * @vue-prop {Number} [opt.defCellMinWidth=null] 輸入cell預設最小寬度數字，預設為null
  * @vue-prop {Object} [opt.kpCellWidth={}] 輸入key對應cell之寬度物件，預設各key值為undefined
  * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設各key值為undefined
@@ -162,17 +165,17 @@ function parseText(contentPaste) {
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
  * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
- * @vue-prop {Function} [opt.rowClick=function(){}] 輸入row click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowDbClick=function(){}] 輸入row double click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowChange=function(){}] 輸入row change之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowChecked=function(){}] 輸入row checked之觸發事件，需使用kpHeadCheckBox開啟指定key的head與對應rows使用checkbox，預設為function(){}
- * @vue-prop {Function} [opt.rowMouseEnter=function(){}] 輸入row mouseenter之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.rowMouseLeave=function(){}] 輸入row mouseleave之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellClick=function(){}] 輸入cell click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellDbClick=function(){}] 輸入cell double click之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellChange=function(){}] 輸入cell change之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellMouseEnter=function(){}] 輸入cell mouseenter之觸發事件，預設為function(){}
- * @vue-prop {Function} [opt.cellMouseLeave=function(){}] 輸入cell mouseleave之觸發事件，預設為function(){}
+ * @vue-prop {Function} [opt.rowClick=()=>{}] 輸入row click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowDbClick=()=>{}] 輸入row double click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowChange=()=>{}] 輸入row change之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowChecked=()=>{}] 輸入row checked之觸發事件，需使用kpHeadCheckBox開啟指定key的head與對應rows使用checkbox，預設為()=>{}
+ * @vue-prop {Function} [opt.rowMouseEnter=()=>{}] 輸入row mouseenter之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowMouseLeave=()=>{}] 輸入row mouseleave之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellClick=()=>{}] 輸入cell click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellDbClick=()=>{}] 輸入cell double click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellChange=()=>{}] 輸入cell change之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellMouseEnter=()=>{}] 輸入cell mouseenter之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellMouseLeave=()=>{}] 輸入cell mouseleave之觸發事件，預設為()=>{}
  * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬布林值，預設false
  * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
@@ -242,6 +245,7 @@ export default {
             kpRowStyle: {},
             kpRowDrag: {},
             kpColStyle: {},
+            kpColSpan: {},
             defCellMinWidth: null,
             kpCellWidth: {},
             kpCellRender: {},
@@ -273,6 +277,9 @@ export default {
             vCellMouseLeave: null,
             eCellMouseLeaves: [],
 
+            genRowsPinnTop: null,
+            genRowsPinnBottom: null,
+
             // AllModules,
             gridOptions: {
 
@@ -300,6 +307,9 @@ export default {
                 getRowStyle: vo.agGetRowStyle,
 
                 // debounceVerticalScrollbar: true,
+
+                pinnedTopRowData: [],
+                pinnedBottomRowData: [],
 
             },
 
@@ -486,7 +496,7 @@ export default {
         },
 
         agCellChange: function(param) {
-            //console.log('methods agCellChange', param)
+            // console.log('methods agCellChange', param)
 
             let vo = this
 
@@ -502,7 +512,36 @@ export default {
                 //rowChange
                 vo.rowChange(param.colDef.field, param.data)
 
+                //setRowsPinnBottom
+                vo.setRowsPinnBottom(vo.rows)
+
             }
+
+        },
+
+        agReady: function(params) {
+            //console.log('methods agReady', params)
+
+            let vo = this
+
+            //ag
+            vo.ag = params
+
+            if (vo.autoFitColumn) {
+
+                //fitColumns
+                vo.fitColumns(false)
+
+            }
+
+            //setRowsPinnTop
+            vo.setRowsPinnTop(vo.rows)
+
+            //setRowsPinnBottom
+            vo.setRowsPinnBottom(vo.rows)
+
+            //show
+            vo.opacity = 1
 
         },
 
@@ -918,6 +957,291 @@ export default {
 
         },
 
+        keys2columns: function(keys) {
+            //console.log('methods keys2columns')
+
+            let vo = this
+
+            //cs
+            let cs = map(keys, function(key) {
+                let o = {}
+
+                //key
+                o.field = key
+
+                //text
+                o.headerName = vo.kpHead[key]
+
+                //sort
+                o.sortable = vo.kpHeadSort[key]
+
+                //comparator
+                let funHeadSortMethod = vo.kpHeadSortMethod[key]
+                if (isfun(funHeadSortMethod)) {
+                    o.comparator = funHeadSortMethod
+                }
+                else if (funHeadSortMethod === 'auto') {
+                    o.comparator = function(valueA, valueB, nodeA, nodeB, isInverted) {
+
+                        //若值無效
+                        let sA = iser(valueA)
+                        let sB = iser(valueB)
+                        if (sA && sB) {
+                            return 0
+                        }
+                        if (sA) {
+                            return -1
+                        }
+                        if (sB) {
+                            return 1
+                        }
+
+                        //若值為數字
+                        if (isnum(valueA) && isnum(valueB)) {
+                            return cdbl(valueA) - cdbl(valueB)
+                        }
+
+                        //若值為字串, 先比長度越小越前面, 長度相同則用localeCompare比較
+                        if (isestr(valueA) && isestr(valueB)) {
+                            let lenA = size(valueA)
+                            let lenB = size(valueB)
+                            if (lenA !== lenB) {
+                                return lenA - lenB
+                            }
+                            else {
+                                return valueA.localeCompare(valueB)
+                            }
+                        }
+
+                        return 0 //不比較
+                    }
+                }
+
+                //filter
+                o.filter = vo.kpHeadFilter[key] //欄位標題右邊的選單按鈕, 可使用文字過濾器'agTextColumnFilter'
+                o.floatingFilter = vo.kpHeadFilter[key] //欄位標題下方的文字過濾輸入區, 因ag-grid 23.1.0已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
+                //o.suppressMenu = true //關閉欄位標題右邊的選單按鈕
+
+                //filterParams
+                o.filterParams = {
+                    // caseSensitive: true, //過濾區分大小寫, 會導致數字欄位無法被過濾
+                    // applyButton: true, //彈出選單下方可加入使用按鈕
+                    // clearButton: true, //彈出選單下方可加入取消按鈕
+                    // filterParams: {
+                    //     comparator: function(ft, cv) {
+                    //         console.log('comparator', ft, cv)
+                    //     }
+                    // }
+                }
+                //filter plus, 欄位標題下方加入文字過濾輸入框, 需gridOptions內floatingFilter=true
+                o.floatingFilterComponentParams = { suppressFilterButton: true } //關閉文字過濾輸入框右邊按鈕, 需suppressFilterButton=true
+
+                //lockPosition, 若不拖曳而設定欄位lockPosition為true時, 該欄位會強制置左, 故不使用
+                //o.lockPosition = !vo.kpHeadDrag[key]
+
+                //suppressMovable, 指定欄位不能拖曳, 但會被其他欄位拖曳而改變位置
+                o.suppressMovable = !vo.kpHeadDrag[key]
+
+                //resizable
+                o.resizable = true
+
+                //editable
+                o.editable = vo.kpCellEditable[key]
+
+                //row selection
+                if (vo.kpHeadCheckBox[key]) {
+                    o.headerCheckboxSelection = true
+                    o.headerCheckboxSelectionFilteredOnly = true //若有使用過濾filter, 點header的全選全取消核選方塊時, 僅針對過濾的rows來操作
+                    o.checkboxSelection = true
+                }
+
+                //flex
+                // o.flex = 1
+
+                //funHeadTooltip
+                let funHeadTooltip = vo.kpHeadTooltip[key]
+
+                //header onmouseenter
+                let headerMouseenter = ''
+                if (isfun(funHeadTooltip)) {
+
+                    //tooltip
+                    let t = funHeadTooltip(vo.kpHead[key], key)
+
+                    //cstr
+                    t = cstr(t)
+
+                    //kmsg
+                    let kmsg = str2md5(t)
+
+                    //add dtmsg
+                    dtmsg[kmsg] = t
+
+                    //onmouseenter
+                    headerMouseenter = `onmouseenter="ttWAgGridVue(this,'${kmsg}')"`
+
+                }
+
+                //text-align
+                let cTextAlign = vo.kpHeadAlignH[key]
+
+                //justify-content
+                let kpTA2JC = {
+                    'left': 'flex-start',
+                    'center': 'center',
+                    'right': 'flex-end',
+                }
+                let cJustifyContent = kpTA2JC[cTextAlign]
+
+                //複寫header template
+                o.headerComponentParams = {
+                    template: `
+                        <div class="ag-cell-label-container" role="presentation"" ${headerMouseenter}>
+                            <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
+                            <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
+                                <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
+                                <span ref="eSortOrder" class="ag-header-icon ag-sort-order" ></span>
+                                <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></span>
+                                <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></span>
+                                <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></span>
+                                <span ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
+                            </div>
+                        </div>
+                    `
+                }
+
+                //funColSpan
+                let funColSpan = vo.kpColSpan[key]
+
+                //colSpan
+                if (isfun(funColSpan)) {
+                    o.colSpan = function(params) {
+                        // console.log('colSpan', params)
+
+                        //row
+                        let row = get(params, 'data', {})
+
+                        //value
+                        let value = get(row, key)
+
+                        //funColSpan
+                        let i = funColSpan(value, key, row, params)
+
+                        //check
+                        if (!isnum(i)) {
+                            i = 1
+                        }
+
+                        //cint
+                        i = cint(i)
+
+                        //check
+                        if (i < 1) {
+                            i = 1
+                        }
+
+                        return i
+                    }
+                }
+
+                //funCellTooltip
+                let funCellTooltip = vo.kpCellTooltip[key]
+
+                //funCellRender
+                let funCellRender = vo.kpCellRender[key]
+
+                //cellRenderer
+                o.cellRenderer = function(params) {
+                    //console.log('cellRenderer', params)
+
+                    //待加入於編輯cell後可顯示編輯後值的tooltip
+                    // console.log('trueRowId', params.node.id, 'trueColKey', params.column.colId)
+
+                    //funCellTooltip
+                    if (isfun(funCellTooltip)) {
+
+                        //tooltip
+                        let t = funCellTooltip(params.value, params.colDef.field, cloneDeep(params.data))
+
+                        //cstr
+                        t = cstr(t)
+
+                        //kmsg
+                        let kmsg = str2md5(t)
+
+                        //add dtmsg
+                        dtmsg[kmsg] = t
+
+                        //onmouseenter
+                        params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
+
+                    }
+
+                    //h
+                    let h = params.value
+
+                    //funCellRender
+                    if (isfun(funCellRender)) {
+                        h = funCellRender(params.value, params.colDef.field, cloneDeep(params.data))
+                    }
+
+                    return h
+                }
+
+                //cellStyle
+                let cellStyle = {
+                    'text-align': vo.kpCellAlignH[key] //add align
+                }
+                let funColStyle = vo.kpColStyle[key]
+                if (isfun(funColStyle)) {
+                    cellStyle = merge(cellStyle, funColStyle()) //add col style
+                }
+                o.cellStyle = cellStyle
+
+                //fix
+                if (isbol(vo.kpHeadFixLeft[key])) {
+
+                    //pinned
+                    o.pinned = vo.kpHeadFixLeft[key] ? 'left' : ''
+
+                    // //suppressSizeToFit, true代表禁止欄位被sizeColumnsToFit, 因有pinned也需能resize與自動調整寬度, 故取消此功能
+                    // if (vo.kpHeadFixLeft[key]) {
+                    //     o.suppressSizeToFit = true
+                    // }
+
+                }
+
+                //width, 內容物超過width不會自動撐開
+                if (isnum(vo.kpCellWidth[key])) {
+                    let w = cdbl(vo.kpCellWidth[key])
+                    o.width = w
+                }
+
+                //minWidth, ag-grid設定minWidth還是會自動被處理調整成寬度, 例如minWidth給150, 實際會依照內容長度轉成width如200, 而內容物超過轉換後的width不會自動撐開
+                if (isnum(vo.defCellMinWidth)) {
+                    o.minWidth = vo.defCellMinWidth
+                }
+
+                //rowDrag
+                let rowDrag = false //default
+                if (isbol(vo.kpRowDrag[key])) {
+                    rowDrag = vo.kpRowDrag[key]
+                }
+                o.rowDrag = rowDrag
+
+                //hide
+                let hide = false //default
+                if (isbol(vo.kpHeadHide[key])) {
+                    hide = vo.kpHeadHide[key]
+                }
+                o.hide = hide
+
+                return o
+            })
+
+            return cs
+        },
+
         changeOpt: function() {
             //console.log('methods changeOpt')
 
@@ -1024,12 +1348,10 @@ export default {
             )
 
             //kpHeadFixLeft
-            vo.kpHeadFixLeft = setobj(vo.keys,
-                function(key) {
-                    return false //預設false
-                },
-                vo.opt.kpHeadFixLeft
-            )
+            vo.kpHeadFixLeft = {}
+            if (iseobj(vo.opt.kpHeadFixLeft)) {
+                vo.kpHeadFixLeft = vo.opt.kpHeadFixLeft
+            }
 
             //defHeadFilter
             vo.defHeadFilter = true
@@ -1062,40 +1384,52 @@ export default {
             //kpHeadCheckBox
             vo.kpHeadCheckBox = setobj(vo.keys,
                 function(key) {
-                    return false //預設false
+                    return false //每個col皆預設false
                 },
                 vo.opt.kpHeadCheckBox
             )
 
             //kpHeadHide
-            vo.kpHeadHide = setobj(vo.keys,
-                function(key) {
-                    return false //預設false
-                },
-                vo.opt.kpHeadHide
-            )
+            vo.kpHeadHide = {}
+            if (iseobj(vo.opt.kpHeadHide)) {
+                vo.kpHeadHide = vo.opt.kpHeadHide
+            }
 
             //kpRowStyle
             vo.kpRowStyle = {}
-            if (isobj(vo.opt.kpRowStyle)) {
+            if (iseobj(vo.opt.kpRowStyle)) {
                 vo.kpRowStyle = vo.opt.kpRowStyle
             }
 
             //kpRowDrag
-            vo.kpRowDrag = setobj(vo.keys,
-                function(key) {
-                    return false //預設false
-                },
-                vo.opt.kpRowDrag
-            )
+            vo.kpRowDrag = {}
+            if (iseobj(vo.opt.kpRowDrag)) {
+                vo.kpRowDrag = vo.opt.kpRowDrag
+            }
+
+            //genRowsPinnTop
+            vo.genRowsPinnTop = null
+            if (isfun(vo.opt.genRowsPinnTop)) {
+                vo.genRowsPinnTop = vo.opt.genRowsPinnTop
+            }
+
+            //genRowsPinnBottom
+            vo.genRowsPinnBottom = null
+            if (isfun(vo.opt.genRowsPinnBottom)) {
+                vo.genRowsPinnBottom = vo.opt.genRowsPinnBottom
+            }
 
             //kpColStyle
-            vo.kpColStyle = setobj(vo.keys,
-                function(key) {
-                    return null //預設null
-                },
-                vo.opt.kpColStyle
-            )
+            vo.kpColStyle = {}
+            if (iseobj(vo.opt.kpColStyle)) {
+                vo.kpColStyle = vo.opt.kpColStyle
+            }
+
+            //kpColSpan
+            vo.kpColSpan = {}
+            if (iseobj(vo.opt.kpColSpan)) {
+                vo.kpColSpan = vo.opt.kpColSpan
+            }
 
             //defCellMinWidth
             vo.defCellMinWidth = null
@@ -1104,22 +1438,20 @@ export default {
             }
 
             //kpCellWidth
-            vo.kpCellWidth = setobj(vo.keys,
-                function(key) {
-                    return null //預設null
-                },
-                vo.opt.kpCellWidth
-            )
+            vo.kpCellWidth = {}
+            if (iseobj(vo.opt.kpCellWidth)) {
+                vo.kpCellWidth = vo.opt.kpCellWidth
+            }
 
             //kpCellRender
             vo.kpCellRender = {}
-            if (isobj(vo.opt.kpCellRender)) {
+            if (iseobj(vo.opt.kpCellRender)) {
                 vo.kpCellRender = vo.opt.kpCellRender
             }
 
             //kpCellTooltip
             vo.kpCellTooltip = {}
-            if (isobj(vo.opt.kpCellTooltip)) {
+            if (iseobj(vo.opt.kpCellTooltip)) {
                 vo.kpCellTooltip = vo.opt.kpCellTooltip
             }
 
@@ -1238,273 +1570,41 @@ export default {
 
         },
 
-        keys2columns: function(keys) {
-            //console.log('methods keys2columns')
+        setRowsPinnTop: function(rows) {
+            // console.log('methods setRowsPinnTop', rows)
 
             let vo = this
 
-            let r = map(keys, function(key) {
-                let o = {}
+            //check
+            if (isfun(vo.genRowsPinnTop)) {
 
-                //key
-                o.field = key
+                //pinnedTopRowData
+                let pinnedTopRowData = vo.genRowsPinnTop(rows)
+                // console.log('pinnedTopRowData', pinnedTopRowData)
 
-                //text
-                o.headerName = vo.kpHead[key]
-
-                //sort
-                o.sortable = vo.kpHeadSort[key]
-
-                //comparator
-                let funHeadSortMethod = vo.kpHeadSortMethod[key]
-                if (isfun(funHeadSortMethod)) {
-                    o.comparator = funHeadSortMethod
-                }
-                else if (funHeadSortMethod === 'auto') {
-                    o.comparator = function(valueA, valueB, nodeA, nodeB, isInverted) {
-
-                        //若值無效
-                        let sA = iser(valueA)
-                        let sB = iser(valueB)
-                        if (sA && sB) {
-                            return 0
-                        }
-                        if (sA) {
-                            return -1
-                        }
-                        if (sB) {
-                            return 1
-                        }
-
-                        //若值為數字
-                        if (isnum(valueA) && isnum(valueB)) {
-                            return cdbl(valueA) - cdbl(valueB)
-                        }
-
-                        //若值為字串, 先比長度越小越前面, 長度相同則用localeCompare比較
-                        if (isestr(valueA) && isestr(valueB)) {
-                            let lenA = size(valueA)
-                            let lenB = size(valueB)
-                            if (lenA !== lenB) {
-                                return lenA - lenB
-                            }
-                            else {
-                                return valueA.localeCompare(valueB)
-                            }
-                        }
-
-                        return 0 //不比較
-                    }
-                }
-
-                //filter
-                o.filter = vo.kpHeadFilter[key] //欄位標題右邊的選單按鈕, 可使用文字過濾器'agTextColumnFilter'
-                o.floatingFilter = vo.kpHeadFilter[key] //欄位標題下方的文字過濾輸入區, 因ag-grid 23.1.0已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
-                //o.suppressMenu = true //關閉欄位標題右邊的選單按鈕
-
-                //filterParams
-                o.filterParams = {
-                    // caseSensitive: true, //過濾區分大小寫, 會導致數字欄位無法被過濾
-                    // applyButton: true, //彈出選單下方可加入使用按鈕
-                    // clearButton: true, //彈出選單下方可加入取消按鈕
-                    // filterParams: {
-                    //     comparator: function(ft, cv) {
-                    //         console.log('comparator', ft, cv)
-                    //     }
-                    // }
-                }
-                //filter plus, 欄位標題下方加入文字過濾輸入框, 需gridOptions內floatingFilter=true
-                o.floatingFilterComponentParams = { suppressFilterButton: true } //關閉文字過濾輸入框右邊按鈕, 需suppressFilterButton=true
-
-                //lockPosition, 若不拖曳而設定欄位lockPosition為true時, 該欄位會強制置左, 故不使用
-                //o.lockPosition = !vo.kpHeadDrag[key]
-
-                //suppressMovable, 指定欄位不能拖曳, 但會被其他欄位拖曳而改變位置
-                o.suppressMovable = !vo.kpHeadDrag[key]
-
-                //resizable
-                o.resizable = true
-
-                //editable
-                o.editable = vo.kpCellEditable[key]
-
-                //row selection
-                if (vo.kpHeadCheckBox[key]) {
-                    o.headerCheckboxSelection = true
-                    o.headerCheckboxSelectionFilteredOnly = true //若有使用過濾filter, 點header的全選全取消核選方塊時, 僅針對過濾的rows來操作
-                    o.checkboxSelection = true
-                }
-
-                //flex
-                // o.flex = 1
-
-                //funHeadTooltip
-                let funHeadTooltip = vo.kpHeadTooltip[key]
-
-                //header onmouseenter
-                let headerMouseenter = ''
-                if (isfun(funHeadTooltip)) {
-
-                    //tooltip
-                    let t = funHeadTooltip(vo.kpHead[key])
-
-                    //cstr
-                    t = cstr(t)
-
-                    //kmsg
-                    let kmsg = str2md5(t)
-
-                    //add dtmsg
-                    dtmsg[kmsg] = t
-
-                    //onmouseenter
-                    headerMouseenter = `onmouseenter="ttWAgGridVue(this,'${kmsg}')"`
-
-                }
-
-                //text-align
-                let cTextAlign = vo.kpHeadAlignH[key]
-
-                //justify-content
-                let kpTA2JC = {
-                    'left': 'flex-start',
-                    'center': 'center',
-                    'right': 'flex-end',
-                }
-                let cJustifyContent = kpTA2JC[cTextAlign]
-
-                //複寫header template
-                o.headerComponentParams = {
-                    template: `
-                        <div class="ag-cell-label-container" role="presentation"" ${headerMouseenter}>
-                            <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
-                            <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
-                                <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
-                                <span ref="eSortOrder" class="ag-header-icon ag-sort-order" ></span>
-                                <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></span>
-                                <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></span>
-                                <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></span>
-                                <span ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
-                            </div>
-                        </div>
-                    `
-                }
-
-                //funCellTooltip
-                let funCellTooltip = vo.kpCellTooltip[key]
-
-                //funCellRender
-                let funCellRender = vo.kpCellRender[key]
-
-                //cellRenderer
-                o.cellRenderer = function(params) {
-                    //console.log('cellRenderer', params)
-
-                    //待加入於編輯cell後可顯示編輯後值的tooltip
-                    // console.log('trueRowId', params.node.id, 'trueColKey', params.column.colId)
-
-                    //funCellTooltip
-                    if (isfun(funCellTooltip)) {
-
-                        //tooltip
-                        let t = funCellTooltip(params.value, params.colDef.field, cloneDeep(params.data))
-
-                        //cstr
-                        t = cstr(t)
-
-                        //kmsg
-                        let kmsg = str2md5(t)
-
-                        //add dtmsg
-                        dtmsg[kmsg] = t
-
-                        //onmouseenter
-                        params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
-
-                    }
-
-                    //h
-                    let h = params.value
-
-                    //funCellRender
-                    if (isfun(funCellRender)) {
-                        h = funCellRender(params.value, params.colDef.field, cloneDeep(params.data))
-                    }
-
-                    return h
-                }
-
-                //cellStyle
-                let cellStyle = {
-                    'text-align': vo.kpCellAlignH[key] //add align
-                }
-                let funColStyle = vo.kpColStyle[key]
-                if (isfun(funColStyle)) {
-                    cellStyle = merge(cellStyle, funColStyle()) //add col style
-                }
-                o.cellStyle = cellStyle
-
-                //fix
-                if (isbol(vo.kpHeadFixLeft[key])) {
-
-                    //pinned
-                    o.pinned = vo.kpHeadFixLeft[key] ? 'left' : ''
-
-                    // //suppressSizeToFit, true代表禁止欄位被sizeColumnsToFit, 因有pinned也需能resize與自動調整寬度, 故取消此功能
-                    // if (vo.kpHeadFixLeft[key]) {
-                    //     o.suppressSizeToFit = true
-                    // }
-
-                }
-
-                //width, 內容物超過width不會自動撐開
-                if (isnum(vo.kpCellWidth[key])) {
-
-                    //width
-                    o.width = vo.kpCellWidth[key]
-
-                }
-
-                //min-width, ag-grid設定minWidth還是會自動被處理調整成寬度, 例如minWidth給150, 實際會依照內容長度轉成width如200, 而內容物超過轉換後的width不會自動撐開
-                if (isnum(vo.defCellMinWidth)) {
-
-                    //min-width
-                    o.minWidth = vo.defCellMinWidth
-
-                }
-
-                //rowDrag
-                o.rowDrag = vo.kpRowDrag[key]
-
-                //hide
-                o.hide = false
-                if (isbol(vo.kpHeadHide[key])) {
-                    o.hide = vo.kpHeadHide[key]
-                }
-
-                return o
-            })
-
-            return r
-        },
-
-        agReady: function(params) {
-            //console.log('methods agReady', params)
-
-            let vo = this
-
-            //ag
-            vo.ag = params
-
-            if (vo.autoFitColumn) {
-
-                //fitColumns
-                vo.fitColumns(false)
+                //update
+                vo.gridOptions.api.setPinnedTopRowData(pinnedTopRowData)
 
             }
 
-            //show
-            vo.opacity = 1
+        },
+
+        setRowsPinnBottom: function(rows) {
+            // console.log('methods setRowsPinnBottom', rows)
+
+            let vo = this
+
+            //check
+            if (isfun(vo.genRowsPinnBottom)) {
+
+                //pinnedBottomRowData
+                let pinnedBottomRowData = vo.genRowsPinnBottom(rows)
+                // console.log('pinnedBottomRowData', pinnedBottomRowData)
+
+                //update
+                vo.gridOptions.api.setPinnedBottomRowData(pinnedBottomRowData)
+
+            }
 
         },
 
@@ -1591,7 +1691,7 @@ export default {
 
             //setModel
             ft.setModel({
-                type: type,
+                type,
                 filter: cstr(value), //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串
             })
 

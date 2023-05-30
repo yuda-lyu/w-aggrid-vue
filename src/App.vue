@@ -32,7 +32,7 @@
                         v-for="(mcmp,kmcmp) in mcmps"
                     >
 
-                        <div :style="`transition:all 0.2s; display:table-cell; padding-top:15px; padding-right:10px; width:65px; text-align:right; font-size:0.9rem; color:${showMenu?'#cbf':'#888'}; background-color:${showMenu?'#444':'#fff'}; border-bottom:1px solid ${showMenu?'#769':'#fff'};`">{{kmcmp}}</div>
+                        <div :style="`transition:all 0.2s; display:table-cell; padding-top:15px; padding-right:10px; width:${widthMenu-10}px; text-align:right; font-size:0.9rem; color:${showMenu?'#6A1B9A':'#888'}; background-color:${showMenu?'#eee':'#fff'}; border-bottom:1px solid ${showMenu?'#E1BEE7':'#fff'};`">{{kmcmp}}</div>
 
                         <div :style="`transition:all 0.2s; display:table-cell; padding-top:15px; padding-left:10px; padding-right:10px; border-bottom:1px solid ${showMenu?'#dcf':'#fff'};`">
                             <template v-for="(cmp,kcmp) in mcmp">
@@ -127,6 +127,10 @@
 
                     <AppAutoFitColumns v-if="showCmp==='autoFitColumns'"></AppAutoFitColumns>
 
+                    <AppGenRowsPinnBottom v-if="showCmp==='genRowsPinnBottom'"></AppGenRowsPinnBottom>
+
+                    <AppGenRowsPinnTop v-if="showCmp==='genRowsPinnTop'"></AppGenRowsPinnTop>
+
                     <AppGetInstance v-if="showCmp==='getInstance'"></AppGetInstance>
 
                     <AppHighlight v-if="showCmp==='highlight'"></AppHighlight>
@@ -161,11 +165,13 @@
 
                     <AppKpHeadTooltip v-if="showCmp==='kpHeadTooltip'"></AppKpHeadTooltip>
 
-                    <AppKpRowDrag v-if="showCmp==='kpRowDrag'"></AppKpRowDrag>
-
                     <AppKpRowStyle v-if="showCmp==='kpRowStyle'"></AppKpRowStyle>
 
+                    <AppKpRowDrag v-if="showCmp==='kpRowDrag'"></AppKpRowDrag>
+
                     <AppKpColStyle v-if="showCmp==='kpColStyle'"></AppKpColStyle>
+
+                    <AppKpColSpan v-if="showCmp==='kpColSpan'"></AppKpColSpan>
 
                     <AppLargeData v-if="showCmp==='largeData'"></AppLargeData>
 
@@ -230,6 +236,8 @@ import AppUploadDataWithConvertKeys from './AppUploadDataWithConvertKeys.vue'
 import AppPasteText from './AppPasteText.vue'
 import AppFitColumns from './AppFitColumns.vue'
 import AppAutoFitColumns from './AppAutoFitColumns.vue'
+import AppGenRowsPinnBottom from './AppGenRowsPinnBottom.vue'
+import AppGenRowsPinnTop from './AppGenRowsPinnTop.vue'
 import AppGetInstance from './AppGetInstance.vue'
 import AppHighlight from './AppHighlight.vue'
 import AppKpCellAlignH from './AppKpCellAlignH.vue'
@@ -247,9 +255,10 @@ import AppKpHeadFixLeft from './AppKpHeadFixLeft.vue'
 import AppKpHeadSort from './AppKpHeadSort.vue'
 import AppKpHeadSortMethod from './AppKpHeadSortMethod.vue'
 import AppKpHeadTooltip from './AppKpHeadTooltip.vue'
-import AppKpRowDrag from './AppKpRowDrag.vue'
 import AppKpRowStyle from './AppKpRowStyle.vue'
+import AppKpRowDrag from './AppKpRowDrag.vue'
 import AppKpColStyle from './AppKpColStyle.vue'
+import AppKpColSpan from './AppKpColSpan.vue'
 import AppLargeData from './AppLargeData.vue'
 import AppOperateData from './AppOperateData.vue'
 import AppRowChange from './AppRowChange.vue'
@@ -292,6 +301,8 @@ export default {
         AppPasteText,
         AppFitColumns,
         AppAutoFitColumns,
+        AppGenRowsPinnBottom,
+        AppGenRowsPinnTop,
         AppGetInstance,
         AppHighlight,
         AppKpCellAlignH,
@@ -309,9 +320,10 @@ export default {
         AppKpHeadSort,
         AppKpHeadSortMethod,
         AppKpHeadTooltip,
-        AppKpRowDrag,
         AppKpRowStyle,
+        AppKpRowDrag,
         AppKpColStyle,
+        AppKpColSpan,
         AppLargeData,
         AppOperateData,
         AppRowChange,
@@ -385,11 +397,12 @@ export default {
                     'defHeadSortMethod',
                 ],
                 kpRow: [
-                    'kpRowDrag',
                     'kpRowStyle',
+                    'kpRowDrag',
                 ],
                 kpCol: [
                     'kpColStyle',
+                    'kpColSpan',
                 ],
                 funcs: [
                     'filterAllData',
@@ -401,6 +414,8 @@ export default {
                     'pasteText',
                     'fitColumns',
                     'autoFitColumns',
+                    'genRowsPinnBottom',
+                    'genRowsPinnTop',
                     'operateData',
                     'getInstance',
                     'highlight',
