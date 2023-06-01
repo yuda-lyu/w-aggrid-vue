@@ -157,6 +157,8 @@
 
                     <AppKpHeadFilter v-if="showCmp==='kpHeadFilter'"></AppKpHeadFilter>
 
+                    <AppKpHeadFilterType v-if="showCmp==='kpHeadFilterType'"></AppKpHeadFilterType>
+
                     <AppKpHeadFixLeft v-if="showCmp==='kpHeadFixLeft'"></AppKpHeadFixLeft>
 
                     <AppKpHeadSort v-if="showCmp==='kpHeadSort'"></AppKpHeadSort>
@@ -251,6 +253,7 @@ import AppKpHeadDrag from './AppKpHeadDrag.vue'
 import AppKpHeadCheckBox from './AppKpHeadCheckBox.vue'
 import AppKpHeadHide from './AppKpHeadHide.vue'
 import AppKpHeadFilter from './AppKpHeadFilter.vue'
+import AppKpHeadFilterType from './AppKpHeadFilterType.vue'
 import AppKpHeadFixLeft from './AppKpHeadFixLeft.vue'
 import AppKpHeadSort from './AppKpHeadSort.vue'
 import AppKpHeadSortMethod from './AppKpHeadSortMethod.vue'
@@ -316,6 +319,7 @@ export default {
         AppKpHeadCheckBox,
         AppKpHeadHide,
         AppKpHeadFilter,
+        AppKpHeadFilterType,
         AppKpHeadFixLeft,
         AppKpHeadSort,
         AppKpHeadSortMethod,
@@ -386,6 +390,7 @@ export default {
                     'kpHeadCheckBox',
                     'kpHeadHide',
                     'kpHeadFilter',
+                    'kpHeadFilterType',
                     'kpHeadFixLeft',
                     'kpHeadSort',
                     'kpHeadSortMethod',

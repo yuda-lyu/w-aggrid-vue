@@ -6,14 +6,14 @@
             <div>
 
                 <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">autoFitColumns</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-autoFitColumns.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-autoFitColumns.html" target="_blank" class="item-link item-shadow">code</a>
+                    <span style="font-size:1.5rem; margin-right:20px;">kpHeadFilterType</span>
+                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFilterType.html" target="_blank" class="item-link item-shadow">example</a>
+                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFilterType.html" target="_blank" class="item-link item-shadow">code</a>
                 </div>
 
                 <WAgGridVue
+                    style="width:620px;"
                     ref="rftable"
-                    :style="'width:'+opt.width+'px;'"
                     :opt="opt"
                 ></WAgGridVue>
 
@@ -44,54 +44,32 @@ export default {
     data: function() {
         return {
             'opt': {
-                width: 620,
                 keys: ['make', 'model', 'price'],
+                kpHead: {
+                    'make': 'make(false)',
+                    'model': 'model(true)',
+                    'price': 'price(false)',
+                },
+                kpHeadFilter: { //default: true
+                    'make': false,
+                    //'model':true,
+                    //'price': true,
+                },
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',
                     'model': 'text',
                     'price': 'num',
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
-                autoFitColumn: true,
             },
             'action': [
+                { 'mode': 'eleclick', 'selector': 'input.ag-floating-filter-input' }, { 'mode': 'type', 'str': 'C' }
             ],
         }
     },
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
-
-        //change width
-        setTimeout(function() {
-            try {
-                vo.opt.width = 400
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }, 1000)
-
-        //change width
-        setTimeout(function() {
-            try {
-                vo.opt.width = 800
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }, 2000)
-
-        //change width
-        setTimeout(function() {
-            try {
-                vo.opt.width = 620
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }, 3000)
-
     },
 }
 </script>

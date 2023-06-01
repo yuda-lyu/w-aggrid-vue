@@ -45,6 +45,11 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 kpCellEditable: {
                     'make': true,
                     'model': true,

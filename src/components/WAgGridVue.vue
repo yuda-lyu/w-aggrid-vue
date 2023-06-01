@@ -53,7 +53,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import concat from 'lodash/concat'
 import difference from 'lodash/difference'
 import trim from 'lodash/trim'
-import genID from 'wsemi/src/genID.mjs'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrHas from 'wsemi/src/arrHas.mjs'
 import sep from 'wsemi/src/sep.mjs'
@@ -146,6 +145,7 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpHeadFixLeft={}] 輸入key對應head之是否固定於左側物件，預設各key值為false
  * @vue-prop {Boolean} [opt.defHeadFilter=true] 輸入head預設之是否允許過濾布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設各key值為defHeadFilter
+ * @vue-prop {Object} [opt.kpHeadFilterType={}] 輸入key對應head之過濾器物件，可使用'num'、'text'、'time'、'set'，預設各key值為'num'
  * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設各key值為defHeadDrag
  * @vue-prop {Object} [opt.kpHeadCheckBox={}] 輸入key對應head與key的各列是否使用核選方塊物件，預設各key值為false
@@ -212,7 +212,7 @@ export default {
     data: function() {
         let vo = this
         return {
-            mmkey: null,
+            dbc: debounce(),
             de: null,
 
             evPaste: null,
@@ -238,6 +238,7 @@ export default {
             kpHeadFixLeft: {},
             defHeadFilter: null,
             kpHeadFilter: {},
+            kpHeadFilterType: {},
             defHeadDrag: null,
             kpHeadDrag: {},
             kpHeadCheckBox: {},
@@ -325,23 +326,18 @@ export default {
 
         let vo = this
 
-        //mmkey
-        if (vo.mmkey === null) {
-            vo.mmkey = genID()
-        }
-
         //監聽dom
         vo.de = domDetect(() => {
             return get(vo, '$refs.shell', null)
         })
         vo.de.on('resize', (s) => {
-            //console.log('resize', s)
+            // console.log('resize', s)
             if (vo.autoFitColumn) {
                 vo.fitColumns()
             }
         })
         vo.de.on('display', (s) => {
-            //console.log('display', s)
+            // console.log('display', s)
             if (vo.autoFitColumn) {
                 vo.fitColumns()
             }
@@ -1017,9 +1013,30 @@ export default {
                     }
                 }
 
-                //filter
-                o.filter = vo.kpHeadFilter[key] //欄位標題右邊的選單按鈕, 可使用文字過濾器'agTextColumnFilter'
-                o.floatingFilter = vo.kpHeadFilter[key] //欄位標題下方的文字過濾輸入區, 因ag-grid 23.1.0已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
+                //filter, 欄位標題右邊的選單按鈕, 可使用數字過濾器'agNumberColumnFilter'或文字過濾器'agTextColumnFilter'
+                if (vo.kpHeadFilter[key]) {
+                    let t = vo.kpHeadFilterType[key]
+                    if (t === 'text') {
+                        o.filter = 'agTextColumnFilter'
+                    }
+                    else if (t === 'time') {
+                        o.filter = 'agDateColumnFilter'
+                    }
+                    else if (t === 'set') {
+                        o.filter = 'agSetColumnFilter'
+                    }
+                    else { //其他皆為num
+                        o.filter = 'agNumberColumnFilter'
+                    }
+                }
+                else {
+                    o.filter = false
+                }
+
+                //floatingFilter, 欄位標題下方的文字過濾輸入區, 因ag-grid 23.1.0已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
+                o.floatingFilter = vo.kpHeadFilter[key]
+
+                //suppressMenu
                 //o.suppressMenu = true //關閉欄位標題右邊的選單按鈕
 
                 //filterParams
@@ -1365,6 +1382,14 @@ export default {
                     return vo.defHeadFilter
                 },
                 vo.opt.kpHeadFilter
+            )
+
+            //kpHeadFilterType
+            vo.kpHeadFilterType = setobj(vo.keys,
+                function(key) {
+                    return 'num'
+                },
+                vo.opt.kpHeadFilterType
             )
 
             //defHeadDrag
@@ -1742,23 +1767,29 @@ export default {
             return vo.gridOptions
         },
 
-        fitColumns: async function(bDebounce = true) {
-            //console.log('methods fitColumns')
+        fitColumns: function(bDebounce = true) {
+            // console.log('methods fitColumns', bDebounce)
 
             let vo = this
 
             //fit
             async function fit(w) {
+                // console.log('call fit', w)
                 try {
 
                     //width
                     vo.width = w
 
+                    // //delay
+                    // await delay(30)
+
                     //getInstance
                     let o = vo.getInstance()
+                    // console.log('getInstance', o)
 
                     //sizeColumnsToFit, 有可能於高頻初始化與解構時, 例如切換分頁, 導致可能取不到sizeColumnsToFit
                     let funSizeColumnsToFit = get(o, 'api.sizeColumnsToFit')
+                    // console.log('funSizeColumnsToFit', funSizeColumnsToFit, `isfun(funSizeColumnsToFit)`, isfun(funSizeColumnsToFit))
                     if (isfun(funSizeColumnsToFit)) {
                         o.api.sizeColumnsToFit()
                     }
@@ -1771,26 +1802,26 @@ export default {
 
             //core
             async function core() {
-                //ag-grid 24.1.0已能正常fit至100%, 不會因微小差距而出現水平捲軸, 故關閉先縮小再還原機制
-                //但縮放第3次時有些欄位header會爆版, 故還是得使用先縮小再還原機制
+                // console.log('call core')
 
-                //先微縮小fit
-                await fit(99.5)
+                //ag-grid 24.1.0已能正常fit至100%, 不會因微小差距而出現水平捲軸, 故關閉先縮小再還原機制, 但縮放第3次時有些欄位header會爆版, 故還是得使用先縮小再還原機制
 
-                //delay
-                await delay(30) //不能過短, 否則先縮小再還原機制會失效, header會爆版
+                // //先微縮小fit
+                // await fit(99.5)
 
-                //還原fit
+                // //delay
+                // await delay(30) //不能過短, 否則先縮小再還原機制會失效, header會爆版
+
+                //還原fit, ag-grid 27.3.0已能正常fit至100%
                 await fit(100)
 
             }
 
             //core
             if (bDebounce) {
-                //debounce, 避免高頻觸發
-                debounce(`${vo.mmkey}|fitColumns`, () => {
+                vo.dbc(() => {
                     core()
-                }, 50)
+                })
             }
             else {
                 core()

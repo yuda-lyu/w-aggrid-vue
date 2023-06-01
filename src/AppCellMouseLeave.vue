@@ -45,6 +45,11 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 cellMouseLeave: function(k, r) {
                     document.querySelector('#ckmsg').innerHTML = 'trigger: cellMouseLeave\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
                 },
