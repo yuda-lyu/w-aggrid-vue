@@ -55,6 +55,11 @@ export default {
                     // 'model': false,
                     // 'price': false,
                 },
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 rowChecked: function(rs) {
                     document.querySelector('#ckmsg').innerHTML = 'trigger: rowChecked\n\n' + 'rows: ' + JSON.stringify(rs, null, 2)
                 },

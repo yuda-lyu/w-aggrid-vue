@@ -50,6 +50,11 @@ export default {
                     'model': true,
                     'price': true,
                 },
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 rowChange: function(k, r) {
                     document.querySelector('#ckmsg').innerHTML = 'trigger: rowChange\n\n' + 'key: ' + k + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
                 },

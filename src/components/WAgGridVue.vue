@@ -1384,10 +1384,16 @@ export default {
                 vo.opt.kpHeadFilter
             )
 
+            //defHeadFilterType
+            vo.defHeadFilterType = 'num'
+            if (arrHas(vo.opt.defHeadFilterType, ['num', 'text', 'time', 'set'])) {
+                vo.defHeadFilterType = vo.opt.defHeadFilterType
+            }
+
             //kpHeadFilterType
             vo.kpHeadFilterType = setobj(vo.keys,
                 function(key) {
-                    return 'num'
+                    return vo.defHeadFilterType
                 },
                 vo.opt.kpHeadFilterType
             )

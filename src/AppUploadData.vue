@@ -70,6 +70,11 @@ export default {
                     'model': 'model(モデル)',
                     'price': 'price(价钱)',
                 },
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'uploadMode': 'replace',
@@ -103,10 +108,10 @@ export default {
             try {
                 vo.$refs.rftable.uploadData({
                     pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
-                    beforeUpload: beforeUpload,
+                    beforeUpload,
                     // beforeUpload: beforeUploadAsync,
-                    parseSheetInd: parseSheetInd,
-                    uploadMode: uploadMode, //replace append
+                    parseSheetInd,
+                    uploadMode, //replace append
                 })
                     .then(function(ddata) {
                         document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'data: ' + JSON.stringify(ddata, null, 2)

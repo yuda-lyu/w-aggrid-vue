@@ -45,15 +45,15 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpHeadFilterType: { //default: num (num,text,time,set)
-                    'make': 'text',
-                    'model': 'text',
-                    'price': 'num',
-                },
                 kpCellEditable: {
                     'make': true,
                     'model': true,
                     'price': true,
+                },
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
                 },
                 cellChange: function(k, r) {
                     document.querySelector('#ckmsg').innerHTML = 'trigger: cellChange\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)

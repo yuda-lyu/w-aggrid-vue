@@ -56,6 +56,11 @@ export default {
                         return '<div style="font-size:8pt; font-weight:bold; color:#6fe;">[' + v + ']</div><div>虛擬販售價格</div>'
                     },
                 },
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [

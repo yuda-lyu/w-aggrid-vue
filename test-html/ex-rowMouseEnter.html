@@ -153,6 +153,12 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
+          kpHeadFilterType: {
+            //default: num (num,text,time,set)
+            make: "text",
+            model: "text",
+            price: "num"
+          },
           rowMouseEnter: function(k, r) {
             document.querySelector("#ckmsg").innerHTML =
               "trigger: rowMouseEnter\n\n" +

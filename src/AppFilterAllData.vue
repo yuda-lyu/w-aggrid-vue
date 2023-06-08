@@ -47,6 +47,11 @@ export default {
             'filterall': '',
             'opt': {
                 keys: ['make', 'model', 'price'],
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [

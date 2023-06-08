@@ -55,6 +55,11 @@ export default {
                     'field1': 'auto',
                     'field2': 'auto',
                 },
+                kpHeadFilterType: { //default: num (num,text,time,set)
+                    'make': 'text',
+                    'model': 'text',
+                    'price': 'num',
+                },
                 rows: JSON.parse(JSON.stringify(window.dataLikeNumber)),
             },
             'action': [

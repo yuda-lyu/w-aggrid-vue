@@ -51,8 +51,8 @@ export default {
                     'model': 'text',
                     'price': 'num',
                 },
-                rows: JSON.parse(JSON.stringify(window.dataEasy)),
                 autoFitColumn: true,
+                rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
             ],

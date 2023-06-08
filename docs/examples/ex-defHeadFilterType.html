@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for simpleData</title>
+    <title>example for defHeadFilterType</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -112,14 +112,14 @@
                 <div style="margin:20px 0px;">
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
-                    >simpleData</span>
+                    >defHeadFilterType</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-simpleData.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadFilterType.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-simpleData.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadFilterType.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
@@ -153,10 +153,11 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
+          defHeadFilterType: "text",
           kpHeadFilterType: {
             //default: num (num,text,time,set)
-            make: "text",
-            model: "text",
+            // 'make': 'text',
+            // 'model': 'text',
             price: "num"
           },
           rows: JSON.parse(JSON.stringify(window.dataEasy))

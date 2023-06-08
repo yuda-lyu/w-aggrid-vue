@@ -105,6 +105,8 @@
 
                     <AppDefHeadFilter v-if="showCmp==='defHeadFilter'"></AppDefHeadFilter>
 
+                    <AppDefHeadFilterType v-if="showCmp==='defHeadFilterType'"></AppDefHeadFilterType>
+
                     <AppDefHeadSort v-if="showCmp==='defHeadSort'"></AppDefHeadSort>
 
                     <AppDefHeadSortMethod v-if="showCmp==='defHeadSortMethod'"></AppDefHeadSortMethod>
@@ -227,6 +229,7 @@ import AppDefCellMinWidth from './AppDefCellMinWidth.vue'
 import AppDefHeadAlignH from './AppDefHeadAlignH.vue'
 import AppDefHeadDrag from './AppDefHeadDrag.vue'
 import AppDefHeadFilter from './AppDefHeadFilter.vue'
+import AppDefHeadFilterType from './AppDefHeadFilterType.vue'
 import AppDefHeadSort from './AppDefHeadSort.vue'
 import AppDefHeadSortMethod from './AppDefHeadSortMethod.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
@@ -293,6 +296,7 @@ export default {
         AppDefHeadAlignH,
         AppDefHeadDrag,
         AppDefHeadFilter,
+        AppDefHeadFilterType,
         AppDefHeadSort,
         AppDefHeadSortMethod,
         AppFilterAllData,
@@ -398,6 +402,7 @@ export default {
                     'defHeadAlignH',
                     'defHeadDrag',
                     'defHeadFilter',
+                    'defHeadFilterType',
                     'defHeadSort',
                     'defHeadSortMethod',
                 ],
