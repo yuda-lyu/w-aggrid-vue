@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.34/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.35/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -194,6 +194,12 @@
             model: "model(モデル)",
             price: "price(价钱)"
           },
+          kpHeadFilterType: {
+            //default: num (num,text,time,set)
+            make: "text",
+            model: "text",
+            price: "num"
+          },
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
         uploadMode: "replace",
@@ -228,10 +234,10 @@
           vo.$refs.rftable
             .uploadData({
               pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
-              beforeUpload: beforeUpload,
+              beforeUpload,
               // beforeUpload: beforeUploadAsync,
-              parseSheetInd: parseSheetInd,
-              uploadMode: uploadMode //replace append
+              parseSheetInd,
+              uploadMode //replace append
             })
             .then(function(ddata) {
               document.querySelector("#ckmsg").innerHTML =
