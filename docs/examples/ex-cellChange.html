@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.35/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.36/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -164,7 +164,8 @@
             model: "text",
             price: "num"
           },
-          cellChange: function(k, r) {
+          cellChange: function(k, r, rs) {
+            console.log("cellChange", k, r, rs);
             document.querySelector("#ckmsg").innerHTML =
               "trigger: cellChange\n\n" +
               "key: " +

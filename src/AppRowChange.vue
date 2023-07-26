@@ -55,7 +55,8 @@ export default {
                     'model': 'text',
                     'price': 'num',
                 },
-                rowChange: function(k, r) {
+                rowChange: function(k, r, rs) {
+                    console.log('rowChange', k, r, rs)
                     document.querySelector('#ckmsg').innerHTML = 'trigger: rowChange\n\n' + 'key: ' + k + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),

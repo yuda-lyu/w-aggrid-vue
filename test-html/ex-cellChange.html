@@ -164,7 +164,8 @@
             model: "text",
             price: "num"
           },
-          cellChange: function(k, r) {
+          cellChange: function(k, r, rs) {
+            console.log("cellChange", k, r, rs);
             document.querySelector("#ckmsg").innerHTML =
               "trigger: cellChange\n\n" +
               "key: " +

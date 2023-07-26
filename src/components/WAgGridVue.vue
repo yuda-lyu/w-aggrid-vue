@@ -503,10 +503,10 @@ export default {
                 vo.refresh()
 
                 //cellChange
-                vo.cellChange(param.colDef.field, param.data)
+                vo.cellChange(param.colDef.field, param.data, vo.rows)
 
                 //rowChange
-                vo.rowChange(param.colDef.field, param.data)
+                vo.rowChange(param.colDef.field, param.data, vo.rows)
 
                 //setRowsPinnBottom
                 vo.setRowsPinnBottom(vo.rows)
@@ -1752,7 +1752,7 @@ export default {
 
             //rs
             let rs = []
-            vo.gridOptions.api.forEachNodeAfterFilterAndSort(function(node) {
+            vo.gridOptions.api.forEachNodeAfterFilterAndSort((node) => {
                 rs.push(cloneDeep(node.data))
             })
 

@@ -55,7 +55,8 @@ export default {
                     'model': 'text',
                     'price': 'num',
                 },
-                cellChange: function(k, r) {
+                cellChange: function(k, r, rs) {
+                    console.log('cellChange', k, r, rs)
                     document.querySelector('#ckmsg').innerHTML = 'trigger: cellChange\n\n' + 'key: ' + k + '\n\n' + 'value: ' + r[k] + '\n\n' + 'row: ' + JSON.stringify(r, null, 2)
                 },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
