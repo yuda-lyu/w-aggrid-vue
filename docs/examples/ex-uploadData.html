@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.37/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.38/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -199,6 +199,13 @@
             make: "text",
             model: "text",
             price: "num"
+          },
+          rowsChange: function(rs) {
+            console.log("rowsChange", rs);
+            document.querySelector("#ckmsg").innerHTML =
+              "trigger: uploadData\n\n" +
+              "rows: " +
+              JSON.stringify(rs, null, 2);
           },
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },

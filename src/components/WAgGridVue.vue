@@ -165,6 +165,7 @@ function parseText(contentPaste) {
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
  * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
+ * @vue-prop {Function} [opt.rowsChange=()=>{}] 輸入rows change之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.rowClick=()=>{}] 輸入row click之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.rowDbClick=()=>{}] 輸入row double click之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.rowChange=()=>{}] 輸入row change之觸發事件，預設為()=>{}
@@ -258,6 +259,7 @@ export default {
             kpConvertKeysWhenUploadData: null,
 
             tableClickEnable: false,
+            rowsChange: function() {},
             rowChange: function() {},
             rowChecked: function() {},
             rowMouseEnter: function() {},
@@ -507,6 +509,9 @@ export default {
 
                 //rowChange
                 vo.rowChange(param.colDef.field, param.data, vo.rows)
+
+                //rowsChange
+                vo.rowsChange(vo.rows)
 
                 //setRowsPinnBottom
                 vo.setRowsPinnBottom(vo.rows)
@@ -927,10 +932,13 @@ export default {
 
             //applyTransaction, 只變更必要資料加速
             vo.gridOptions.api.applyTransaction({ update: updateRows })
-            // console.log('applyTransaction res', res)
+            // console.log('applyTransaction', cloneDeep(updateRows))
 
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             set(vo, `opt.rows`, rows)
+
+            //rowsChange
+            vo.rowsChange(rows)
 
         },
 
@@ -1516,6 +1524,12 @@ export default {
 
             //tableClickEnable
             vo.tableClickEnable = false
+
+            //rowsChange
+            vo.rowsChange = function() {}
+            if (isfun(vo.opt.rowsChange)) {
+                vo.rowsChange = vo.opt.rowsChange
+            }
 
             //rowClick
             vo.rowClick = function() {}
@@ -2167,6 +2181,9 @@ export default {
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             // vo.rows = rows
             set(vo, `opt.rows`, rows)
+
+            //rowsChange
+            vo.rowsChange(rows)
 
             return rows
         },

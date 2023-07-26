@@ -77,6 +77,9 @@ export default {
                     'int': true,
                     // 'tongue': false,
                 },
+                rowsChange: function(rs) {
+                    console.log('rowsChange', rs)
+                },
                 rows: [
                     { 'make': 'Toyota', 'model': 'Celica', 'price': 35000, 'index': 0, 'int': 123, 'tongue': 'a' },
                     { 'make': 'Ford', 'model': 'Mondeo', 'price': 32000, 'index': 1, 'int': 234, 'tongue': 'bc' },

@@ -181,6 +181,8 @@
 
                     <AppOperateData v-if="showCmp==='operateData'"></AppOperateData>
 
+                    <AppRowsChange v-if="showCmp==='rowsChange'"></AppRowsChange>
+
                     <AppRowChange v-if="showCmp==='rowChange'"></AppRowChange>
 
                     <AppRowChecked v-if="showCmp==='rowChecked'"></AppRowChecked>
@@ -267,6 +269,7 @@ import AppKpColStyle from './AppKpColStyle.vue'
 import AppKpColSpan from './AppKpColSpan.vue'
 import AppLargeData from './AppLargeData.vue'
 import AppOperateData from './AppOperateData.vue'
+import AppRowsChange from './AppRowsChange.vue'
 import AppRowChange from './AppRowChange.vue'
 import AppRowChecked from './AppRowChecked.vue'
 import AppRowMouseEnter from './AppRowMouseEnter.vue'
@@ -334,6 +337,7 @@ export default {
         AppKpColSpan,
         AppLargeData,
         AppOperateData,
+        AppRowsChange,
         AppRowChange,
         AppRowChecked,
         AppRowMouseEnter,
@@ -370,6 +374,7 @@ export default {
                     'cellDbClick',
                 ],
                 row: [
+                    'rowsChange',
                     'rowChange',
                     'rowChecked',
                     'rowMouseEnter',

@@ -75,6 +75,10 @@ export default {
                     'model': 'text',
                     'price': 'num',
                 },
+                rowsChange: function(rs) {
+                    console.log('rowsChange', rs)
+                    document.querySelector('#ckmsg').innerHTML = 'trigger: uploadData\n\n' + 'rows: ' + JSON.stringify(rs, null, 2)
+                },
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'uploadMode': 'replace',
