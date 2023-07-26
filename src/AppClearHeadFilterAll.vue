@@ -63,7 +63,7 @@ export default {
         //setHeadFilter
         setTimeout(function() {
             try {
-                vo.$refs.rftable.setHeadFilter('price', 6)
+                vo.$refs.rftable.setHeadFilter('price', 61000, 'lessThan')
             }
             catch (err) {
                 console.log(err)

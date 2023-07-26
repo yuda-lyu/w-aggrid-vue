@@ -1640,18 +1640,21 @@ export default {
         },
 
         showKeys: function(keys_new) {
-            //console.log('methods showKeys', keys_new)
+            // console.log('methods showKeys', keys_new)
 
             let vo = this
 
             //keys_old
             let keys_old = cloneDeep(vo.keys)
+            // console.log('keys_old', keys_old)
 
             //keys_nouse
             let keys_nouse = difference(keys_old, keys_new)
+            // console.log('keys_nouse', keys_nouse)
 
             //cs
             let cs = vo.gridOptions.columnApi.getColumnState()
+            // console.log('cs', cs)
 
             //csn
             let csn = []
@@ -1665,9 +1668,15 @@ export default {
                 c.hide = true //未顯示column改為隱藏
                 csn.push(c)
             })
+            // console.log('csn', csn)
 
-            //update, ag-grid 23.1.0已廢棄applyColumnState改用applyColumnState
-            vo.gridOptions.columnApi.applyColumnState(csn)
+            //update, ag-grid 23.1.0已改用applyColumnState, 27.3.0修改傳入須為物件
+            // console.log('colState before', cloneDeep(vo.gridOptions.columnApi.getColumnState()))
+            vo.gridOptions.columnApi.applyColumnState({
+                state: csn,
+                applyOrder: false,
+            })
+            // console.log('colState after', cloneDeep(vo.gridOptions.columnApi.getColumnState()))
 
         },
 
@@ -1705,10 +1714,44 @@ export default {
 
             let vo = this
 
-            //check
-            if (!arrHas(type, ['equals', 'notEqual', 'contains', 'notContains', 'startsWith', 'endsWith'])) {
-                type = 'contains'
-            }
+            // let tpsText = [
+            //     'empty',
+            //     'equals',
+            //     'notEqual',
+            //     'lessThan',
+            //     'lessThanOrEqual',
+            //     'greaterThan',
+            //     'greaterThanOrEqual',
+            //     'inRange',
+            //     'contains',
+            //     'notContains',
+            //     'startsWith',
+            //     'endsWith',
+            //     'blank',
+            //     'notBlank',
+            // ]
+
+            // let tpsNumber = [
+            //     'empty',
+            //     'equals',
+            //     'notEqual',
+            //     'lessThan',
+            //     'lessThanOrEqual',
+            //     'greaterThan',
+            //     'greaterThanOrEqual',
+            //     'inRange',
+            //     'contains',
+            //     'notContains',
+            //     'startsWith',
+            //     'endsWith',
+            //     'blank',
+            //     'notBlank',
+            // ]
+
+            // //check
+            // if (!arrHas(type, [...tpsText,...tpsNumber])) {
+            //     type = 'contains'
+            // }
 
             // //fo
             // let fo = {}
@@ -2121,7 +2164,7 @@ export default {
 
             }
 
-            //save, 需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+            //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             // vo.rows = rows
             set(vo, `opt.rows`, rows)
 
