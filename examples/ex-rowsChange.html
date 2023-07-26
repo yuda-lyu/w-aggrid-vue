@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for kpHeadSortMethod</title>
+    <title>example for rowsChange</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -112,14 +112,14 @@
                 <div style="margin:20px 0px;">
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
-                    >kpHeadSortMethod</span>
+                    >rowsChange</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadSortMethod.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-rowsChange.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadSortMethod.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-rowsChange.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
@@ -152,17 +152,11 @@
     data: function() {
       return {
         opt: {
-          keys: ["make", "field1", "field2"],
-          kpHead: {
-            make: "make",
-            field1: "field1(auto)",
-            field2: "field2(auto)"
-          },
-          kpHeadSortMethod: {
-            //default: false
-            //'make':false,
-            field1: "auto",
-            field2: "auto"
+          keys: ["make", "model", "price"],
+          kpCellEditable: {
+            make: true,
+            model: true,
+            price: true
           },
           kpHeadFilterType: {
             //default: num (num,text,time,set)
@@ -170,7 +164,14 @@
             model: "text",
             price: "num"
           },
-          rows: JSON.parse(JSON.stringify(window.dataLikeNumber))
+          rowsChange: function(rs) {
+            console.log("rowsChange", rs);
+            document.querySelector("#ckmsg").innerHTML =
+              "trigger: rowsChange\n\n" +
+              "rows: " +
+              JSON.stringify(rs, null, 2);
+          },
+          rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
         action: []
       };
