@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.36/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.37/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -171,7 +171,7 @@
       //setHeadFilter
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("price", 6); //default type='contains'
+          vo.$refs.rftable.setHeadFilter("price", 61000, "lessThan");
         } catch (err) {
           console.log(err);
         }
@@ -180,7 +180,7 @@
       //setHeadFilter
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("price", 6, "notContains");
+          vo.$refs.rftable.setHeadFilter("price", 61000, "greaterThanOrEqual");
         } catch (err) {
           console.log(err);
         }
