@@ -197,6 +197,8 @@
 
                     <AppSetHeadFilter v-if="showCmp==='setHeadFilter'"></AppSetHeadFilter>
 
+                    <AppFilterChange v-if="showCmp==='filterChange'"></AppFilterChange>
+
                     <AppShowKeys v-if="showCmp==='showKeys'"></AppShowKeys>
 
                     <AppSimpleData v-if="showCmp==='simpleData'"></AppSimpleData>
@@ -277,6 +279,7 @@ import AppRowMouseLeave from './AppRowMouseLeave.vue'
 import AppRowClick from './AppRowClick.vue'
 import AppRowDbClick from './AppRowDbClick.vue'
 import AppSetHeadFilter from './AppSetHeadFilter.vue'
+import AppFilterChange from './AppFilterChange.vue'
 import AppShowKeys from './AppShowKeys.vue'
 import AppSimpleData from './AppSimpleData.vue'
 import AppTableHeight from './AppTableHeight.vue'
@@ -345,6 +348,7 @@ export default {
         AppRowClick,
         AppRowDbClick,
         AppSetHeadFilter,
+        AppFilterChange,
         AppShowKeys,
         AppSimpleData,
         AppTableHeight,
@@ -435,6 +439,7 @@ export default {
                     'getInstance',
                     'highlight',
                     'setHeadFilter',
+                    'filterChange',
                     'showKeys',
                     'clearHeadFilter',
                     'clearHeadFilterAll',

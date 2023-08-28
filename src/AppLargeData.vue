@@ -54,6 +54,7 @@ export default {
                     'img_inner',
                     'link'
                 ],
+                defHeadFilterType: 'text',
                 rows: JSON.parse(JSON.stringify(window.dataEduagency)),
             },
             'action': [

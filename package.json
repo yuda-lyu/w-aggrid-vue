@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "2.0.38",
+  "version": "2.0.39",
   "main": "dist/w-aggrid-vue.umd.js",
   "dependencies": {
     "ag-grid-community": "^27.3.0",
@@ -8,7 +8,7 @@
     "lodash": "^4.17.21",
     "vue-class-component": "^7.2.6",
     "vue-property-decorator": "^9.1.2",
-    "wsemi": "^1.7.19"
+    "wsemi": "^1.7.27"
   },
   "devDependencies": {
     "eslint": "^8.37.0",
