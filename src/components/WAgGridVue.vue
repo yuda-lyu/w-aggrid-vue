@@ -147,6 +147,7 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpHeadFixLeft={}] 輸入key對應head之是否固定於左側物件，預設各key值為false
  * @vue-prop {Boolean} [opt.defHeadFilter=true] 輸入head預設之是否允許過濾布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設各key值為defHeadFilter
+ * @vue-prop {String} [opt.defHeadFilterType='num'] 輸入head預設過濾器字串，可選'num'、'text'、'time'、'set'，預設為'num'
  * @vue-prop {Object} [opt.kpHeadFilterType={}] 輸入key對應head之過濾器物件，可使用'num'、'text'、'time'、'set'，預設各key值為'num'
  * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設各key值為defHeadDrag
@@ -233,6 +234,7 @@ export default {
             kpHeadFixLeft: {},
             defHeadFilter: null,
             kpHeadFilter: {},
+            defHeadFilterType: null,
             kpHeadFilterType: {},
             defHeadDrag: null,
             kpHeadDrag: {},
@@ -313,7 +315,7 @@ export default {
                 onFilterChanged: (ev) => {
                     // console.log('onFilterChanged', ev)
                     let vo = this
-                    vo.triggerFilterChange('columns')
+                    vo.triggerFilterChange('heads')
                 },
 
             },
