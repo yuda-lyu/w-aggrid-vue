@@ -151,6 +151,8 @@
 
                     <AppKpHeadAlignH v-if="showCmp==='kpHeadAlignH'"></AppKpHeadAlignH>
 
+                    <AppKpHeadRender v-if="showCmp==='kpHeadRender'"></AppKpHeadRender>
+
                     <AppKpHeadDrag v-if="showCmp==='kpHeadDrag'"></AppKpHeadDrag>
 
                     <AppKpHeadCheckBox v-if="showCmp==='kpHeadCheckBox'"></AppKpHeadCheckBox>
@@ -256,6 +258,7 @@ import AppKpCellTooltip from './AppKpCellTooltip.vue'
 import AppKpCellWidth from './AppKpCellWidth.vue'
 import AppKpHead from './AppKpHead.vue'
 import AppKpHeadAlignH from './AppKpHeadAlignH.vue'
+import AppKpHeadRender from './AppKpHeadRender.vue'
 import AppKpHeadDrag from './AppKpHeadDrag.vue'
 import AppKpHeadCheckBox from './AppKpHeadCheckBox.vue'
 import AppKpHeadHide from './AppKpHeadHide.vue'
@@ -325,6 +328,7 @@ export default {
         AppKpCellWidth,
         AppKpHead,
         AppKpHeadAlignH,
+        AppKpHeadRender,
         AppKpHeadDrag,
         AppKpHeadCheckBox,
         AppKpHeadHide,
@@ -399,6 +403,7 @@ export default {
                 kpHead: [
                     'kpHead',
                     'kpHeadAlignH',
+                    'kpHeadRender',
                     'kpHeadDrag',
                     'kpHeadCheckBox',
                     'kpHeadHide',

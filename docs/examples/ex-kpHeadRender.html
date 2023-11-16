@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for uploadData</title>
+    <title>example for kpHeadRender</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -112,53 +112,17 @@
                 <div style="margin:20px 0px;">
                     <span
                         style="font-size:1.5rem; margin-right:20px;"
-                    >uploadData</span>
+                    >kpHeadRender</span>
                     <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-uploadData.html"
+                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadRender.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >example</a>
                     <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-uploadData.html"
+                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadRender.html"
                         target="_blank"
                         class="item-link item-shadow"
                     >code</a>
-                </div>
-
-                <div style="margin-bottom:10px;">
-                    <div style="display:flex; align-items:center;">
-                        <div style="margin-right:5px;">uploadMode:</div>
-                        <label>
-                            <input
-                                type="radio"
-                                id="replace"
-                                value="replace"
-                                v-model="uploadMode"
-                            />
-                            <span>replace</span>
-                        </label>
-                        <label>
-                            <input
-                                type="radio"
-                                id="append"
-                                value="append"
-                                v-model="uploadMode"
-                            />
-                            <span>append</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:10px;">
-                    <button
-                        @click="upload(0,uploadMode)"
-                    >Upload excel file(use first sheet)</button>
-                    <button
-                        @click="upload(1,uploadMode)"
-                    >Upload excel file(use second sheet)</button>
-                    <div
-                        style="font-size:0.8rem; color:#f26;"
-                    >:: The first row of the file needs keys</div>
                 </div>
 
                 <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
@@ -189,10 +153,16 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
-          kpHead: {
-            make: "make(製作)",
-            model: "model(モデル)",
-            price: "price(价钱)"
+          kpHeadRender: {
+            make: function(v) {
+              return `<span style="color:#aaa;">生產製造商</span><sup>${v}</sup>`;
+            },
+            model: function(v) {
+              return `<span style="color:#2c6;">車款型號</span><sup>${v}</sup>`;
+            },
+            price: function(v) {
+              return `<span style="color:#f26;">虛擬販售價格</span><sup>${v}</sup>`;
+            }
           },
           kpHeadFilterType: {
             //default: num (num,text,time,set)
@@ -200,66 +170,17 @@
             model: "text",
             price: "num"
           },
-          rowsChange: function(rs) {
-            console.log("rowsChange", rs);
-            document.querySelector("#ckmsg").innerHTML =
-              "trigger: uploadData\n\n" +
-              "rows: " +
-              JSON.stringify(rs, null, 2);
-          },
           rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
-        uploadMode: "replace",
         action: []
       };
     },
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
-      // setInterval(() => {
-      //     console.log(JSON.parse(JSON.stringify(vo.opt.rows)))
-      // }, 1000)
     },
     computed: {},
-    methods: {
-      upload: function(parseSheetInd, uploadMode) {
-        let vo = this;
-
-        function beforeUpload(rows) {
-          console.log("beforeUpload", rows);
-          return rows;
-        }
-
-        function beforeUploadAsync(rows) {
-          console.log("beforeUploadAsync", rows);
-          return new Promise(function(resolve, reject) {
-            resolve(rows);
-          });
-        }
-
-        try {
-          vo.$refs.rftable
-            .uploadData({
-              pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
-              beforeUpload,
-              // beforeUpload: beforeUploadAsync,
-              parseSheetInd,
-              uploadMode //replace append
-            })
-            .then(function(ddata) {
-              document.querySelector("#ckmsg").innerHTML =
-                "trigger: uploadData\n\n" +
-                "data: " +
-                JSON.stringify(ddata, null, 2);
-            })
-            .catch(function(err) {
-              console.log(err);
-            });
-        } catch (err) {
-          console.log(err);
-        }
-      }
-    }
+    methods: {}
   });
     </script>
 </body>

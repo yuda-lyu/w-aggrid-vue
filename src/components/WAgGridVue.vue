@@ -149,6 +149,7 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設各key值為defHeadFilter
  * @vue-prop {String} [opt.defHeadFilterType='num'] 輸入head預設過濾器字串，可選'num'、'text'、'time'、'set'，預設為'num'
  * @vue-prop {Object} [opt.kpHeadFilterType={}] 輸入key對應head之過濾器物件，可使用'num'、'text'、'time'、'set'，預設各key值為'num'
+ * @vue-prop {Object} [opt.kpHeadRender={}] 輸入key對應head之渲染函數物件，預設各key值為undefined
  * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設各key值為defHeadDrag
  * @vue-prop {Object} [opt.kpHeadCheckBox={}] 輸入key對應head與key的各列是否使用核選方塊物件，預設各key值為false
@@ -237,6 +238,7 @@ export default {
             defHeadFilterType: null,
             kpHeadFilterType: {},
             defHeadDrag: null,
+            kpHeadRender: {},
             kpHeadDrag: {},
             kpHeadCheckBox: {},
             kpHeadHide: {},
@@ -1148,13 +1150,35 @@ export default {
                 }
                 let cJustifyContent = kpTA2JC[cTextAlign]
 
-                //複寫header template
-                o.headerComponentParams = {
-                    template: `
+                //headTemplate, 基於ref=eText來尋覓與給予head字串, 但會限於純文字而不能給予html
+                let headTemplate = `
+                    <div class="ag-cell-label-container" role="presentation"" ${headerMouseenter}>
+                        <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
+                        <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
+                            <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
+                            <span ref="eSortOrder" class="ag-header-icon ag-sort-order" ></span>
+                            <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></span>
+                            <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></span>
+                            <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></span>
+                            <span ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
+                        </div>
+                    </div>
+                `
+
+                //kpHeadRender
+                if (iseobj(vo.kpHeadRender)) {
+                    let head = o.headerName
+                    if (haskey(vo.kpHeadRender, key)) {
+                        let funRender = vo.kpHeadRender[key]
+                        if (isfun(funRender)) {
+                            head = funRender(o.headerName, key, keys)
+                        }
+                    }
+                    headTemplate = `
                         <div class="ag-cell-label-container" role="presentation"" ${headerMouseenter}>
                             <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
                             <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
-                                <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
+                                <span class="ag-header-cell-text" role="columnheader">${head}</span>
                                 <span ref="eSortOrder" class="ag-header-icon ag-sort-order" ></span>
                                 <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></span>
                                 <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></span>
@@ -1163,6 +1187,11 @@ export default {
                             </div>
                         </div>
                     `
+                }
+
+                //複寫header template
+                o.headerComponentParams = {
+                    template: headTemplate,
                 }
 
                 //funColSpan
@@ -1435,6 +1464,12 @@ export default {
                 },
                 vo.opt.kpHeadFilterType
             )
+
+            //kpHeadRender
+            vo.kpHeadRender = {}
+            if (iseobj(vo.opt.kpHeadRender)) {
+                vo.kpHeadRender = vo.opt.kpHeadRender
+            }
 
             //defHeadDrag
             vo.defHeadDrag = true
