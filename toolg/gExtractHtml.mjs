@@ -46,16 +46,10 @@ function writeHtml(v) {
         <script src="../dist/w-aggrid-vue.umd.js"></script>
         
         <!-- data -->
-        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEasy.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEduagency.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataLikeNumber.js"></script>
-        <script>
-            //save in window
-            window.dataEasy=dataEasy
-            window.dataEduagency=dataEduagency
-            window.dataLikeNumber=dataLikeNumber
-        </script>
-    
+        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataEasy.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataEduagency.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataLikeNumber.js"></script>
+
         <!-- w-jsonview-tree -->
         <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree/dist/w-jsonview-tree.umd.js"></script>
         <script>

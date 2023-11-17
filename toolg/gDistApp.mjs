@@ -17,15 +17,9 @@ let opt = {
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue@27.3.0/dist/ag-grid-vue.umd.min.js"></script>
 
     <!-- data -->
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEasy.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataEduagency.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/data/dataLikeNumber.js"></script>
-    <script>
-        //save in window
-        window.dataEasy=dataEasy
-        window.dataEduagency=dataEduagency
-        window.dataLikeNumber=dataLikeNumber
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataEasy.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataEduagency.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataLikeNumber.js"></script>
 
     `,
     newVue: ``,
