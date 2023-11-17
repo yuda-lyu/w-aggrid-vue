@@ -51,7 +51,7 @@ function writeHtml(v) {
         <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataLikeNumber.js"></script>
 
         <!-- w-jsonview-tree -->
-        <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree/dist/w-jsonview-tree.umd.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@latest/dist/w-jsonview-tree.umd.js"></script>
         <script>
             let jv=window['w-jsonview-tree']
         </script>
