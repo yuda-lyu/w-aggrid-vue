@@ -287,6 +287,8 @@ export default {
 
                 animateRows: true,
 
+                suppressMenuHide: true, //預設為false, 代表標題右側的漢堡按鈕預先隱藏, 滑鼠移入時才顯示
+
                 // rowHoverHighlight: true, //預設為true
                 suppressRowHoverHighlight: false, //預設為true, ag-grid 25.3.0已由rowHoverHighlight改為suppressRowHoverHighlight
 
@@ -1090,7 +1092,7 @@ export default {
                     //     }
                     // }
                 }
-                //filter plus, 欄位標題下方加入文字過濾輸入框, 需gridOptions內floatingFilter=true
+                //filter plus, 欄位標題下方加入文字過濾輸入框
                 o.floatingFilterComponentParams = { suppressFilterButton: true } //關閉文字過濾輸入框右邊按鈕, 需suppressFilterButton=true
 
                 //lockPosition, 若不拖曳而設定欄位lockPosition為true時, 該欄位會強制置左, 故不使用
@@ -1156,10 +1158,11 @@ export default {
                         <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
                         <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
                             <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
-                            <span ref="eSortOrder" class="ag-header-icon ag-sort-order" ></span>
-                            <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></span>
-                            <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></span>
-                            <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></span>
+                            <span ref="eSortOrder" class="ag-header-icon ag-sort-order ag-hidden" ></span>
+                            <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon ag-hidden" ></span>
+                            <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon ag-hidden" ></span>
+                            <span ref="eSortMixed" class="ag-header-icon ag-sort-mixed-icon ag-hidden"></span>
+                            <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon ag-hidden" ></span>
                             <span ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
                         </div>
                     </div>
