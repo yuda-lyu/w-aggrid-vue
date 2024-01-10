@@ -57,41 +57,48 @@ function writeHtml(v) {
         </script>
     
         <style>
-            .item {
-                transition: all 0.3s;
-                display: inline-block;
-                margin: 0px 15px 20px 0px;
-                padding: 4px 15px;
-                border-radius: 30px;
-                cursor: pointer;
-                font-size: 0.8rem;
-                background-color:#f6f6f6;
-            }
-            .item-active {
-                color: #fff;
-                background-color:rgb(141, 32, 145);
-            }
-            .item-inactive:hover {
-                background-color:#eaeaea;
-            }
             .item-link {
-                margin-right: 10px;
-                padding: 2px 10px;
+                display: inline-block;
+                margin: 10px 10px 0px 0px;
+                padding: 5px 10px;
                 font-size: 0.8rem;
-                color:#f22;
-                background-color:#fafafa;
-                border-radius:10px;
-                cursor:pointer;
-                text-decoration:none;
+                color: #fff;
+                background-color: #443a65;
+                cursor: pointer;
+                text-decoration: none;
             }
-            .item-shadow {
-                box-shadow:0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
+            .bkh { /* 寬 */
+                padding:20px;
+            }
+            @media screen and (max-width:800px){ /* 中 */
+                .bkh {
+                    padding:10px;
+                }
+            }
+            @media screen and (max-width:400px){ /* 窄 */
+                .bkh {
+                    padding:5px;
+                }
+            }
+            .bkp { /* 寬 */
+                padding:0px 20px;
+            }
+            @media screen and (max-width:800px){ /* 中 */
+                .bkp {
+                    padding:0px 10px;
+                }
+            }
+            @media screen and (max-width:400px){ /* 窄 */
+                .bkp {
+                    padding:0px 5px;
+                }
             }
         </style>
     
         `,
         appTag: `div`,
-        appStyle: `padding:0px 30px;`,
+        appClass: `bkh`,
+        appStyle: ``,
         appTmp: getAppTmp(),
         installVue: `Vue.component('w-aggrid-vue', window['w-aggrid-vue'])`,
         newVue: ``,

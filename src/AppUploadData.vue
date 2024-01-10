@@ -1,51 +1,58 @@
 <template>
     <div>
 
-        <div style="display:flex;">
+        <div class="bkh">
+            <div style="font-size:1.5rem;">uploadData</div>
+            <a href="//yuda-lyu.github.io/w-threejs-vue/examples/ex-uploadData.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-threejs-vue/blob/master/docs/examples/ex-uploadData.html" target="_blank" class="item-link">code</a>
+        </div>
 
-            <div>
+        <div class="bkp">
 
-                <div style="margin:20px 0px;">
-                    <span style="font-size:1.5rem; margin-right:20px;">uploadData</span>
-                    <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-uploadData.html" target="_blank" class="item-link item-shadow">example</a>
-                    <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-uploadData.html" target="_blank" class="item-link item-shadow">code</a>
+            <div style="padding-bottom:10px;">
+                <div style="display:flex; align-items:center;">
+                    <div style="margin-right:5px;">uploadMode:</div>
+                    <label>
+                        <input type="radio" id="replace" value="replace" v-model="uploadMode">
+                        <span>replace</span>
+                    </label>
+                    <label>
+                        <input type="radio" id="append" value="append" v-model="uploadMode">
+                        <span>append</span>
+                    </label>
                 </div>
-
-                <div style="margin-bottom:10px;">
-                    <div style="display:flex; align-items:center;">
-                        <div style="margin-right:5px;">uploadMode:</div>
-                        <label>
-                            <input type="radio" id="replace" value="replace" v-model="uploadMode">
-                            <span>replace</span>
-                        </label>
-                        <label>
-                            <input type="radio" id="append" value="append" v-model="uploadMode">
-                            <span>append</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:10px;">
-                    <button @click="upload(0,uploadMode)">Upload excel file(use first sheet)</button>
-                    <button @click="upload(1,uploadMode)">Upload excel file(use second sheet)</button>
-                    <div style="font-size:0.8rem; color:#f26;"> :: The first row of the file needs keys</div>
-                </div>
-
-                <WAgGridVue
-                    style="width:620px;"
-                    ref="rftable"
-                    :opt="opt"
-                ></WAgGridVue>
-
-                <pre id="ckmsg"></pre>
-
             </div>
 
-            <div style="margin-left:20px; width:calc(100% - 20px);">
-                <div style="margin:20px 0px; font-size:1.5rem;">Option:</div>
-                <div style="border-top:1px solid #ddd; padding:10px; overflow-y:auto; height:calc(100vh - 120px);">
-                    <div id="optjson" style="font-size:10pt;"></div>
+            <div style="padding-bottom:10px;">
+                <button @click="upload(0,uploadMode)">Upload excel file(use first sheet)</button>
+                <button @click="upload(1,uploadMode)">Upload excel file(use second sheet)</button>
+                <div style="font-size:0.8rem; color:#f26;"> :: The first row of the file needs keys</div>
+            </div>
+
+            <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
+
+                <div style="position:relative;">
+
+                    <WAgGridVue
+                        style="width:620px;"
+                        ref="rftable"
+                        :opt="opt"
+                    ></WAgGridVue>
+
+                    <pre id="ckmsg"></pre>
+
                 </div>
+
+                <div style="padding:0px 20px;">
+
+                    <div :style="`border:1px solid #ddd; width:600px; min-width:600px; height:300px; overflow-y:auto;`">
+                        <div style="padding-left:5px;">
+                            <div id="optjson" style="font-size:10pt;"></div>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
 
         </div>

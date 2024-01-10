@@ -64,72 +64,84 @@
     </script>
 
     <style>
-  .item {
-    transition: all 0.3s;
-    display: inline-block;
-    margin: 0px 15px 20px 0px;
-    padding: 4px 15px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    background-color: #f6f6f6;
-  }
-  .item-active {
-    color: #fff;
-    background-color: rgb(141, 32, 145);
-  }
-  .item-inactive:hover {
-    background-color: #eaeaea;
-  }
   .item-link {
-    margin-right: 10px;
-    padding: 2px 10px;
+    display: inline-block;
+    margin: 10px 10px 0px 0px;
+    padding: 5px 10px;
     font-size: 0.8rem;
-    color: #f22;
-    background-color: #fafafa;
-    border-radius: 10px;
+    color: #fff;
+    background-color: #443a65;
     cursor: pointer;
     text-decoration: none;
   }
-  .item-shadow {
-    box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
-      0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+  .bkh {
+    /* 寬 */
+    padding: 20px;
+  }
+  @media screen and (max-width: 800px) {
+    /* 中 */
+    .bkh {
+      padding: 10px;
+    }
+  }
+  @media screen and (max-width: 400px) {
+    /* 窄 */
+    .bkh {
+      padding: 5px;
+    }
+  }
+  .bkp {
+    /* 寬 */
+    padding: 0px 20px;
+  }
+  @media screen and (max-width: 800px) {
+    /* 中 */
+    .bkp {
+      padding: 0px 10px;
+    }
+  }
+  @media screen and (max-width: 400px) {
+    /* 窄 */
+    .bkp {
+      padding: 0px 5px;
+    }
   }
     </style>
 </head>
 <body
     style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px; margin:0px;"
 >
-    <div id="app" style="padding:0px 30px;">
-        <div style="display:flex;">
-            <div>
-                <div style="margin:20px 0px;">
-                    <span
-                        style="font-size:1.5rem; margin-right:20px;"
-                    >cellDbClick</span>
-                    <a
-                        href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-cellDbClick.html"
-                        target="_blank"
-                        class="item-link item-shadow"
-                    >example</a>
-                    <a
-                        href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-cellDbClick.html"
-                        target="_blank"
-                        class="item-link item-shadow"
-                    >code</a>
+    <div id="app" class="bkh" style>
+        <div class="bkh">
+            <div style="font-size:1.5rem;">cellDbClick</div>
+            <a
+                href="//yuda-lyu.github.io/w-threejs-vue/examples/ex-cellDbClick.html"
+                target="_blank"
+                class="item-link"
+            >example</a>
+            <a
+                href="//github.com/yuda-lyu/w-threejs-vue/blob/master/docs/examples/ex-cellDbClick.html"
+                target="_blank"
+                class="item-link"
+            >code</a>
+        </div>
+
+        <div class="bkp">
+            <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
+                <div style="position:relative;">
+                    <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
+
+                    <pre id="ckmsg"></pre>
                 </div>
 
-                <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
-
-                <pre id="ckmsg"></pre>
-            </div>
-
-            <div style="margin-left:20px; width:calc(100% - 20px);">
-                <div style="margin:20px 0px; font-size:1.5rem;">Option:</div>
-                <div
-                    style="border-top:1px solid #ddd; padding:10px; overflow-y:auto; height:calc(100vh - 120px);"
-                >
-                    <div id="optjson" style="font-size:10pt;"></div>
+                <div style="padding:0px 20px;">
+                    <div
+                        :style="`border:1px solid #ddd; width:600px; min-width:600px; height:300px; overflow-y:auto;`"
+                    >
+                        <div style="padding-left:5px;">
+                            <div id="optjson" style="font-size:10pt;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

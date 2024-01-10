@@ -1,26 +1,39 @@
 <template>
     <div>
 
-        <div>
-
-            <div style="margin:20px 0px;">
-                <span style="font-size:1.5rem; margin-right:20px;">largeData</span>
-                <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-largeData.html" target="_blank" class="item-link item-shadow">example</a>
-                <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-largeData.html" target="_blank" class="item-link item-shadow">code</a>
-            </div>
-
-            <WAgGridVue
-                ref="rftable"
-                :opt="opt"
-            ></WAgGridVue>
-
-            <pre id="ckmsg"></pre>
-
+        <div class="bkh">
+            <div style="font-size:1.5rem;">largeData</div>
+            <a href="//yuda-lyu.github.io/w-threejs-vue/examples/ex-largeData.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-threejs-vue/blob/master/docs/examples/ex-largeData.html" target="_blank" class="item-link">code</a>
         </div>
 
-        <div style="margin-top:20px;">
-            <div style="margin:20px 0px; font-size:1.5rem;">Option:</div>
-            <div id="optjson" style="font-size:10pt; padding:10px 0px 0px 10px; border-top:1px solid #ddd;"></div>
+        <div class="bkp">
+
+            <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
+
+                <div style="width:100%; min-width:620px; position:relative;">
+
+                    <WAgGridVue
+                        ref="rftable"
+                        :opt="opt"
+                    ></WAgGridVue>
+
+                    <pre id="ckmsg"></pre>
+
+                </div>
+
+                <div style="padding:0px 20px;">
+
+                    <div :style="`border:1px solid #ddd; width:600px; min-width:600px; height:300px; overflow-y:auto;`">
+                        <div style="padding-left:5px;">
+                            <div id="optjson" style="font-size:10pt;"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>

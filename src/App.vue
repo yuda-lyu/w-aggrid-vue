@@ -1,219 +1,218 @@
 <template>
-    <div>
+    <div
+        style=""
+        :changeMenus="changeMenus"
+    >
 
 
         <template v-if="!isNarrow">
-            <a href="https://github.com/yuda-lyu/w-aggrid-vue" class="github-corner" style="position:fixed; top:0; right:0; border:0; z-index:10000;" aria-label="View source on GitHub" target="_blank">
+            <a href="https://github.com/yuda-lyu/w-plot-vue" class="github-corner" style="position:fixed; top:0; right:0; border:0; z-index:10000;" aria-label="View source on GitHub" target="_blank" rel="noreferrer noopener">
                 <svg width="80" height="80" viewBox="0 0 250 250" style="fill:rgba(0,0,0,0.25); color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg>
             </a>
         </template>
 
 
-        <div
-            :style="`transition:background-color 0.2s; position:fixed; left:0; top:0; z-index:10; height:100vh; width:${showMenu?'100vw':widthMenu+'px'}; overflow-x:hidden; background-color:${showMenu?'rgba(0,0,0,0.5)':'transparent'};`"
-            @click="showMenu=false"
-            @mouseenter="showMenu=false"
-        >
+        <div style="background:#f5f5f5;">
 
-            <div
-                :style="`transition:all 0.2s; height:100vh; width:${showMenu?'50vw':widthMenu+'px'}; overflow-x:hidden;`"
-                @click.stop="showMenu=true"
-                @mouseenter="showMenu=true"
-                @mouseleave="showMenu=false"
-            >
-
-                <div
-                    :style="`transition:all 0.2s; height:100%; width:50vw; overflow-y:auto; background-color:#fff`"
+            <div style="width:calc( 100vw - 20px ); overflow-x:auto;" v-if="cmpsL1 && cmpsL1.length>0">
+                <WListHorizontal
+                    :items="cmpsL1"
+                    :itemActive.sync="cmpP1"
+                    :itemBackgroundColor="'transparent'"
+                    :itemBackgroundColorHover="'#eee'"
+                    :itemBackgroundColorActive="'#eee'"
+                    :keyText="'name'"
+                    :paddingStyle="{v:12,h:20}"
+                    @update:itemActive="(v)=>{indP3=0;indP2=0;indP1=getInd(v,cmpsL1)}"
                 >
-
-                    <div
-                        :style="`transition:all 0.2s; display:table; width:100%;`"
-                        :key="kmcmp"
-                        v-for="(mcmp,kmcmp) in mcmps"
-                    >
-
-                        <div :style="`transition:all 0.2s; display:table-cell; padding-top:15px; padding-right:10px; width:${widthMenu-10}px; text-align:right; font-size:0.9rem; color:${showMenu?'#6A1B9A':'#888'}; background-color:${showMenu?'#eee':'#fff'}; border-bottom:1px solid ${showMenu?'#E1BEE7':'#fff'};`">{{kmcmp}}</div>
-
-                        <div :style="`transition:all 0.2s; display:table-cell; padding-top:15px; padding-left:10px; padding-right:10px; border-bottom:1px solid ${showMenu?'#dcf':'#fff'};`">
-                            <template v-for="(cmp,kcmp) in mcmp">
-                                <div
-                                    :class="`item ${cmp===showCmp?'item-active':'item-inactive'}`"
-                                    style="position:relative;"
-                                    :key="kcmp"
-                                    @click="showCmp=cmp;showMenu=false;"
-                                >
-
-                                    <span>{{cmp}}</span>
-
-                                    <div
-                                        style="position:absolute; top:-9px; right:-10px; padding:0px 7px; opacity:0.8; font-size:0.7rem; color:#fff; background-color:#f26; border-radius:10px;"
-                                        v-if="cmp.substring(0, 3)==='def'"
-                                    >
-                                        def
-                                    </div>
-
-                                </div>
-                            </template>
+                    <template v-slot:item="props">
+                        <div style="">
+                            {{props.item.name}}
                         </div>
+                    </template>
+                </WListHorizontal>
+                <div style="height:1px; background:#ddd;"></div>
+            </div>
 
-                    </div>
 
-                </div>
+            <div style="width:calc( 100vw - 20px ); overflow-x:auto;" v-if="cmpsL2 && cmpsL2.length>0">
+                <div style="height:3px; background:#fff;"></div>
+                <WListHorizontal
+                    :items="cmpsL2"
+                    :itemActive.sync="cmpP2"
+                    :itemBackgroundColor="'transparent'"
+                    :itemBackgroundColorHover="'#eee'"
+                    :itemBackgroundColorActive="'#eee'"
+                    :keyText="'name'"
+                    :paddingStyle="{v:12,h:20}"
+                    @update:itemActive="(v)=>{indP3=0;indP2=getInd(v,cmpsL2)}"
+                >
+                    <template v-slot:item="props">
+                        <div style="">
+                            {{props.item.name}}
+                        </div>
+                    </template>
+                </WListHorizontal>
+                <div style="height:1px; background:#ddd;"></div>
+            </div>
 
+            <div style="width:calc( 100vw - 20px ); overflow-x:auto;" v-if="cmpsL3 && cmpsL3.length>0">
+                <div style="height:3px; background:#fff;"></div>
+                <WListHorizontal
+                    :items="cmpsL3"
+                    :itemActive.sync="cmpP3"
+                    :itemBackgroundColor="'transparent'"
+                    :itemBackgroundColorHover="'#eee'"
+                    :itemBackgroundColorActive="'#eee'"
+                    :keyText="'name'"
+                    :paddingStyle="{v:12,h:20}"
+                    @update:itemActive="(v)=>{indP3=getInd(v,cmpsL3)}"
+                >
+                    <template v-slot:item="props">
+                        <div style="">
+                            {{props.item.name}}
+                        </div>
+                    </template>
+                </WListHorizontal>
+                <div style="height:1px; background:#ddd;"></div>
             </div>
 
         </div>
 
 
-        <div style="display:flex;">
+        <div class="bkh">
 
-            <div
-                :style="`padding-left:${widthMenu}px;`"
-                @mouseenter="showMenu=true"
-            ></div>
+            <AppCellChange v-if="cmpPick==='cellChange'"></AppCellChange>
 
-            <div
-                style="width:100%;"
-                @mousemove="showMenu=false"
-            >
+            <AppCellMouseEnter v-if="cmpPick==='cellMouseEnter'"></AppCellMouseEnter>
 
-                <div style="padding:0px 30px; overflow-x:auto; border-left:1px solid #ddd;">
+            <AppCellMouseLeave v-if="cmpPick==='cellMouseLeave'"></AppCellMouseLeave>
 
-                    <AppCellChange v-if="showCmp==='cellChange'"></AppCellChange>
+            <AppCellClick v-if="cmpPick==='cellClick'"></AppCellClick>
 
-                    <AppCellMouseEnter v-if="showCmp==='cellMouseEnter'"></AppCellMouseEnter>
+            <AppCellDbClick v-if="cmpPick==='cellDbClick'"></AppCellDbClick>
 
-                    <AppCellMouseLeave v-if="showCmp==='cellMouseLeave'"></AppCellMouseLeave>
+            <AppClearHeadFilter v-if="cmpPick==='clearHeadFilter'"></AppClearHeadFilter>
 
-                    <AppCellClick v-if="showCmp==='cellClick'"></AppCellClick>
+            <AppClearHeadFilterAll v-if="cmpPick==='clearHeadFilterAll'"></AppClearHeadFilterAll>
 
-                    <AppCellDbClick v-if="showCmp==='cellDbClick'"></AppCellDbClick>
+            <AppDefCellAlignH v-if="cmpPick==='defCellAlignH'"></AppDefCellAlignH>
 
-                    <AppClearHeadFilter v-if="showCmp==='clearHeadFilter'"></AppClearHeadFilter>
+            <AppDefCellEditable v-if="cmpPick==='defCellEditable'"></AppDefCellEditable>
 
-                    <AppClearHeadFilterAll v-if="showCmp==='clearHeadFilterAll'"></AppClearHeadFilterAll>
+            <AppDefCellMinWidth v-if="cmpPick==='defCellMinWidth'"></AppDefCellMinWidth>
 
-                    <AppDefCellAlignH v-if="showCmp==='defCellAlignH'"></AppDefCellAlignH>
+            <AppDefHeadAlignH v-if="cmpPick==='defHeadAlignH'"></AppDefHeadAlignH>
 
-                    <AppDefCellEditable v-if="showCmp==='defCellEditable'"></AppDefCellEditable>
+            <AppDefHeadDrag v-if="cmpPick==='defHeadDrag'"></AppDefHeadDrag>
 
-                    <AppDefCellMinWidth v-if="showCmp==='defCellMinWidth'"></AppDefCellMinWidth>
+            <AppDefHeadFilter v-if="cmpPick==='defHeadFilter'"></AppDefHeadFilter>
 
-                    <AppDefHeadAlignH v-if="showCmp==='defHeadAlignH'"></AppDefHeadAlignH>
+            <AppDefHeadFilterType v-if="cmpPick==='defHeadFilterType'"></AppDefHeadFilterType>
 
-                    <AppDefHeadDrag v-if="showCmp==='defHeadDrag'"></AppDefHeadDrag>
+            <AppDefHeadSort v-if="cmpPick==='defHeadSort'"></AppDefHeadSort>
 
-                    <AppDefHeadFilter v-if="showCmp==='defHeadFilter'"></AppDefHeadFilter>
+            <AppDefHeadSortMethod v-if="cmpPick==='defHeadSortMethod'"></AppDefHeadSortMethod>
 
-                    <AppDefHeadFilterType v-if="showCmp==='defHeadFilterType'"></AppDefHeadFilterType>
+            <AppFilterAllData v-if="cmpPick==='filterAllData'"></AppFilterAllData>
 
-                    <AppDefHeadSort v-if="showCmp==='defHeadSort'"></AppDefHeadSort>
+            <AppGetDisplayData v-if="cmpPick==='getDisplayData'"></AppGetDisplayData>
 
-                    <AppDefHeadSortMethod v-if="showCmp==='defHeadSortMethod'"></AppDefHeadSortMethod>
+            <AppDownloadData v-if="cmpPick==='downloadData'"></AppDownloadData>
 
-                    <AppFilterAllData v-if="showCmp==='filterAllData'"></AppFilterAllData>
+            <AppDownloadDisplayData v-if="cmpPick==='downloadDisplayData'"></AppDownloadDisplayData>
 
-                    <AppGetDisplayData v-if="showCmp==='getDisplayData'"></AppGetDisplayData>
+            <AppUploadData v-if="cmpPick==='uploadData'"></AppUploadData>
 
-                    <AppDownloadData v-if="showCmp==='downloadData'"></AppDownloadData>
+            <AppUploadDataWithConvertKeys v-if="cmpPick==='uploadDataWithkpConvertKeys'"></AppUploadDataWithConvertKeys>
 
-                    <AppDownloadDisplayData v-if="showCmp==='downloadDisplayData'"></AppDownloadDisplayData>
+            <AppPasteText v-if="cmpPick==='pasteText'"></AppPasteText>
 
-                    <AppUploadData v-if="showCmp==='uploadData'"></AppUploadData>
+            <AppFitColumns v-if="cmpPick==='fitColumns'"></AppFitColumns>
 
-                    <AppUploadDataWithConvertKeys v-if="showCmp==='uploadDataWithkpConvertKeys'"></AppUploadDataWithConvertKeys>
+            <AppAutoFitColumns v-if="cmpPick==='autoFitColumns'"></AppAutoFitColumns>
 
-                    <AppPasteText v-if="showCmp==='pasteText'"></AppPasteText>
+            <AppGenRowsPinnBottom v-if="cmpPick==='genRowsPinnBottom'"></AppGenRowsPinnBottom>
 
-                    <AppFitColumns v-if="showCmp==='fitColumns'"></AppFitColumns>
+            <AppGenRowsPinnTop v-if="cmpPick==='genRowsPinnTop'"></AppGenRowsPinnTop>
 
-                    <AppAutoFitColumns v-if="showCmp==='autoFitColumns'"></AppAutoFitColumns>
+            <AppGetInstance v-if="cmpPick==='getInstance'"></AppGetInstance>
 
-                    <AppGenRowsPinnBottom v-if="showCmp==='genRowsPinnBottom'"></AppGenRowsPinnBottom>
+            <AppHighlight v-if="cmpPick==='highlight'"></AppHighlight>
 
-                    <AppGenRowsPinnTop v-if="showCmp==='genRowsPinnTop'"></AppGenRowsPinnTop>
+            <AppKpCellAlignH v-if="cmpPick==='kpCellAlignH'"></AppKpCellAlignH>
 
-                    <AppGetInstance v-if="showCmp==='getInstance'"></AppGetInstance>
+            <AppKpCellEditable v-if="cmpPick==='kpCellEditable'"></AppKpCellEditable>
 
-                    <AppHighlight v-if="showCmp==='highlight'"></AppHighlight>
+            <AppKpCellRender v-if="cmpPick==='kpCellRender'"></AppKpCellRender>
 
-                    <AppKpCellAlignH v-if="showCmp==='kpCellAlignH'"></AppKpCellAlignH>
+            <AppKpCellTooltip v-if="cmpPick==='kpCellTooltip'"></AppKpCellTooltip>
 
-                    <AppKpCellEditable v-if="showCmp==='kpCellEditable'"></AppKpCellEditable>
+            <AppKpCellWidth v-if="cmpPick==='kpCellWidth'"></AppKpCellWidth>
 
-                    <AppKpCellRender v-if="showCmp==='kpCellRender'"></AppKpCellRender>
+            <AppKpHead v-if="cmpPick==='kpHead'"></AppKpHead>
 
-                    <AppKpCellTooltip v-if="showCmp==='kpCellTooltip'"></AppKpCellTooltip>
+            <AppKpHeadAlignH v-if="cmpPick==='kpHeadAlignH'"></AppKpHeadAlignH>
 
-                    <AppKpCellWidth v-if="showCmp==='kpCellWidth'"></AppKpCellWidth>
+            <AppKpHeadRender v-if="cmpPick==='kpHeadRender'"></AppKpHeadRender>
 
-                    <AppKpHead v-if="showCmp==='kpHead'"></AppKpHead>
+            <AppKpHeadDrag v-if="cmpPick==='kpHeadDrag'"></AppKpHeadDrag>
 
-                    <AppKpHeadAlignH v-if="showCmp==='kpHeadAlignH'"></AppKpHeadAlignH>
+            <AppKpHeadCheckBox v-if="cmpPick==='kpHeadCheckBox'"></AppKpHeadCheckBox>
 
-                    <AppKpHeadRender v-if="showCmp==='kpHeadRender'"></AppKpHeadRender>
+            <AppKpHeadHide v-if="cmpPick==='kpHeadHide'"></AppKpHeadHide>
 
-                    <AppKpHeadDrag v-if="showCmp==='kpHeadDrag'"></AppKpHeadDrag>
+            <AppKpHeadFilter v-if="cmpPick==='kpHeadFilter'"></AppKpHeadFilter>
 
-                    <AppKpHeadCheckBox v-if="showCmp==='kpHeadCheckBox'"></AppKpHeadCheckBox>
+            <AppKpHeadFilterType v-if="cmpPick==='kpHeadFilterType'"></AppKpHeadFilterType>
 
-                    <AppKpHeadHide v-if="showCmp==='kpHeadHide'"></AppKpHeadHide>
+            <AppKpHeadFixLeft v-if="cmpPick==='kpHeadFixLeft'"></AppKpHeadFixLeft>
 
-                    <AppKpHeadFilter v-if="showCmp==='kpHeadFilter'"></AppKpHeadFilter>
+            <AppKpHeadSort v-if="cmpPick==='kpHeadSort'"></AppKpHeadSort>
 
-                    <AppKpHeadFilterType v-if="showCmp==='kpHeadFilterType'"></AppKpHeadFilterType>
+            <AppKpHeadSortMethod v-if="cmpPick==='kpHeadSortMethod'"></AppKpHeadSortMethod>
 
-                    <AppKpHeadFixLeft v-if="showCmp==='kpHeadFixLeft'"></AppKpHeadFixLeft>
+            <AppKpHeadTooltip v-if="cmpPick==='kpHeadTooltip'"></AppKpHeadTooltip>
 
-                    <AppKpHeadSort v-if="showCmp==='kpHeadSort'"></AppKpHeadSort>
+            <AppKpRowStyle v-if="cmpPick==='kpRowStyle'"></AppKpRowStyle>
 
-                    <AppKpHeadSortMethod v-if="showCmp==='kpHeadSortMethod'"></AppKpHeadSortMethod>
+            <AppKpRowDrag v-if="cmpPick==='kpRowDrag'"></AppKpRowDrag>
 
-                    <AppKpHeadTooltip v-if="showCmp==='kpHeadTooltip'"></AppKpHeadTooltip>
+            <AppKpColStyle v-if="cmpPick==='kpColStyle'"></AppKpColStyle>
 
-                    <AppKpRowStyle v-if="showCmp==='kpRowStyle'"></AppKpRowStyle>
+            <AppKpColSpan v-if="cmpPick==='kpColSpan'"></AppKpColSpan>
 
-                    <AppKpRowDrag v-if="showCmp==='kpRowDrag'"></AppKpRowDrag>
+            <AppLargeData v-if="cmpPick==='largeData'"></AppLargeData>
 
-                    <AppKpColStyle v-if="showCmp==='kpColStyle'"></AppKpColStyle>
+            <AppOperateData v-if="cmpPick==='operateData'"></AppOperateData>
 
-                    <AppKpColSpan v-if="showCmp==='kpColSpan'"></AppKpColSpan>
+            <AppRowsChange v-if="cmpPick==='rowsChange'"></AppRowsChange>
 
-                    <AppLargeData v-if="showCmp==='largeData'"></AppLargeData>
+            <AppRowChange v-if="cmpPick==='rowChange'"></AppRowChange>
 
-                    <AppOperateData v-if="showCmp==='operateData'"></AppOperateData>
+            <AppRowChecked v-if="cmpPick==='rowChecked'"></AppRowChecked>
 
-                    <AppRowsChange v-if="showCmp==='rowsChange'"></AppRowsChange>
+            <AppRowMouseEnter v-if="cmpPick==='rowMouseEnter'"></AppRowMouseEnter>
 
-                    <AppRowChange v-if="showCmp==='rowChange'"></AppRowChange>
+            <AppRowMouseLeave v-if="cmpPick==='rowMouseLeave'"></AppRowMouseLeave>
 
-                    <AppRowChecked v-if="showCmp==='rowChecked'"></AppRowChecked>
+            <AppRowClick v-if="cmpPick==='rowClick'"></AppRowClick>
 
-                    <AppRowMouseEnter v-if="showCmp==='rowMouseEnter'"></AppRowMouseEnter>
+            <AppRowDbClick v-if="cmpPick==='rowDbClick'"></AppRowDbClick>
 
-                    <AppRowMouseLeave v-if="showCmp==='rowMouseLeave'"></AppRowMouseLeave>
+            <AppSetHeadFilter v-if="cmpPick==='setHeadFilter'"></AppSetHeadFilter>
 
-                    <AppRowClick v-if="showCmp==='rowClick'"></AppRowClick>
+            <AppFilterChange v-if="cmpPick==='filterChange'"></AppFilterChange>
 
-                    <AppRowDbClick v-if="showCmp==='rowDbClick'"></AppRowDbClick>
+            <AppShowKeys v-if="cmpPick==='showKeys'"></AppShowKeys>
 
-                    <AppSetHeadFilter v-if="showCmp==='setHeadFilter'"></AppSetHeadFilter>
+            <AppSimpleData v-if="cmpPick==='simpleData'"></AppSimpleData>
 
-                    <AppFilterChange v-if="showCmp==='filterChange'"></AppFilterChange>
+            <AppTableHeight v-if="cmpPick==='tableHeight'"></AppTableHeight>
 
-                    <AppShowKeys v-if="showCmp==='showKeys'"></AppShowKeys>
+            <AppTableWidth v-if="cmpPick==='tableWidth'"></AppTableWidth>
 
-                    <AppSimpleData v-if="showCmp==='simpleData'"></AppSimpleData>
-
-                    <AppTableHeight v-if="showCmp==='tableHeight'"></AppTableHeight>
-
-                    <AppTableWidth v-if="showCmp==='tableWidth'"></AppTableWidth>
-
-                    <AppTableWidthFull v-if="showCmp==='tableWidthFull'"></AppTableWidthFull>
-
-                </div>
-
-            </div>
+            <AppTableWidthFull v-if="cmpPick==='tableWidthFull'"></AppTableWidthFull>
 
         </div>
 
@@ -222,6 +221,11 @@
 </template>
 
 <script>
+import get from 'lodash-es/get'
+import each from 'lodash-es/each'
+// import cloneDeep from 'lodash-es/cloneDeep'
+import urlParse from 'wsemi/src/urlParse.mjs'
+import WListHorizontal from 'w-component-vue/src/components/WListHorizontal.vue'
 import AppCellChange from './AppCellChange.vue'
 import AppCellMouseEnter from './AppCellMouseEnter.vue'
 import AppCellMouseLeave from './AppCellMouseLeave.vue'
@@ -292,6 +296,7 @@ import AppTableWidthFull from './AppTableWidthFull.vue'
 
 export default {
     components: {
+        WListHorizontal,
         AppCellChange,
         AppCellMouseEnter,
         AppCellMouseLeave,
@@ -360,102 +365,342 @@ export default {
         AppTableWidthFull,
     },
     data: function() {
-        return {
-            widthMenu: 80,
-            showMenu: false,
-            showCmp: 'largeData',
-            mcmps: {
-                data: [
-                    'simpleData',
-                    'largeData',
-                ],
-                size: [
-                    'tableHeight',
-                    'tableWidth',
-                    'tableWidthFull',
-                ],
-                cell: [
-                    'cellChange',
-                    'cellMouseEnter',
-                    'cellMouseLeave',
-                    'cellClick',
-                    'cellDbClick',
-                ],
-                row: [
-                    'rowsChange',
-                    'rowChange',
-                    'rowChecked',
-                    'rowMouseEnter',
-                    'rowMouseLeave',
-                    'rowClick',
-                    'rowDbClick',
-                ],
-                kpCell: [
-                    'kpCellAlignH',
-                    'kpCellEditable',
-                    'kpCellRender',
-                    'kpCellTooltip',
-                    'kpCellWidth',
-                    'defCellAlignH',
-                    'defCellEditable',
-                    'defCellMinWidth',
-                ],
-                kpHead: [
-                    'kpHead',
-                    'kpHeadAlignH',
-                    'kpHeadRender',
-                    'kpHeadDrag',
-                    'kpHeadCheckBox',
-                    'kpHeadHide',
-                    'kpHeadFilter',
-                    'kpHeadFilterType',
-                    'kpHeadFixLeft',
-                    'kpHeadSort',
-                    'kpHeadSortMethod',
-                    'kpHeadTooltip',
-                    'defHeadAlignH',
-                    'defHeadDrag',
-                    'defHeadFilter',
-                    'defHeadFilterType',
-                    'defHeadSort',
-                    'defHeadSortMethod',
-                ],
-                kpRow: [
-                    'kpRowStyle',
-                    'kpRowDrag',
-                ],
-                kpCol: [
-                    'kpColStyle',
-                    'kpColSpan',
-                ],
-                funcs: [
-                    'filterAllData',
-                    'getDisplayData',
-                    'downloadData',
-                    'downloadDisplayData',
-                    'uploadData',
-                    'uploadDataWithkpConvertKeys',
-                    'pasteText',
-                    'fitColumns',
-                    'autoFitColumns',
-                    'genRowsPinnBottom',
-                    'genRowsPinnTop',
-                    'operateData',
-                    'getInstance',
-                    'highlight',
-                    'setHeadFilter',
-                    'filterChange',
-                    'showKeys',
-                    'clearHeadFilter',
-                    'clearHeadFilterAll',
+        let cmps = [
+            {
+                name: 'data',
+                cmps: [
+                    { name: 'simpleData' },
+                    { name: 'largeData' },
                 ],
             },
+            {
+                name: 'size',
+                cmps: [
+                    { name: 'tableHeight' },
+                    { name: 'tableWidth' },
+                    { name: 'tableWidthFull' },
+                ],
+            },
+            {
+                name: 'cell',
+                cmps: [
+                    { name: 'cellChange' },
+                    { name: 'cellMouseEnter' },
+                    { name: 'cellMouseLeave' },
+                    { name: 'cellClick' },
+                    { name: 'cellDbClick' },
+                ],
+            },
+            {
+                name: 'row',
+                cmps: [
+                    { name: 'rowsChange' },
+                    { name: 'rowChange' },
+                    { name: 'rowChecked' },
+                    { name: 'rowMouseEnter' },
+                    { name: 'rowMouseLeave' },
+                    { name: 'rowClick' },
+                    { name: 'rowDbClick' },
+                ],
+            },
+            {
+                name: 'kpCell',
+                cmps: [
+                    {
+                        name: 'kp',
+                        cmps: [
+                            { name: 'kpCellAlignH' },
+                            { name: 'kpCellEditable' },
+                            { name: 'kpCellRender' },
+                            { name: 'kpCellTooltip' },
+                            { name: 'kpCellWidth' },
+                        ],
+                    },
+                    {
+                        name: 'def',
+                        cmps: [
+                            { name: 'defCellAlignH' },
+                            { name: 'defCellEditable' },
+                            { name: 'defCellMinWidth' },
+                        ],
+                    },
+                ],
+            },
+            {
+                name: 'kpHead',
+                cmps: [
+                    {
+                        name: 'kp',
+                        cmps: [
+                            { name: 'kpHead' },
+                            { name: 'kpHeadAlignH' },
+                            { name: 'kpHeadRender' },
+                            { name: 'kpHeadDrag' },
+                            { name: 'kpHeadCheckBox' },
+                            { name: 'kpHeadHide' },
+                            { name: 'kpHeadFilter' },
+                            { name: 'kpHeadFilterType' },
+                            { name: 'kpHeadFixLeft' },
+                            { name: 'kpHeadSort' },
+                            { name: 'kpHeadSortMethod' },
+                            { name: 'kpHeadTooltip' },
+                        ],
+                    },
+                    {
+                        name: 'def',
+                        cmps: [
+                            { name: 'defHeadAlignH' },
+                            { name: 'defHeadDrag' },
+                            { name: 'defHeadFilter' },
+                            { name: 'defHeadFilterType' },
+                            { name: 'defHeadSort' },
+                            { name: 'defHeadSortMethod' },
+                        ],
+                    },
+                ],
+            },
+            {
+                name: 'kpRow',
+                cmps: [
+                    {
+                        name: 'kp',
+                        cmps: [
+                            { name: 'kpRowStyle' },
+                            { name: 'kpRowDrag' },
+                        ],
+                    },
+                ],
+            },
+            {
+                name: 'kpCol',
+                cmps: [
+                    {
+                        name: 'kp',
+                        cmps: [
+                            { name: 'kpColStyle' },
+                            { name: 'kpColSpan' },
+                        ],
+                    },
+                ],
+            },
+            {
+                name: 'filter',
+                cmps: [
+                    { name: 'filterAllData' },
+                    { name: 'getDisplayData' },
+                    { name: 'clearHeadFilter' },
+                    { name: 'clearHeadFilterAll' },
+                    { name: 'setHeadFilter' },
+                    { name: 'filterChange' },
+                    { name: 'highlight' },
+                ],
+            },
+            {
+                name: 'funcs',
+                cmps: [
+                    {
+                        name: 'fit',
+                        cmps: [
+                            { name: 'fitColumns' },
+                            { name: 'autoFitColumns' },
+                        ],
+                    },
+                    {
+                        name: 'gen',
+                        cmps: [
+                            { name: 'genRowsPinnBottom' },
+                            { name: 'genRowsPinnTop' },
+                        ],
+                    },
+                    {
+                        name: 'operate',
+                        cmps: [
+                            { name: 'pasteText' },
+                            { name: 'showKeys' },
+                            { name: 'operateData' },
+                        ],
+                    },
+                    {
+                        name: 'download',
+                        cmps: [
+                            { name: 'downloadData' },
+                            { name: 'downloadDisplayData' },
+                        ],
+                    },
+                    {
+                        name: 'upload',
+                        cmps: [
+                            { name: 'uploadData' },
+                            { name: 'uploadDataWithkpConvertKeys' },
+                        ],
+                    },
+                    { name: 'getInstance' },
+                ],
+            },
+        ]
+        return {
+
+            cmpsL1: cmps,
+            indP1: null,
+            cmpP1: null,
+
+            cmpsL2: null,
+            indP2: null,
+            cmpP2: null,
+
+            cmpsL3: null,
+            indP3: null,
+            cmpP3: null,
+
+            cmpsL4: null,
+
+            cmpPick: '',
+
         }
+    },
+    mounted: function() {
+        let vo = this
+
+        //default
+        vo.indP1 = 0
+        vo.indP2 = 0
+        vo.indP3 = 0
+
+        //urlParse, http://localhost:8080/?cmp=w-set-multi
+        let p = urlParse(location.href)
+        // console.log('p', p)
+
+        //viewPick
+        vo.viewPick(get(p, 'cmp', ''))
+
     },
     computed: {
 
+        changeMenus: function() {
+            let vo = this
+            vo.modifyMenus(vo.indP1, vo.indP2, vo.indP3)
+            return ''
+        },
+
         isNarrow: function() {
             return window.innerWidth < 1000
+        },
+
+    },
+    methods: {
+
+        modifyMenus: function() {
+            let vo = this
+
+            let cmpPick = ''
+
+            setTimeout(() => {
+
+                // console.log('call P1')
+                vo.cmpP1 = get(vo.cmpsL1, vo.indP1, {})
+                vo.cmpsL2 = get(vo.cmpP1, `cmps`, [])
+                let _cmpPick = get(vo.cmpP1, `name`, '')
+                if (_cmpPick) {
+                    cmpPick = _cmpPick
+                }
+                // console.log('vo.cmpP1', cloneDeep(vo.cmpP1))
+                // console.log('vo.cmpsL2', cloneDeep(vo.cmpsL2))
+
+            }, 50)
+
+            setTimeout(() => {
+
+                // console.log('call P2')
+                let cmps = get(vo.cmpP1, `cmps`, [])
+                vo.cmpP2 = get(cmps, vo.indP2, {})
+                vo.cmpsL3 = get(vo.cmpP2, `cmps`, [])
+                let _cmpPick = get(vo.cmpP2, `name`, '')
+                if (_cmpPick) {
+                    cmpPick = _cmpPick
+                }
+                // console.log('vo.cmpP2', cloneDeep(vo.cmpP2))
+                // console.log('vo.cmpsL3', cloneDeep(vo.cmpsL3))
+
+            }, 100)
+
+            setTimeout(() => {
+
+                // console.log('call P3')
+                let cmps = get(vo.cmpP2, `cmps`, [])
+                vo.cmpP3 = get(cmps, vo.indP3, {})
+                vo.cmpsL4 = get(vo.cmpP3, `cmps`, [])
+                let _cmpPick = get(vo.cmpP3, `name`, '')
+                if (_cmpPick) {
+                    cmpPick = _cmpPick
+                }
+                // console.log('vo.cmpP3', cloneDeep(vo.cmpP3))
+                // console.log('vo.cmpsL4', cloneDeep(vo.cmpsL4))
+
+                //update
+                vo.cmpPick = cmpPick
+                // console.log('cmpPick', cmpPick)
+
+            }, 150)
+
+        },
+
+        getInd: function(item, items) {
+            // let vo = this
+            let ind = -1
+            each(items, (v, k) => {
+                if (item.name === v.name) {
+                    ind = k
+                    return false //跳出
+                }
+            })
+            return ind
+        },
+
+        viewPick: function(cmpPick) {
+            let vo = this
+            let _cmpPick = cmpPick
+            let r = ''
+            let rs = []
+            let ls = []
+            let pv = (ts) => {
+                each(ts, (v, k) => {
+                    ls.push(k)
+
+                    //name, _name
+                    let name = get(v, `name`, '')
+                    let _name = name
+
+                    //cmps
+                    let cmps = get(v, `cmps`, [])
+
+                    //push
+                    let cls = ls.join('.')
+                    let b = _name === _cmpPick
+                    rs.push({
+                        cls,
+                        name,
+                        b,
+                    })
+
+                    //save
+                    if (b) {
+                        r = JSON.parse(JSON.stringify(ls))
+                    }
+
+                    //遞迴pv
+                    if (cmps.length > 0) {
+                        pv(cmps)
+                    }
+
+                    ls.pop()
+                })
+            }
+            pv(vo.cmpsL1)
+            // console.log('rs', rs)
+            // console.log('r', r)
+            vo.indP1 = get(r, 0, 0)
+            vo.indP2 = get(r, 1, 0)
+            vo.indP3 = get(r, 2, 0)
         },
 
     },
@@ -463,31 +708,40 @@ export default {
 </script>
 
 <style>
-.item {
-    transition: all 0.3s linear;
-    display: inline-block;
-    margin: 0px 15px 15px 0px;
-    padding: 4px 15px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    background-color:#f6f6f6;
-}
-.item-active {
-    color: #fff;
-    background-color:rgb(141, 32, 145);
-}
-.item-inactive:hover {
-    background-color:#eaeaea;
-}
 .item-link {
-    margin-right: 10px;
-    padding: 2px 10px;
+    display: inline-block;
+    margin: 10px 10px 0px 0px;
+    padding: 5px 10px;
     font-size: 0.8rem;
-    color:#f22;
-    background-color:#fafafa;
-    border-radius:10px;
-    cursor:pointer;
-    text-decoration:none;
+    color: #fff;
+    background-color: #443a65;
+    cursor: pointer;
+    text-decoration: none;
+}
+.bkh { /* 寬 */
+    padding:20px;
+}
+@media screen and (max-width:800px){ /* 中 */
+    .bkh {
+        padding:10px;
+    }
+}
+@media screen and (max-width:400px){ /* 窄 */
+    .bkh {
+        padding:5px;
+    }
+}
+.bkp { /* 寬 */
+    padding:0px 20px;
+}
+@media screen and (max-width:800px){ /* 中 */
+    .bkp {
+        padding:0px 10px;
+    }
+}
+@media screen and (max-width:400px){ /* 窄 */
+    .bkp {
+        padding:0px 5px;
+    }
 }
 </style>
