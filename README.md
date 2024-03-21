@@ -7,6 +7,7 @@ A wrapper for ag-grid-vue.
 [![license](https://img.shields.io/npm/l/w-aggrid-vue.svg?style=flat)](https://npmjs.org/package/w-aggrid-vue) 
 [![gzip file size](http://img.badgesize.io/yuda-lyu/w-aggrid-vue/master/dist/w-aggrid-vue.umd.js.svg?compression=gzip)](https://github.com/yuda-lyu/w-aggrid-vue)
 [![npm download](https://img.shields.io/npm/dt/w-aggrid-vue.svg)](https://npmjs.org/package/w-aggrid-vue) 
+[![npm download](https://img.shields.io/npm/dm/w-aggrid-vue.svg)](https://npmjs.org/package/w-aggrid-vue) 
 [![jsdelivr download](https://img.shields.io/jsdelivr/npm/hm/w-aggrid-vue.svg)](https://www.jsdelivr.com/package/npm/w-aggrid-vue)
 
 ## Documentation
@@ -27,7 +28,7 @@ npm i w-aggrid-vue
 ### In a browser(UMD module):
 > **Note:** w-aggrid-vue is mainly dependent on `vue`, `ag-grid-community` and `ag-grid-vue`.
 
-> **Note:** umd file includes with `lodash` and `wsemi`, by using tree-shaking for dead-code elimination.
+> **Note:** umd file includes with `lodash-es` and `wsemi`, by using tree-shaking for dead-code elimination.
 
 [Optional] Add script with nomodule for IE11.
 ```alias
@@ -49,5 +50,5 @@ or
 ```
 [Necessary] Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.46/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.47/dist/w-aggrid-vue.umd.js"></script>
 ```
