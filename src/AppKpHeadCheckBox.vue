@@ -3,8 +3,8 @@
 
         <div class="bkh">
             <div style="font-size:1.5rem;">kpHeadCheckBox</div>
-            <a href="//yuda-lyu.github.io/w-threejs-vue/examples/ex-kpHeadCheckBox.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-threejs-vue/blob/master/docs/examples/ex-kpHeadCheckBox.html" target="_blank" class="item-link">code</a>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadCheckBox.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadCheckBox.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">

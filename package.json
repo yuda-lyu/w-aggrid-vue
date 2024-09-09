@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "2.0.48",
+  "version": "2.0.49",
   "main": "dist/w-aggrid-vue.umd.js",
   "dependencies": {
     "ag-grid-community": "^27.3.0",
@@ -8,8 +8,8 @@
     "lodash-es": "^4.17.21",
     "vue-class-component": "^7.2.6",
     "vue-property-decorator": "^9.1.2",
-    "w-component-vue": "^2.3.80",
-    "wsemi": "^1.7.49"
+    "w-component-vue": "^2.3.95",
+    "wsemi": "^1.7.58"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^5.0.8",
@@ -30,7 +30,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",
+    "test": "mocha --parallel --timeout 60000 --experimental-modules",
     "lint": "vue-cli-service lint",
     "deploy": "gh-pages -d docs"
   },
