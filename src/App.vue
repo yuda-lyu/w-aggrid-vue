@@ -200,6 +200,16 @@
 
             <AppRowDbClick v-if="cmpPick==='rowDbClick'"></AppRowDbClick>
 
+            <AppRowDragEnter v-if="cmpPick==='rowDragEnter'"></AppRowDragEnter>
+
+            <AppRowDragEnd v-if="cmpPick==='rowDragEnd'"></AppRowDragEnd>
+
+            <AppRowDragMove v-if="cmpPick==='rowDragMove'"></AppRowDragMove>
+
+            <AppRowDragLeave v-if="cmpPick==='rowDragLeave'"></AppRowDragLeave>
+
+            <AppRowDragChange v-if="cmpPick==='rowDragChange'"></AppRowDragChange>
+
             <AppSetHeadFilter v-if="cmpPick==='setHeadFilter'"></AppSetHeadFilter>
 
             <AppFilterChange v-if="cmpPick==='filterChange'"></AppFilterChange>
@@ -285,6 +295,11 @@ import AppRowMouseEnter from './AppRowMouseEnter.vue'
 import AppRowMouseLeave from './AppRowMouseLeave.vue'
 import AppRowClick from './AppRowClick.vue'
 import AppRowDbClick from './AppRowDbClick.vue'
+import AppRowDragEnter from './AppRowDragEnter.vue'
+import AppRowDragEnd from './AppRowDragEnd.vue'
+import AppRowDragMove from './AppRowDragMove.vue'
+import AppRowDragLeave from './AppRowDragLeave.vue'
+import AppRowDragChange from './AppRowDragChange.vue'
 import AppSetHeadFilter from './AppSetHeadFilter.vue'
 import AppFilterChange from './AppFilterChange.vue'
 import AppShowKeys from './AppShowKeys.vue'
@@ -356,6 +371,11 @@ export default {
         AppRowMouseLeave,
         AppRowClick,
         AppRowDbClick,
+        AppRowDragEnter,
+        AppRowDragEnd,
+        AppRowDragMove,
+        AppRowDragLeave,
+        AppRowDragChange,
         AppSetHeadFilter,
         AppFilterChange,
         AppShowKeys,
@@ -401,6 +421,11 @@ export default {
                     { name: 'rowMouseLeave' },
                     { name: 'rowClick' },
                     { name: 'rowDbClick' },
+                    { name: 'rowDragEnter' },
+                    { name: 'rowDragEnd' },
+                    { name: 'rowDragMove' },
+                    { name: 'rowDragLeave' },
+                    { name: 'rowDragChange' },
                 ],
             },
             {

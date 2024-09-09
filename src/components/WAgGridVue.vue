@@ -29,6 +29,11 @@
                 @cellMouseOver="agCellMouseEnter"
                 @cellMouseOut="agCellMouseLeave"
                 @cellKeyDown="agCellKeyDown"
+                @rowDragEnter="agRowDragEnter"
+                @rowDragEnd="agRowDragEnd"
+                @rowDragMove="agRowDragMove"
+                @rowDragLeave="agRowDragLeave"
+                @filterChanged="agFilterChanged"
                 @gridReady="agReady"
             ></ag-grid-vue>
 
@@ -264,6 +269,11 @@ export default {
             rowMouseLeave: function() {},
             rowClick: function() {},
             rowDbClick: function() {},
+            rowDragEnter: function() {},
+            rowDragEnd: function() {},
+            rowDragMove: function() {},
+            rowDragLeave: function() {},
+            rowDragChange: function() {},
             cellClick: function() {},
             cellDbClick: function() {},
             cellChange: function() {},
@@ -278,6 +288,7 @@ export default {
             vCellMouseEnter: null,
             vCellMouseLeave: null,
             eCellMouseLeaves: [],
+            iRowDragEnter: null,
 
             genRowsPinnTop: null,
             genRowsPinnBottom: null,
@@ -316,11 +327,11 @@ export default {
                 pinnedTopRowData: [],
                 pinnedBottomRowData: [],
 
-                onFilterChanged: (ev) => {
-                    // console.log('onFilterChanged', ev)
-                    let vo = this
-                    vo.triggerFilterChange('heads')
-                },
+                // onFilterChanged: (ev) => {
+                //     // console.log('onFilterChanged', ev)
+                //     let vo = this
+                //     vo.triggerFilterChange('heads')
+                // },
 
             },
 
@@ -479,6 +490,113 @@ export default {
             return style
         },
 
+        triggerRowDragChange: function(indFrom, indTo, row, rows) {
+
+            let vo = this
+
+            //check
+            if (indFrom !== indTo) {
+                vo.iRowDragEnter = indTo
+                vo.rowDragChange(indFrom, indTo, row, rows)
+            }
+
+        },
+
+        agRowDragEnter: function(param) {
+            // console.log('methods agRowDragEnter', param)
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragEnter ind', ind)
+
+            //iRowDragEnter
+            vo.iRowDragEnter = ind
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            // //rows
+            // let rows = vo.getNowData()
+            // // console.log('agRowDragEnd rows', cloneDeep(rows))
+
+            //rowDragEnter
+            vo.rowDragEnter(ind, -1, row)
+
+        },
+
+        agRowDragEnd: function(param) {
+            // console.log('methods agRowDragEnd', param)
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragEnd ind', ind)
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            //rows
+            let rows = vo.getNowData()
+            // console.log('agRowDragEnd rows', cloneDeep(rows))
+
+            //rowDragEnd
+            vo.rowDragEnd(vo.iRowDragEnter, ind, row, rows)
+
+            //triggerRowDragChange
+            vo.triggerRowDragChange(vo.iRowDragEnter, ind, row, rows)
+
+        },
+
+        agRowDragMove: function(param) {
+            // console.log('methods agRowDragMove', param)
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragMove ind', ind)
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            // //rows
+            // let rows = vo.getNowData()
+            // // console.log('agRowDragMove rows', cloneDeep(rows))
+
+            //rowDragMove
+            vo.rowDragMove(vo.iRowDragEnter, ind, row)
+
+        },
+
+        agRowDragLeave: function(param) {
+            // console.log('methods agRowDragLeave', param)
+
+            //先move再leave至表格外, 拖曳排序依然有效, 但僅觸發DragLeave不觸發DragEnd, 得聯合處理
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragLeave ind', ind)
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            //rows
+            let rows = vo.getNowData()
+            // console.log('agRowDragLeave rows', cloneDeep(rows))
+
+            //rowDragLeave
+            vo.rowDragLeave(vo.iRowDragEnter, ind, row, rows)
+
+            //triggerRowDragChange
+            vo.triggerRowDragChange(vo.iRowDragEnter, ind, row, rows)
+
+        },
+
         agRowSelect: function(params) {
             //console.log('agRowSelect', params)
 
@@ -551,6 +669,16 @@ export default {
                 vo.setRowsPinnBottom(vo.rows)
 
             }
+
+        },
+
+        agFilterChanged: function(params) {
+            // console.log('methods agFilterChanged', params)
+
+            let vo = this
+
+            //triggerFilterChange
+            vo.triggerFilterChange('heads')
 
         },
 
@@ -1637,6 +1765,36 @@ export default {
                 vo.rowMouseLeave = vo.opt.rowMouseLeave
             }
 
+            //rowDragEnter
+            vo.rowDragEnter = function() {}
+            if (isfun(vo.opt.rowDragEnter)) {
+                vo.rowDragEnter = vo.opt.rowDragEnter
+            }
+
+            //rowDragEnd
+            vo.rowDragEnd = function() {}
+            if (isfun(vo.opt.rowDragEnd)) {
+                vo.rowDragEnd = vo.opt.rowDragEnd
+            }
+
+            //rowDragMove
+            vo.rowDragMove = function() {}
+            if (isfun(vo.opt.rowDragMove)) {
+                vo.rowDragMove = vo.opt.rowDragMove
+            }
+
+            //rowDragLeave
+            vo.rowDragLeave = function() {}
+            if (isfun(vo.opt.rowDragLeave)) {
+                vo.rowDragLeave = vo.opt.rowDragLeave
+            }
+
+            //rowDragChange
+            vo.rowDragChange = function() {}
+            if (isfun(vo.opt.rowDragChange)) {
+                vo.rowDragChange = vo.opt.rowDragChange
+            }
+
             //cellClick
             vo.cellClick = function() {}
             if (isfun(vo.opt.cellClick)) {
@@ -1938,6 +2096,23 @@ export default {
 
             //ltdtmapping
             let data = ltdtmapping(rs, keys)
+
+            return data
+        },
+
+        getNowData: function() {
+            //console.log('methods getNowData')
+
+            let vo = this
+
+            //rs
+            let rs = []
+            vo.gridOptions.api.forEachNode((node) => {
+                rs.push(cloneDeep(node.data))
+            })
+
+            //ltdtmapping
+            let data = ltdtmapping(rs, vo.keys)
 
             return data
         },
