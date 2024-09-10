@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.50/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.51/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -194,6 +194,9 @@
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+      // setInterval(() => { //檢測數據有被組件更新
+      //     console.log(JSON.parse(JSON.stringify(vo.opt.rows)))
+      // }, 1000)
     },
     computed: {},
     methods: {}
