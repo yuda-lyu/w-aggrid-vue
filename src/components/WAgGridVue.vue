@@ -497,7 +497,16 @@ export default {
             //check
             if (indFrom !== indTo) {
                 vo.iRowDragEnter = indTo
+
+                //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+                set(vo, `opt.rows`, rows)
+
+                //rowDragChange
                 vo.rowDragChange(indFrom, indTo, row, rows)
+
+                //rowsChange, rows是內部已更新數據, 直接用於回傳函數
+                vo.rowsChange(rows)
+
             }
 
         },
@@ -652,6 +661,7 @@ export default {
 
             //check值變化
             if (param.oldValue !== param.newValue) {
+                //值變化因為記憶體同址vo.rows會出現變更, 故使用vo.rows
 
                 //refresh
                 vo.refresh()
@@ -662,7 +672,7 @@ export default {
                 //rowChange
                 vo.rowChange(param.colDef.field, param.data, vo.rows)
 
-                //rowsChange
+                //rowsChange, 因為記憶體同址vo.rows會出現變更, 故直接用於回傳函數
                 vo.rowsChange(vo.rows)
 
                 //setRowsPinnBottom
@@ -1092,14 +1102,14 @@ export default {
 
             }
 
-            //applyTransaction, 只變更必要資料加速
+            //applyTransaction, 只變更必要資料加速, 注意記憶體得用原始記憶體, 也就是updateRows得使用原始vo.rows來給予欲變更之rows, 否則applyTransaction會無法找到原始數據物件進行更新
             vo.gridOptions.api.applyTransaction({ update: updateRows })
             // console.log('applyTransaction', cloneDeep(updateRows))
 
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             set(vo, `opt.rows`, rows)
 
-            //rowsChange
+            //rowsChange, rows是內部已更新數據, 直接用於回傳函數
             vo.rowsChange(rows)
 
         },
@@ -2474,10 +2484,9 @@ export default {
             }
 
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
-            // vo.rows = rows
             set(vo, `opt.rows`, rows)
 
-            //rowsChange
+            //rowsChange, rows是內部已更新數據, 直接用於回傳函數
             vo.rowsChange(rows)
 
             return rows

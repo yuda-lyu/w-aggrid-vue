@@ -96,7 +96,7 @@ export default {
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
-        // setInterval(() => {
+        // setInterval(() => { //檢測數據有被組件更新
         //     console.log(JSON.parse(JSON.stringify(vo.opt.rows)))
         // }, 1000)
     },
