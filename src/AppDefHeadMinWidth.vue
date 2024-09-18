@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">kpHeadFixLeft</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFixLeft.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFixLeft.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">defHeadMinWidth</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadMinWidth.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadMinWidth.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">
@@ -52,20 +52,7 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpHead: {
-                    'make': 'make(false)',
-                    'model': 'model(true)',
-                    'price': 'price(false)',
-                },
-                kpHeadFixLeft: { //default: false
-                    //'make':false,
-                    'model': true,
-                    //'price':false,
-                },
-                kpHeadWidth: {
-                    make: 300,
-                    price: 300,
-                },
+                defHeadMinWidth: 150, //拖曳欄寬度可看到最小寬度限定為150
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',
                     'model': 'text',
@@ -74,6 +61,7 @@ export default {
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
+                { 'mode': 'eledrag', 'selector': '[col-id="price"] > [ref="eResize"]', 'shiftx': 100, 'shifty': 0 }, { 'mode': 'eledrag', 'selector': '[col-id="model"] > [ref="eResize"]', 'shiftx': -300, 'shifty': 0 }
             ],
         }
     },

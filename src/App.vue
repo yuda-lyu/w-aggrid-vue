@@ -100,20 +100,6 @@
 
             <AppDefCellEditable v-if="cmpPick==='defCellEditable'"></AppDefCellEditable>
 
-            <AppDefCellMinWidth v-if="cmpPick==='defCellMinWidth'"></AppDefCellMinWidth>
-
-            <AppDefHeadAlignH v-if="cmpPick==='defHeadAlignH'"></AppDefHeadAlignH>
-
-            <AppDefHeadDrag v-if="cmpPick==='defHeadDrag'"></AppDefHeadDrag>
-
-            <AppDefHeadFilter v-if="cmpPick==='defHeadFilter'"></AppDefHeadFilter>
-
-            <AppDefHeadFilterType v-if="cmpPick==='defHeadFilterType'"></AppDefHeadFilterType>
-
-            <AppDefHeadSort v-if="cmpPick==='defHeadSort'"></AppDefHeadSort>
-
-            <AppDefHeadSortMethod v-if="cmpPick==='defHeadSortMethod'"></AppDefHeadSortMethod>
-
             <AppFilterAllData v-if="cmpPick==='filterAllData'"></AppFilterAllData>
 
             <AppGetDisplayData v-if="cmpPick==='getDisplayData'"></AppGetDisplayData>
@@ -148,19 +134,13 @@
 
             <AppKpCellTooltip v-if="cmpPick==='kpCellTooltip'"></AppKpCellTooltip>
 
-            <AppKpCellWidth v-if="cmpPick==='kpCellWidth'"></AppKpCellWidth>
-
             <AppKpHead v-if="cmpPick==='kpHead'"></AppKpHead>
+
+            <AppKpHeadWidth v-if="cmpPick==='kpHeadWidth'"></AppKpHeadWidth>
 
             <AppKpHeadAlignH v-if="cmpPick==='kpHeadAlignH'"></AppKpHeadAlignH>
 
             <AppKpHeadRender v-if="cmpPick==='kpHeadRender'"></AppKpHeadRender>
-
-            <AppKpHeadDrag v-if="cmpPick==='kpHeadDrag'"></AppKpHeadDrag>
-
-            <AppKpHeadCheckBox v-if="cmpPick==='kpHeadCheckBox'"></AppKpHeadCheckBox>
-
-            <AppKpHeadHide v-if="cmpPick==='kpHeadHide'"></AppKpHeadHide>
 
             <AppKpHeadFilter v-if="cmpPick==='kpHeadFilter'"></AppKpHeadFilter>
 
@@ -173,6 +153,30 @@
             <AppKpHeadSortMethod v-if="cmpPick==='kpHeadSortMethod'"></AppKpHeadSortMethod>
 
             <AppKpHeadTooltip v-if="cmpPick==='kpHeadTooltip'"></AppKpHeadTooltip>
+
+            <AppKpHeadDrag v-if="cmpPick==='kpHeadDrag'"></AppKpHeadDrag>
+
+            <AppKpHeadCheckBox v-if="cmpPick==='kpHeadCheckBox'"></AppKpHeadCheckBox>
+
+            <AppKpHeadFocusHighlight v-if="cmpPick==='kpHeadFocusHighlight'"></AppKpHeadFocusHighlight>
+
+            <AppKpHeadHide v-if="cmpPick==='kpHeadHide'"></AppKpHeadHide>
+
+            <AppDefHeadMinWidth v-if="cmpPick==='defHeadMinWidth'"></AppDefHeadMinWidth>
+
+            <AppDefHeadMaxWidth v-if="cmpPick==='defHeadMaxWidth'"></AppDefHeadMaxWidth>
+
+            <AppDefHeadAlignH v-if="cmpPick==='defHeadAlignH'"></AppDefHeadAlignH>
+
+            <AppDefHeadDrag v-if="cmpPick==='defHeadDrag'"></AppDefHeadDrag>
+
+            <AppDefHeadFilter v-if="cmpPick==='defHeadFilter'"></AppDefHeadFilter>
+
+            <AppDefHeadFilterType v-if="cmpPick==='defHeadFilterType'"></AppDefHeadFilterType>
+
+            <AppDefHeadSort v-if="cmpPick==='defHeadSort'"></AppDefHeadSort>
+
+            <AppDefHeadSortMethod v-if="cmpPick==='defHeadSortMethod'"></AppDefHeadSortMethod>
 
             <AppKpRowStyle v-if="cmpPick==='kpRowStyle'"></AppKpRowStyle>
 
@@ -245,7 +249,8 @@ import AppClearHeadFilter from './AppClearHeadFilter.vue'
 import AppClearHeadFilterAll from './AppClearHeadFilterAll.vue'
 import AppDefCellAlignH from './AppDefCellAlignH.vue'
 import AppDefCellEditable from './AppDefCellEditable.vue'
-import AppDefCellMinWidth from './AppDefCellMinWidth.vue'
+import AppDefHeadMinWidth from './AppDefHeadMinWidth.vue'
+import AppDefHeadMaxWidth from './AppDefHeadMaxWidth.vue'
 import AppDefHeadAlignH from './AppDefHeadAlignH.vue'
 import AppDefHeadDrag from './AppDefHeadDrag.vue'
 import AppDefHeadFilter from './AppDefHeadFilter.vue'
@@ -269,19 +274,20 @@ import AppKpCellAlignH from './AppKpCellAlignH.vue'
 import AppKpCellEditable from './AppKpCellEditable.vue'
 import AppKpCellRender from './AppKpCellRender.vue'
 import AppKpCellTooltip from './AppKpCellTooltip.vue'
-import AppKpCellWidth from './AppKpCellWidth.vue'
 import AppKpHead from './AppKpHead.vue'
+import AppKpHeadWidth from './AppKpHeadWidth.vue'
 import AppKpHeadAlignH from './AppKpHeadAlignH.vue'
 import AppKpHeadRender from './AppKpHeadRender.vue'
-import AppKpHeadDrag from './AppKpHeadDrag.vue'
-import AppKpHeadCheckBox from './AppKpHeadCheckBox.vue'
-import AppKpHeadHide from './AppKpHeadHide.vue'
 import AppKpHeadFilter from './AppKpHeadFilter.vue'
 import AppKpHeadFilterType from './AppKpHeadFilterType.vue'
 import AppKpHeadFixLeft from './AppKpHeadFixLeft.vue'
 import AppKpHeadSort from './AppKpHeadSort.vue'
 import AppKpHeadSortMethod from './AppKpHeadSortMethod.vue'
 import AppKpHeadTooltip from './AppKpHeadTooltip.vue'
+import AppKpHeadDrag from './AppKpHeadDrag.vue'
+import AppKpHeadCheckBox from './AppKpHeadCheckBox.vue'
+import AppKpHeadFocusHighlight from './AppKpHeadFocusHighlight.vue'
+import AppKpHeadHide from './AppKpHeadHide.vue'
 import AppKpRowStyle from './AppKpRowStyle.vue'
 import AppKpRowDrag from './AppKpRowDrag.vue'
 import AppKpColStyle from './AppKpColStyle.vue'
@@ -321,7 +327,8 @@ export default {
         AppClearHeadFilterAll,
         AppDefCellAlignH,
         AppDefCellEditable,
-        AppDefCellMinWidth,
+        AppDefHeadMinWidth,
+        AppDefHeadMaxWidth,
         AppDefHeadAlignH,
         AppDefHeadDrag,
         AppDefHeadFilter,
@@ -345,19 +352,20 @@ export default {
         AppKpCellEditable,
         AppKpCellRender,
         AppKpCellTooltip,
-        AppKpCellWidth,
         AppKpHead,
+        AppKpHeadWidth,
         AppKpHeadAlignH,
         AppKpHeadRender,
-        AppKpHeadDrag,
-        AppKpHeadCheckBox,
-        AppKpHeadHide,
         AppKpHeadFilter,
         AppKpHeadFilterType,
         AppKpHeadFixLeft,
         AppKpHeadSort,
         AppKpHeadSortMethod,
         AppKpHeadTooltip,
+        AppKpHeadDrag,
+        AppKpHeadCheckBox,
+        AppKpHeadFocusHighlight,
+        AppKpHeadHide,
         AppKpRowStyle,
         AppKpRowDrag,
         AppKpColStyle,
@@ -438,7 +446,6 @@ export default {
                             { name: 'kpCellEditable' },
                             { name: 'kpCellRender' },
                             { name: 'kpCellTooltip' },
-                            { name: 'kpCellWidth' },
                         ],
                     },
                     {
@@ -446,7 +453,6 @@ export default {
                         cmps: [
                             { name: 'defCellAlignH' },
                             { name: 'defCellEditable' },
-                            { name: 'defCellMinWidth' },
                         ],
                     },
                 ],
@@ -458,22 +464,26 @@ export default {
                         name: 'kp',
                         cmps: [
                             { name: 'kpHead' },
+                            { name: 'kpHeadWidth' },
                             { name: 'kpHeadAlignH' },
                             { name: 'kpHeadRender' },
-                            { name: 'kpHeadDrag' },
-                            { name: 'kpHeadCheckBox' },
-                            { name: 'kpHeadHide' },
                             { name: 'kpHeadFilter' },
                             { name: 'kpHeadFilterType' },
                             { name: 'kpHeadFixLeft' },
                             { name: 'kpHeadSort' },
                             { name: 'kpHeadSortMethod' },
                             { name: 'kpHeadTooltip' },
+                            { name: 'kpHeadDrag' },
+                            { name: 'kpHeadCheckBox' },
+                            { name: 'kpHeadFocusHighlight' },
+                            { name: 'kpHeadHide' },
                         ],
                     },
                     {
                         name: 'def',
                         cmps: [
+                            { name: 'defHeadMinWidth' },
+                            { name: 'defHeadMaxWidth' },
                             { name: 'defHeadAlignH' },
                             { name: 'defHeadDrag' },
                             { name: 'defHeadFilter' },

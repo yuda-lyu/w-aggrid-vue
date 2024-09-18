@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">kpCellWidth</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellWidth.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellWidth.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">kpHeadFocusHighlight</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFocusHighlight.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFocusHighlight.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">
@@ -52,10 +52,15 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpCellWidth: { //default: null
-                    //'make':null,
-                    'model': 400,
-                    //'price':null,
+                kpHead: {
+                    'make': 'make(false)',
+                    'model': 'model(true)',
+                    'price': 'price(true)',
+                },
+                kpHeadFocusHighlight: { //default: false
+                    'make': false,
+                    'model': true,
+                    'price': true,
                 },
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',
@@ -65,6 +70,7 @@ export default {
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
+                { 'mode': 'eledrag', 'selector': 'div.ag-row-drag', 'nth': 2, 'shiftx': 0, 'shifty': 100 }
             ],
         }
     },

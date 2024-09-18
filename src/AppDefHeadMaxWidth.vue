@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">defCellMinWidth</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defCellMinWidth.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defCellMinWidth.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">defHeadMaxWidth</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadMaxWidth.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadMaxWidth.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">
@@ -52,7 +52,7 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                defCellMinWidth: 150, //拖曳欄寬度可看到最小寬度限定為150
+                defHeadMaxWidth: 150, //拖曳欄寬度可看到最小寬度限定為150
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',
                     'model': 'text',

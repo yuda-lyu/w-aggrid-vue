@@ -142,6 +142,9 @@ function parseText(contentPaste) {
  * @vue-prop {Array} opt.keys 輸入資料各欄位keys
  * @vue-prop {Array} opt.rows 輸入資料列，各列為物件，內含各欄位keys之值，例[{},{},...,{}]
  * @vue-prop {Object} [opt.kpHead={}] 輸入key對應head物件，預設各key值為本身key值
+ * @vue-prop {Number} [opt.defHeadMinWidth=null] 輸入cell預設最小寬度數字，預設為null
+ * @vue-prop {Number} [opt.defHeadMaxWidth=null] 輸入cell預設最小寬度數字，預設為null
+ * @vue-prop {Object} [opt.kpHeadWidth={}] 輸入key對應cell之寬度物件，預設各key值為undefined
  * @vue-prop {Object} [opt.kpHeadTooltip={}] 輸入key對應需tooltip的html字串物件，於各head處滑鼠移入時觸發，預設各key值為undefined
  * @vue-prop {String} [opt.defHeadAlignH='center'] 輸入head預設之左右對齊字串，預設為'center'
  * @vue-prop {Object} [opt.kpHeadAlignH={}] 輸入key對應head之左右對齊字串物件，預設各key值為defHeadAlignH
@@ -158,6 +161,7 @@ function parseText(contentPaste) {
  * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設各key值為defHeadDrag
  * @vue-prop {Object} [opt.kpHeadCheckBox={}] 輸入key對應head與key的各列是否使用核選方塊物件，預設各key值為false
+ * @vue-prop {Object} [opt.kpHeadFocusHighlight={}] 輸入key對應key的各列於獲得焦點時是否高亮顯示物件，預設各key值為true
  * @vue-prop {Object} [opt.kpHeadHide={}] 輸入key對應head是否隱藏物件，預設各key值為false
  * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定各key欄之函數，函數給予cell值需回傳之row style，預設各key值為undefined
  * @vue-prop {Object} [opt.kpRowDrag={}] 輸入key對應col之是否能拖曳排序物件，預設各key值為false
@@ -165,8 +169,6 @@ function parseText(contentPaste) {
  * @vue-prop {Function} [opt.genRowsPinnBottom=null] 輸入產生置底rows函數，輸入為表內全部數據，預設為null
  * @vue-prop {Object} [opt.kpColStyle={}] 輸入key對應col style之物件，可設定各key欄之col style，預設各key值為undefined
  * @vue-prop {Object} [opt.kpColSpan={}] 輸入key對應col span之物件，可設定各key欄之col span，預設各key值為undefined
- * @vue-prop {Number} [opt.defCellMinWidth=null] 輸入cell預設最小寬度數字，預設為null
- * @vue-prop {Object} [opt.kpCellWidth={}] 輸入key對應cell之寬度物件，預設各key值為undefined
  * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設各key值為undefined
  * @vue-prop {Object} [opt.kpCellTooltip={}] 輸入key對應cell之tooltip的html字串物件，於各cell處滑鼠移入時觸發，預設各key值為undefined
  * @vue-prop {String} [opt.defCellAlignH='center'] 輸入cell預設之左右對齊字串，預設為'center'
@@ -230,6 +232,9 @@ export default {
             columns: [],
 
             kpHead: {},
+            defHeadMinWidth: null,
+            defHeadMaxWidth: null,
+            kpHeadWidth: {},
             kpHeadTooltip: {},
             defHeadAlignH: null,
             kpHeadAlignH: {},
@@ -246,13 +251,12 @@ export default {
             kpHeadRender: {},
             kpHeadDrag: {},
             kpHeadCheckBox: {},
+            kpHeadFocusHighlight: {},
             kpHeadHide: {},
             kpRowStyle: {},
             kpRowDrag: {},
             kpColStyle: {},
             kpColSpan: {},
-            defCellMinWidth: null,
-            kpCellWidth: {},
             kpCellRender: {},
             kpCellTooltip: {},
             defCellAlignH: null,
@@ -315,7 +319,9 @@ export default {
                 singleClickEdit: true, //單點即可變更
 
                 // stopEditingWhenGridLosesFocus: true,
-                stopEditingWhenCellsLoseFocus: true, //ag-grid 25.2.2改為此設定
+                stopEditingWhenCellsLoseFocus: true, //失去焦點則停止編輯, ag-grid 25.2.2改為此設定
+
+                // suppressCellFocus: true, //點擊因cell獲得焦點會出現邊框, 若關閉(suppressCellFocus=true)會導致全部cell都關閉, 另用賦予class處理
 
                 // localeText: null,
                 getLocaleText: vo.agGetLocaleText,
@@ -1252,6 +1258,11 @@ export default {
                     o.checkboxSelection = true
                 }
 
+                //cell highlight when focused
+                if (!vo.kpHeadFocusHighlight[key]) {
+                    o.cellClass = 'no-border'
+                }
+
                 //flex
                 // o.flex = 1
 
@@ -1437,14 +1448,19 @@ export default {
                 }
 
                 //width, 內容物超過width不會自動撐開
-                if (isnum(vo.kpCellWidth[key])) {
-                    let w = cdbl(vo.kpCellWidth[key])
+                if (isnum(vo.kpHeadWidth[key])) {
+                    let w = cdbl(vo.kpHeadWidth[key])
                     o.width = w
                 }
 
                 //minWidth, ag-grid設定minWidth還是會自動被處理調整成寬度, 例如minWidth給150, 實際會依照內容長度轉成width如200, 而內容物超過轉換後的width不會自動撐開
-                if (isnum(vo.defCellMinWidth)) {
-                    o.minWidth = vo.defCellMinWidth
+                if (isnum(vo.defHeadMinWidth)) {
+                    o.minWidth = vo.defHeadMinWidth
+                }
+
+                //maxWidth
+                if (isnum(vo.defHeadMaxWidth)) {
+                    o.maxWidth = vo.defHeadMaxWidth
                 }
 
                 //rowDrag
@@ -1634,6 +1650,14 @@ export default {
                 vo.opt.kpHeadCheckBox
             )
 
+            //kpHeadFocusHighlight
+            vo.kpHeadFocusHighlight = setobj(vo.keys,
+                function(key) {
+                    return true //每個col皆預設true
+                },
+                vo.opt.kpHeadFocusHighlight
+            )
+
             //kpHeadHide
             vo.kpHeadHide = {}
             if (iseobj(vo.opt.kpHeadHide)) {
@@ -1676,16 +1700,22 @@ export default {
                 vo.kpColSpan = vo.opt.kpColSpan
             }
 
-            //defCellMinWidth
-            vo.defCellMinWidth = null
-            if (isnum(vo.opt.defCellMinWidth)) {
-                vo.defCellMinWidth = vo.opt.defCellMinWidth
+            //defHeadMinWidth
+            vo.defHeadMinWidth = null
+            if (isnum(vo.opt.defHeadMinWidth)) {
+                vo.defHeadMinWidth = vo.opt.defHeadMinWidth
             }
 
-            //kpCellWidth
-            vo.kpCellWidth = {}
-            if (iseobj(vo.opt.kpCellWidth)) {
-                vo.kpCellWidth = vo.opt.kpCellWidth
+            //defHeadMaxWidth
+            vo.defHeadMaxWidth = null
+            if (isnum(vo.opt.defHeadMaxWidth)) {
+                vo.defHeadMaxWidth = vo.opt.defHeadMaxWidth
+            }
+
+            //kpHeadWidth
+            vo.kpHeadWidth = {}
+            if (iseobj(vo.opt.kpHeadWidth)) {
+                vo.kpHeadWidth = vo.opt.kpHeadWidth
             }
 
             //kpCellRender
@@ -2538,5 +2568,9 @@ export default {
 }
 .CompCssWAgGridVue .ag-input-field-input:focus {
     border: 1px solid #777;
+}
+.CompCssWAgGridVue .no-border.ag-cell:focus{
+  border-color: transparent !important;
+  outline: none;
 }
 </style>
