@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for defCellMinWidth</title>
+    <title>example for kpHeadFocusHighlight</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -42,7 +42,7 @@
     ></script>
 
     <!-- w-aggrid-vue -->
-    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.51/dist/w-aggrid-vue.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.52/dist/w-aggrid-vue.umd.js"></script>
 
     <!-- data -->
     <script
@@ -113,14 +113,14 @@
 >
     <div id="app" class="bkh" style>
         <div class="bkh">
-            <div style="font-size:1.5rem;">defCellMinWidth</div>
+            <div style="font-size:1.5rem;">kpHeadFocusHighlight</div>
             <a
-                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defCellMinWidth.html"
+                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFocusHighlight.html"
                 target="_blank"
                 class="item-link"
             >example</a>
             <a
-                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defCellMinWidth.html"
+                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFocusHighlight.html"
                 target="_blank"
                 class="item-link"
             >code</a>
@@ -159,7 +159,17 @@
       return {
         opt: {
           keys: ["make", "model", "price"],
-          defCellMinWidth: 150, //拖曳欄寬度可看到最小寬度限定為150
+          kpHead: {
+            make: "make(false)",
+            model: "model(true)",
+            price: "price(true)"
+          },
+          kpHeadFocusHighlight: {
+            //default: false
+            make: false,
+            model: true,
+            price: true
+          },
           kpHeadFilterType: {
             //default: num (num,text,time,set)
             make: "text",
@@ -171,15 +181,10 @@
         action: [
           {
             mode: "eledrag",
-            selector: '[col-id="price"] > [ref="eResize"]',
-            shiftx: 100,
-            shifty: 0
-          },
-          {
-            mode: "eledrag",
-            selector: '[col-id="model"] > [ref="eResize"]',
-            shiftx: -300,
-            shifty: 0
+            selector: "div.ag-row-drag",
+            nth: 2,
+            shiftx: 0,
+            shifty: 100
           }
         ]
       };
