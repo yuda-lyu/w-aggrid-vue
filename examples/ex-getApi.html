@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for tableHeight</title>
+    <title>example for getApi</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -113,14 +113,14 @@
 >
     <div id="app" class="bkh" style>
         <div class="bkh">
-            <div style="font-size:1.5rem;">tableHeight</div>
+            <div style="font-size:1.5rem;">getApi</div>
             <a
-                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-tableHeight.html"
+                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getApi.html"
                 target="_blank"
                 class="item-link"
             >example</a>
             <a
-                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-tableHeight.html"
+                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getApi.html"
                 target="_blank"
                 class="item-link"
             >code</a>
@@ -129,12 +129,7 @@
         <div class="bkp">
             <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
                 <div style="position:relative;">
-                    <w-aggrid-vue
-                        style="width:620px;"
-                        ref="rftable"
-                        :height="tableHeight"
-                        :opt="opt"
-                    ></w-aggrid-vue>
+                    <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
 
                     <pre id="ckmsg"></pre>
                 </div>
@@ -162,7 +157,6 @@
 
     data: function() {
       return {
-        tableHeight: 500,
         opt: {
           keys: ["make", "model", "price"],
           kpHeadFilterType: {
@@ -179,6 +173,45 @@
     mounted: function() {
       let vo = this;
       jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+
+      //getApi
+      let api = vo.$refs.rftable.getApi();
+
+      //use api sort price(asc)
+      setTimeout(function() {
+        try {
+          api.applyColumnState({
+            state: [{ colId: "price", sort: "asc" }],
+            defaultState: { sort: null }
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      }, 1000);
+
+      //use api sort price(desc)
+      setTimeout(function() {
+        try {
+          api.applyColumnState({
+            state: [{ colId: "price", sort: "desc" }],
+            defaultState: { sort: null }
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      }, 2000);
+
+      //use api filter model and price
+      setTimeout(function() {
+        try {
+          api.setFilterModel({
+            model: { type: "contains", filter: "m" },
+            price: { type: "lessThan", filter: 50000 }
+          }); //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串, 故此處原本為3需改為'3'
+        } catch (err) {
+          console.log(err);
+        }
+      }, 3000);
     },
     computed: {},
     methods: {}
