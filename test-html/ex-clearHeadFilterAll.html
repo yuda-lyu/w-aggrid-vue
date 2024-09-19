@@ -177,7 +177,9 @@
       //setHeadFilter
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("price", 61000, "lessThan");
+          vo.$refs.rftable
+            .setHeadFilter("price", 61000, "lessThan")
+            .catch(() => {});
         } catch (err) {
           console.log(err);
         }
@@ -186,7 +188,7 @@
       //setHeadFilter
       setTimeout(function() {
         try {
-          vo.$refs.rftable.setHeadFilter("model", "m");
+          vo.$refs.rftable.setHeadFilter("model", "m").catch(() => {});
         } catch (err) {
           console.log(err);
         }
@@ -195,7 +197,7 @@
       //clearHeadFilterAll
       setTimeout(function() {
         try {
-          vo.$refs.rftable.clearHeadFilterAll();
+          vo.$refs.rftable.clearHeadFilterAll().catch(() => {});
         } catch (err) {
           console.log(err);
         }

@@ -12,6 +12,7 @@
         >
 
             <ag-grid-vue
+                ref="agv"
                 style="width:100%; height:100%;"
                 class="ag-theme-balham"
                 :columnDefs="columns"
@@ -62,6 +63,7 @@ import trim from 'lodash-es/trim.js'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrHas from 'wsemi/src/arrHas.mjs'
 import sep from 'wsemi/src/sep.mjs'
+import pmSeries from 'wsemi/src/pmSeries.mjs'
 import iser from 'wsemi/src/iser.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
 import iseobj from 'wsemi/src/iseobj.mjs'
@@ -89,8 +91,8 @@ import debounce from 'wsemi/src/debounce.mjs'
 import domDetect from 'wsemi/src/domDetect.mjs'
 import domTooltip from 'wsemi/src/domTooltip.mjs'
 import * as agv from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator, 因無法被rollup編譯, 故須由外部引入cdn
-import 'ag-grid-community/dist/styles/ag-grid.css'
-import 'ag-grid-community/dist/styles/ag-theme-balham.css'
+import 'ag-grid-community/styles/ag-grid.css'
+import 'ag-grid-community/styles/ag-theme-balham.css'
 // import { AllModules } from '@ag-grid-enterprise/all-modules' //ag-gird-enterprise雖可使用modules擴充支援剪貼簿貼上Excel range數據, 不過由Excel複製的數據會有換行字元, 此導致ag-grid解析多一列的空數據而覆蓋到原數據, 無法用
 import getLangText from './getLangText.mjs'
 
@@ -304,11 +306,11 @@ export default {
 
                 suppressMenuHide: true, //預設為false, 代表標題右側的漢堡按鈕預先隱藏, 滑鼠移入時才顯示
 
-                // rowHoverHighlight: true, //預設為true
-                suppressRowHoverHighlight: false, //預設為true, ag-grid 25.3.0已由rowHoverHighlight改為suppressRowHoverHighlight
+                // rowHoverHighlight: true,
+                suppressRowHoverHighlight: false, //ag-grid 25.3.0已由rowHoverHighlight改為suppressRowHoverHighlight
 
-                columnHoverHighlight: false, //預設為false, ag-grid 26.2.0已由suppressColumnHoverHighlight改為columnHoverHighlight
-                // suppressColumnHoverHighlight: true, //預設為true
+                // suppressColumnHoverHighlight: false,
+                columnHoverHighlight: false, //ag-grid 26.2.0已由suppressColumnHoverHighlight改為columnHoverHighlight
 
                 // floatingFilter: true, //ag-grid 23.1.0已改為由column給予floatingFilter
 
@@ -319,7 +321,7 @@ export default {
                 singleClickEdit: true, //單點即可變更
 
                 // stopEditingWhenGridLosesFocus: true,
-                stopEditingWhenCellsLoseFocus: true, //失去焦點則停止編輯, ag-grid 25.2.2改為此設定
+                stopEditingWhenCellsLoseFocus: true, //失去焦點則停止編輯, ag-grid 25.2.2改為stopEditingWhenCellsLoseFocus
 
                 // suppressCellFocus: true, //點擊因cell獲得焦點會出現邊框, 若關閉(suppressCellFocus=true)會導致全部cell都關閉, 另用賦予class處理
 
@@ -332,12 +334,6 @@ export default {
 
                 pinnedTopRowData: [],
                 pinnedBottomRowData: [],
-
-                // onFilterChanged: (ev) => {
-                //     // console.log('onFilterChanged', ev)
-                //     let vo = this
-                //     vo.triggerFilterChange('heads')
-                // },
 
             },
 
@@ -466,6 +462,25 @@ export default {
 
     },
     methods: {
+
+        getGridOptions: function() {
+            //console.log('methods getGridOptions')
+
+            let vo = this
+
+            return vo.gridOptions
+        },
+
+        getApi: function() {
+            // console.log('getApi')
+
+            let vo = this
+
+            //api, ag-grid 31.1.0的gridOptions.api已改為須由組件ref取得
+            let api = get(vo, '$refs.agv.api', null)
+
+            return api
+        },
 
         agGetLocaleText: function(params) {
             // console.log('agGetLocaleText', params)
@@ -613,12 +628,12 @@ export default {
         },
 
         agRowSelect: function(params) {
-            //console.log('agRowSelect', params)
+            // console.log('agRowSelect', params)
 
             let vo = this
 
             //rn
-            let rn = params.api.getSelectedNodes()
+            let rn = params.api.getSelectedNodes() //params.api已是vo.getApi()
 
             //rs
             let rs = map(rn, (r) => {
@@ -915,7 +930,7 @@ export default {
             // console.log('showColKeyNow', showColKeyNow)
 
             //stopEditing, 停止cell的編輯狀態
-            vo.gridOptions.api.stopEditing()
+            vo.getApi().stopEditing()
 
             //pasteText
             vo.pasteText(vo.dataPasted, showRowIndNow, showColKeyNow)
@@ -923,14 +938,14 @@ export default {
         },
 
         pasteText: function(text, showRowIndNow = null, showColKeyNow = null) {
-            //console.log('methods pasteText', text, showRowIndNow, showColKeyNow)
+            // console.log('methods pasteText', text, showRowIndNow, showColKeyNow)
 
             let vo = this
 
             //mShowRowInds
             let mShowRowInds = []
             let mData = []
-            vo.gridOptions.api.forEachNodeAfterFilterAndSort(function(node, k) {
+            vo.getApi().forEachNodeAfterFilterAndSort(function(node, k) {
                 //console.log('node', node)
                 mShowRowInds.push(node.id)
                 mData.push(node.data)
@@ -945,11 +960,13 @@ export default {
             }
 
             //mShowColKeys
-            let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
+            // let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
+            let mShowColKeys = vo.getApi().getAllGridColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
             mShowColKeys = map(mShowColKeys, (v, k) => {
                 // console.log('v', v, v.getId)
                 return v.getId()
             })
+            // console.log('mShowColKeys', mShowColKeys)
 
             //check
             if (size(mShowColKeys) === 0) {
@@ -957,9 +974,12 @@ export default {
                 return
             }
 
+            //cs
+            // let cs = vo.gridOptions.columnApi.getColumnState()
+            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            // console.log('cs', cs)
+
             //kpHide, kpPinned
-            let cs = vo.gridOptions.columnApi.getColumnState()
-            //console.log('cs', cs)
             let kpHide = {}
             let kpPinned = {}
             each(cs, (v) => {
@@ -983,8 +1003,9 @@ export default {
             //console.log('pasteOnPinned', pasteOnPinned)
 
             //kpEditable
-            let cd = vo.gridOptions.columnDefs
-            //console.log('cd', cd)
+            // let cd = vo.gridOptions.columnDefs
+            let cd = vo.getApi().getColumnDefs() //gridOptions.columnDefs已歸入api, 並須通過ref取得
+            // console.log('cd', cd)
             let kpEditable = {}
             each(cd, (v) => {
                 kpEditable[v.field] = v.editable
@@ -1109,7 +1130,7 @@ export default {
             }
 
             //applyTransaction, 只變更必要資料加速, 注意記憶體得用原始記憶體, 也就是updateRows得使用原始vo.rows來給予欲變更之rows, 否則applyTransaction會無法找到原始數據物件進行更新
-            vo.gridOptions.api.applyTransaction({ update: updateRows })
+            vo.getApi().applyTransaction({ update: updateRows })
             // console.log('applyTransaction', cloneDeep(updateRows))
 
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
@@ -1131,7 +1152,7 @@ export default {
             //redrawRows, 因資料變更不會觸發getRowStyle, 給自行redrawRows
             //可能因使用者切換組件被destroy, 故需try catch
             try {
-                vo.gridOptions.api.redrawRows()
+                vo.getApi().redrawRows()
             }
             catch (err) {
                 //console.log(err)
@@ -1237,7 +1258,8 @@ export default {
                     // }
                 }
                 //filter plus, 欄位標題下方加入文字過濾輸入框
-                o.floatingFilterComponentParams = { suppressFilterButton: true } //關閉文字過濾輸入框右邊按鈕, 需suppressFilterButton=true
+                // o.floatingFilterComponentParams = { suppressFilterButton: true }
+                o.suppressFloatingFilterButton = true //關閉文字過濾輸入框右邊按鈕, 需suppressFloatingFilterButton=true, 因ag-grid 31.1.0已廢棄floatingFilterComponentParams.suppressFilterButton, 須改用suppressFloatingFilterButton
 
                 //lockPosition, 若不拖曳而設定欄位lockPosition為true時, 該欄位會強制置左, 故不使用
                 //o.lockPosition = !vo.kpHeadDrag[key]
@@ -1906,7 +1928,8 @@ export default {
                 // console.log('pinnedTopRowData', pinnedTopRowData)
 
                 //update
-                vo.gridOptions.api.setPinnedTopRowData(pinnedTopRowData)
+                // vo.getApi().setPinnedTopRowData(pinnedBottomRowData)
+                vo.getApi().setGridOption('pinnedTopRowData', pinnedTopRowData) //setPinnedTopRowData已統一改為setGridOption('pinnedTopRowData',newValue)
 
             }
 
@@ -1925,7 +1948,8 @@ export default {
                 // console.log('pinnedBottomRowData', pinnedBottomRowData)
 
                 //update
-                vo.gridOptions.api.setPinnedBottomRowData(pinnedBottomRowData)
+                // vo.getApi().setPinnedBottomRowData(pinnedBottomRowData)
+                vo.getApi().setGridOption('pinnedBottomRowData', pinnedBottomRowData) //setPinnedBottomRowData已統一改為setGridOption('pinnedBottomRowData',newValue)
 
             }
 
@@ -1945,7 +1969,8 @@ export default {
             // console.log('keys_nouse', keys_nouse)
 
             //cs
-            let cs = vo.gridOptions.columnApi.getColumnState()
+            // let cs = vo.gridOptions.columnApi.getColumnState()
+            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
             // console.log('cs', cs)
 
             //csn
@@ -1962,17 +1987,19 @@ export default {
             })
             // console.log('csn', csn)
 
-            //update, ag-grid 23.1.0已改用applyColumnState, 27.3.0修改傳入須為物件
-            // console.log('colState before', cloneDeep(vo.gridOptions.columnApi.getColumnState()))
-            vo.gridOptions.columnApi.applyColumnState({
+            //applyColumnState
+            // vo.gridOptions.columnApi.applyColumnState({
+            //     state: csn,
+            //     applyOrder: true, //要依照csn調整欄位順序
+            // })
+            vo.getApi().applyColumnState({ //gridOptions.columnApi已歸入api, 並須通過ref取得
                 state: csn,
-                applyOrder: false,
+                applyOrder: true, //要依照csn調整欄位順序
             })
-            // console.log('colState after', cloneDeep(vo.gridOptions.columnApi.getColumnState()))
 
         },
 
-        getFilters: function() {
+        getFilters: async function() {
             // console.log('methods getFilters')
 
             let vo = this
@@ -1983,21 +2010,26 @@ export default {
 
             //flts
             let flts = []
-            each(keys, (key) => {
+            await pmSeries(keys, async (key) => {
 
                 //md
                 let md = null
                 try {
 
                     //ft
-                    let ft = vo.gridOptions.api.getFilterInstance(key)
+                    // let ft = vo.getApi().getFilterInstance(key)
+                    let ft = await vo.getApi().getColumnFilterInstance(key) //ag-grid 31.1.0準備廢棄getFilterInstance, 改用getColumnFilterInstance, 此回傳為promise
+                    // console.log(key, 'ft', ft)
 
-                    //getModel
-                    md = ft.getModel()
-                    // console.log(key, 'ft.getModel', md)
+                    //md
+                    // md = ft.getModel()
+                    md = ft.appliedModel //已改用getColumnFilterInstance, 此時直接用appliedModel為model
+                    // console.log(key, 'md', md)
 
                 }
-                catch (err) {}
+                catch (err) {
+                    console.log(err)
+                }
 
                 //check
                 if (iseobj(md)) {
@@ -2012,36 +2044,34 @@ export default {
             return flts
         },
 
-        clearHeadFilterAll: function() {
+        clearHeadFilterAll: async function() {
             //console.log('methods clearHeadFilterAll')
 
             let vo = this
 
             //reset all filters
-            vo.gridOptions.api.setFilterModel(null)
+            vo.getApi().setFilterModel(null)
 
             //fire onFilterChanged
-            vo.gridOptions.api.onFilterChanged()
+            vo.getApi().onFilterChanged()
 
         },
 
-        clearHeadFilter: function(key) {
+        clearHeadFilter: async function(key) {
             //console.log('methods clearHeadFilter', key)
 
             let vo = this
 
-            //ft
-            let ft = vo.gridOptions.api.getFilterInstance(key)
-
             //setModel
-            ft.setModel(null)
+            // ft.setModel(null)
+            await vo.getApi().setColumnFilterModel(key, null) //setModel改為setColumnFilterModel
 
             //fire onFilterChanged
-            vo.gridOptions.api.onFilterChanged()
+            vo.getApi().onFilterChanged()
 
         },
 
-        setHeadFilter: function(key, value, type = 'contains') {
+        setHeadFilter: async function(key, value, type = 'contains') {
             //console.log('methods setHeadFilter', key, value, type)
 
             let vo = this
@@ -2080,29 +2110,19 @@ export default {
             //     'notBlank',
             // ]
 
-            // //check
-            // if (!arrHas(type, [...tpsText,...tpsNumber])) {
-            //     type = 'contains'
-            // }
-
-            // //fo
-            // let fo = {}
-            // fo[key] = { type: type, filter: value }
-
-            // //setFilterModel
-            // vo.gridOptions.api.setFilterModel(fo) //此法是一次性對全部欄位設定過濾條件, 故分次設定過濾時, 前次的過濾設定會被取消
-
-            //ft
-            let ft = vo.gridOptions.api.getFilterInstance(key)
+            //m
+            let m = {
+                type,
+                // filter: cstr(value), //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串
+                filter: value, //ag-grid 31.1.0已修復
+            }
 
             //setModel
-            ft.setModel({
-                type,
-                filter: cstr(value), //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串
-            })
+            // ft.setModel(m)
+            await vo.getApi().setColumnFilterModel(key, m) //setModel改為setColumnFilterModel
 
             //fire onFilterChanged
-            vo.gridOptions.api.onFilterChanged()
+            vo.getApi().onFilterChanged()
 
         },
 
@@ -2112,7 +2132,9 @@ export default {
             let vo = this
 
             //cs
-            let cs = vo.gridOptions.columnApi.getColumnState()
+            // let cs = vo.gridOptions.columnApi.getColumnState()
+            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            // console.log('cs', cs)
 
             //show keys
             let keys = map(filter(cs, { 'hide': false }), 'colId')
@@ -2127,7 +2149,7 @@ export default {
 
             //rs
             let rs = []
-            vo.gridOptions.api.forEachNodeAfterFilterAndSort((node) => {
+            vo.getApi().forEachNodeAfterFilterAndSort((node) => {
                 rs.push(cloneDeep(node.data))
             })
 
@@ -2147,7 +2169,7 @@ export default {
 
             //rs
             let rs = []
-            vo.gridOptions.api.forEachNode((node) => {
+            vo.getApi().forEachNode((node) => {
                 rs.push(cloneDeep(node.data))
             })
 
@@ -2155,14 +2177,6 @@ export default {
             let data = ltdtmapping(rs, vo.keys)
 
             return data
-        },
-
-        getInstance: function() {
-            //console.log('methods getInstance')
-
-            let vo = this
-
-            return vo.gridOptions
         },
 
         fitColumns: function(bDebounce = true) {
@@ -2181,15 +2195,13 @@ export default {
                     // //delay
                     // await delay(30)
 
-                    //getInstance
-                    let o = vo.getInstance()
-                    // console.log('getInstance', o)
+                    //api
+                    let api = vo.getApi()
 
                     //sizeColumnsToFit, 有可能於高頻初始化與解構時, 例如切換分頁, 導致可能取不到sizeColumnsToFit
-                    let funSizeColumnsToFit = get(o, 'api.sizeColumnsToFit')
-                    // console.log('funSizeColumnsToFit', funSizeColumnsToFit, `isfun(funSizeColumnsToFit)`, isfun(funSizeColumnsToFit))
+                    let funSizeColumnsToFit = get(api, 'sizeColumnsToFit')
                     if (isfun(funSizeColumnsToFit)) {
-                        o.api.sizeColumnsToFit()
+                        api.sizeColumnsToFit()
                     }
 
                 }
@@ -2503,8 +2515,8 @@ export default {
                 // //setTimeout, 變更數據後頁面會先渲染, delay後才能調捲軸, 否則太快執行會被頁面渲染蓋掉
                 // setTimeout(() => {
 
-                //     //getInstance
-                //     let o = vo.getInstance()
+                //     //getGridOptions
+                //     let o = vo.getGridOptions()
 
                 //     //ensureIndexVisible, scrollTo(index)
                 //     o.api.ensureIndexVisible(size(rowsTemp) - 1, 'bottom') //捲到最下
@@ -2522,7 +2534,7 @@ export default {
             return rows
         },
 
-        triggerFilterChange: function(from) {
+        triggerFilterChange: async function(from) {
             //console.log('methods triggerFilterChange', from)
 
             let vo = this
@@ -2531,7 +2543,7 @@ export default {
             let filterall = vo.filterall
 
             //flts
-            let flts = vo.getFilters()
+            let flts = await vo.getFilters()
 
             //isFilter
             let isFilter = isestr(filterall) || size(flts) > 0

@@ -79,6 +79,25 @@ export default {
     mounted: function() {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
+
+        //add row
+        setTimeout(function() {
+            try {
+                let rowsNew = [
+                    {
+                        make: 'tester',
+                        model: 'Ach',
+                        price: 'free',
+                    },
+                    ...window.dataEasy,
+                ]
+                vo.opt.rows = rowsNew
+            }
+            catch (err) {
+                console.log(err)
+            }
+        }, 5000)
+
     },
 }
 </script>

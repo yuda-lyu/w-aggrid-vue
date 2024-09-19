@@ -52,6 +52,11 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
+                kpHead: {
+                    'make': 'make(left)',
+                    'model': 'model(center)',
+                    'price': 'price(right)',
+                },
                 kpCellAlignH: { //default: center
                     'make': 'left',
                     //'model':'center',

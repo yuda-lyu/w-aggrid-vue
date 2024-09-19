@@ -71,6 +71,7 @@ export default {
         setTimeout(function() {
             try {
                 vo.$refs.rftable.setHeadFilter('price', 61000, 'lessThan')
+                    .catch(() => {})
             }
             catch (err) {
                 console.log(err)
@@ -81,6 +82,7 @@ export default {
         setTimeout(function() {
             try {
                 vo.$refs.rftable.setHeadFilter('price', 61000, 'greaterThanOrEqual')
+                    .catch(() => {})
             }
             catch (err) {
                 console.log(err)
@@ -90,7 +92,8 @@ export default {
         //setHeadFilter
         setTimeout(function() {
             try {
-                vo.$refs.rftable.setHeadFilter('model', 'a',)
+                vo.$refs.rftable.setHeadFilter('model', 'a')
+                    .catch(() => {})
             }
             catch (err) {
                 console.log(err)

@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">operateData</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-operateData.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-operateData.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">getApi</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getApi.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getApi.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">
@@ -67,66 +67,39 @@ export default {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
 
-        //slice data
+        //getApi
+        let api = vo.$refs.rftable.getApi()
+
+        //use api sort price(asc)
         setTimeout(function() {
             try {
-
-                //cloneDeep
-                let rows = JSON.parse(JSON.stringify(window.dataEasy))
-
-                //slice
-                rows = rows.slice(2, 4)
-
-                //set
-                vo.opt.rows = rows
-                console.log('rows(slice(2, 4))', rows)
-
+                api.applyColumnState({
+                    state: [{ colId: 'price', sort: 'asc' }],
+                    defaultState: { sort: null },
+                })
             }
             catch (err) {
                 console.log(err)
             }
         }, 1000)
 
-        //push data
+        //use api sort price(desc)
         setTimeout(function() {
             try {
-
-                //rows
-                let rows = vo.opt.rows
-
-                //merge
-                rows = [
-                    {
-                        'make': 'new make1',
-                        'model': 'new model1',
-                        'price': 'new price1'
-                    },
-                    {
-                        'make': 'new make2',
-                        'model': 'new model2',
-                        'price': 'new price2'
-                    },
-                    ...rows,
-                ]
-
-                //set
-                vo.opt.rows = rows
-                console.log('rows(push)', rows)
-
+                api.applyColumnState({
+                    state: [{ colId: 'price', sort: 'desc' }],
+                    defaultState: { sort: null },
+                })
             }
             catch (err) {
                 console.log(err)
             }
         }, 2000)
 
-        //delete all data
+        //use api filter model and price
         setTimeout(function() {
             try {
-
-                //set
-                vo.opt.rows = []
-                console.log('rows(clear)', [])
-
+                api.setFilterModel({ model: { type: 'contains', filter: 'm' }, price: { type: 'lessThan', filter: 50000 } }) //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串, 故此處原本為3需改為'3'
             }
             catch (err) {
                 console.log(err)

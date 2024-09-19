@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">getInstance</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getInstance.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getInstance.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">getGridOptions</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-getGridOptions.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-getGridOptions.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">
@@ -67,44 +67,9 @@ export default {
         let vo = this
         jv(vo.opt, document.querySelector('#optjson'), { expanded: true })
 
-        //getInstance
-        let o = vo.$refs.rftable.getInstance()
-
-        //use api sort price(asc)
-        setTimeout(function() {
-            try {
-                o.columnApi.applyColumnState({
-                    state: [{ colId: 'price', sort: 'asc' }],
-                    defaultState: { sort: null },
-                })
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }, 1000)
-
-        //use api sort price(desc)
-        setTimeout(function() {
-            try {
-                o.columnApi.applyColumnState({
-                    state: [{ colId: 'price', sort: 'desc' }],
-                    defaultState: { sort: null },
-                })
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }, 2000)
-
-        //use api filter model and price
-        setTimeout(function() {
-            try {
-                o.api.setFilterModel({ model: { type: 'contains', filter: 'm' }, price: { type: 'contains', filter: '3' } }) //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串, 故此處原本為3需改為'3'
-            }
-            catch (err) {
-                console.log(err)
-            }
-        }, 3000)
+        //getGridOptions
+        let gopt = vo.$refs.rftable.getGridOptions()
+        console.log('gopt', gopt)
 
     },
 }

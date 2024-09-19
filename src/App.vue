@@ -122,7 +122,9 @@
 
             <AppGenRowsPinnTop v-if="cmpPick==='genRowsPinnTop'"></AppGenRowsPinnTop>
 
-            <AppGetInstance v-if="cmpPick==='getInstance'"></AppGetInstance>
+            <AppGetGridOptions v-if="cmpPick==='getGridOptions'"></AppGetGridOptions>
+
+            <AppGetApi v-if="cmpPick==='getApi'"></AppGetApi>
 
             <AppHighlight v-if="cmpPick==='highlight'"></AppHighlight>
 
@@ -268,7 +270,8 @@ import AppFitColumns from './AppFitColumns.vue'
 import AppAutoFitColumns from './AppAutoFitColumns.vue'
 import AppGenRowsPinnBottom from './AppGenRowsPinnBottom.vue'
 import AppGenRowsPinnTop from './AppGenRowsPinnTop.vue'
-import AppGetInstance from './AppGetInstance.vue'
+import AppGetGridOptions from './AppGetGridOptions.vue'
+import AppGetApi from './AppGetApi.vue'
 import AppHighlight from './AppHighlight.vue'
 import AppKpCellAlignH from './AppKpCellAlignH.vue'
 import AppKpCellEditable from './AppKpCellEditable.vue'
@@ -346,7 +349,8 @@ export default {
         AppAutoFitColumns,
         AppGenRowsPinnBottom,
         AppGenRowsPinnTop,
-        AppGetInstance,
+        AppGetGridOptions,
+        AppGetApi,
         AppHighlight,
         AppKpCellAlignH,
         AppKpCellEditable,
@@ -569,7 +573,8 @@ export default {
                             { name: 'uploadDataWithkpConvertKeys' },
                         ],
                     },
-                    { name: 'getInstance' },
+                    { name: 'getGridOptions' },
+                    { name: 'getApi' },
                 ],
             },
         ]

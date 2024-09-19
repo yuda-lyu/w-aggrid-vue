@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">autoFitColumns</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-autoFitColumns.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-autoFitColumns.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">fitColumns</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-fitColumns.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-fitColumns.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">

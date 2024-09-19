@@ -53,14 +53,9 @@ export default {
             'opt': {
                 keys: ['make', 'model', 'price'],
                 kpHead: {
-                    'make': 'make(false)',
-                    'model': 'model(true)',
-                    'price': 'price(false)',
-                },
-                kpHeadFilter: { //default: true
-                    'make': false,
-                    //'model':true,
-                    //'price': true,
+                    'make': 'make(text)',
+                    'model': 'model(text)',
+                    'price': 'price(num)',
                 },
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',

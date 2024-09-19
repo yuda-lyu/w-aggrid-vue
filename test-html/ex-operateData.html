@@ -185,6 +185,7 @@
 
           //set
           vo.opt.rows = rows;
+          console.log("rows(slice(2, 4))", rows);
         } catch (err) {
           console.log(err);
         }
@@ -196,20 +197,24 @@
           //rows
           let rows = vo.opt.rows;
 
-          //push
-          rows.push({
-            make: "new make1",
-            model: "new model1",
-            price: "new price1"
-          });
-          rows.push({
-            make: "new make2",
-            model: "new model2",
-            price: "new price2"
-          });
+          //merge
+          rows = [
+            {
+              make: "new make1",
+              model: "new model1",
+              price: "new price1"
+            },
+            {
+              make: "new make2",
+              model: "new model2",
+              price: "new price2"
+            },
+            ...rows
+          ];
 
           //set
           vo.opt.rows = rows;
+          console.log("rows(push)", rows);
         } catch (err) {
           console.log(err);
         }
@@ -220,6 +225,7 @@
         try {
           //set
           vo.opt.rows = [];
+          console.log("rows(clear)", []);
         } catch (err) {
           console.log(err);
         }
