@@ -52,6 +52,10 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
+                // kpHeadFixLeft: {
+                //     'make': true,
+                // },
+                // defHeadMinWidth: 150,
                 kpHeadWidth: { //default: null
                     //'make':null,
                     'model': 400,
