@@ -19,16 +19,11 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** w-aggrid-vue is mainly dependent on `ag-grid-community` and `ag-grid-vue`.
 ```alias
 npm i w-aggrid-vue
 ```
 
 ### In a browser(UMD module):
-> **Note:** w-aggrid-vue is mainly dependent on `vue`, `ag-grid-community` and `ag-grid-vue`.
-
-> **Note:** umd file includes with `lodash-es` and `wsemi`, by using tree-shaking for dead-code elimination.
-
 [Optional] Add script with nomodule for IE11.
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>

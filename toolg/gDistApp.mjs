@@ -17,9 +17,9 @@ let opt = {
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-vue@31.3.4/dist/ag-grid-vue.umd.min.js"></script>
 
     <!-- data -->
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataEasy.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataEduagency.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.23/res/data/dataLikeNumber.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.27/res/data/dataEasy.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.27/res/data/dataEduagency.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/w-demores@1.0.27/res/data/dataLikeNumber.js"></script>
 
     `,
     newVue: ``,

@@ -58,9 +58,15 @@ export default {
                     'price': 'price(true)',
                 },
                 kpCellEditable: { //default: false
-                    //'make':false,
+                    'make': true,
                     //'model':false,
-                    'price': true,
+                    // 'price': true,
+                    'price': (params) => {
+                        // console.log('params', params)
+                        let b = params.data.model !== 'Celica'
+                        console.log(`params.data.model!=='Celica'`, b, b ? 'editable' : '')
+                        return b
+                    },
                 },
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',

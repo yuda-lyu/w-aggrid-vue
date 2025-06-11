@@ -1272,6 +1272,7 @@ export default {
 
                 //editable
                 o.editable = vo.kpCellEditable[key]
+                // console.log(key, 'vo.kpCellEditable[key]', vo.kpCellEditable[key])
 
                 //row selection
                 if (vo.kpHeadCheckBox[key]) {
