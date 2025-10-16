@@ -73,6 +73,7 @@ export default {
 
                 //cloneDeep
                 let rows = JSON.parse(JSON.stringify(window.dataEasy))
+                console.log('rows(ori)', rows)
 
                 //slice
                 rows = rows.slice(2, 4)

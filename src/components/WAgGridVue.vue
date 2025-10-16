@@ -34,6 +34,7 @@
                 @rowDragEnd="agRowDragEnd"
                 @rowDragMove="agRowDragMove"
                 @rowDragLeave="agRowDragLeave"
+                @rowDataUpdated="agRowDataUpdated"
                 @filterChanged="agFilterChanged"
                 @gridReady="agReady"
             ></ag-grid-vue>
@@ -218,6 +219,8 @@ export default {
         return {
             dbc: debounce(),
             de: null,
+
+            isReady: false,
 
             evPaste: null,
             dataPasted: '',
@@ -525,8 +528,8 @@ export default {
                 //rowDragChange
                 vo.rowDragChange(indFrom, indTo, row, rows)
 
-                //rowsChange, rows是內部已更新數據, 直接用於回傳函數
-                vo.rowsChange(rows)
+                // //rowsChange, rows是內部已更新數據, 直接用於回傳函數
+                // vo.rowsChange(rows) //agRowDataUpdated也會觸發並再觸發rowsChange, 故此處不觸發
 
             }
 
@@ -627,6 +630,25 @@ export default {
 
         },
 
+        agRowDataUpdated: function(params) {
+            // console.log('agRowDataUpdated', params)
+
+            let vo = this
+
+            //check, 表格載入數據也會觸發agRowDataUpdated, 通過isReady判斷是否為載入後變更
+            if (!vo.isReady) {
+                return
+            }
+
+            // //rows
+            // let rows = vo.getNowData()
+            // console.log('agRowDataUpdated rows', cloneDeep(rows))
+
+            //rowsChange, 因為記憶體同址vo.rows會出現變更, 故直接用於回傳函數
+            vo.rowsChange(vo.rows)
+
+        },
+
         agRowSelect: function(params) {
             // console.log('agRowSelect', params)
 
@@ -694,7 +716,7 @@ export default {
                 vo.rowChange(param.colDef.field, param.data, vo.rows)
 
                 //rowsChange, 因為記憶體同址vo.rows會出現變更, 故直接用於回傳函數
-                vo.rowsChange(vo.rows)
+                vo.rowsChange(vo.rows) //agRowDataUpdated不會觸發rowsChange, 故此處須觸發
 
                 //setRowsPinnBottom
                 vo.setRowsPinnBottom(vo.rows)
@@ -736,6 +758,9 @@ export default {
 
             //show
             vo.opacity = 1
+
+            //isReady
+            vo.isReady = true
 
         },
 
@@ -1136,8 +1161,8 @@ export default {
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             set(vo, `opt.rows`, rows)
 
-            //rowsChange, rows是內部已更新數據, 直接用於回傳函數
-            vo.rowsChange(rows)
+            // //rowsChange, rows是內部已更新數據, 直接用於回傳函數
+            // vo.rowsChange(rows) //agRowDataUpdated也會觸發並再觸發rowsChange, 故此處不觸發
 
         },
 
@@ -2529,8 +2554,8 @@ export default {
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
             set(vo, `opt.rows`, rows)
 
-            //rowsChange, rows是內部已更新數據, 直接用於回傳函數
-            vo.rowsChange(rows)
+            // //rowsChange, rows是內部已更新數據, 直接用於回傳函數
+            // vo.rowsChange(rows) //agRowDataUpdated也會觸發並再觸發rowsChange, 故此處不觸發
 
             return rows
         },
