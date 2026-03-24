@@ -17,7 +17,14 @@
                         style="width:620px;"
                         ref="rftable"
                         :opt="opt"
-                    ></WAgGridVue>
+                    >
+                        <template v-slot:head-tooltip="props">
+                            <div v-if="props.key==='make'"><div style="font-size:8pt; font-weight:bold; color:#6fe;">[{{ props.value }}]</div><div>生產製造商</div></div>
+                            <div v-else-if="props.key==='model'"><div style="font-size:8pt; font-weight:bold; color:#6fe;">[{{ props.value }}]</div><div>車款型號</div></div>
+                            <div v-else-if="props.key==='price'"><div style="font-size:8pt; font-weight:bold; color:#6fe;">[{{ props.value }}]</div><div>虛擬販售價格</div></div>
+                            <div v-else>{{ props }}</div>
+                        </template>
+                    </WAgGridVue>
 
                     <pre id="ckmsg"></pre>
 
@@ -52,17 +59,6 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpHeadTooltip: {
-                    'make': function(v) {
-                        return '<div style="font-size:8pt; font-weight:bold; color:#6fe;">[' + v + ']</div><div>生產製造商</div>'
-                    },
-                    'model': function(v) {
-                        return '<div style="font-size:8pt; font-weight:bold; color:#6fe;">[' + v + ']</div><div>車款型號</div>'
-                    },
-                    'price': function(v) {
-                        return '<div style="font-size:8pt; font-weight:bold; color:#6fe;">[' + v + ']</div><div>虛擬販售價格</div>'
-                    },
-                },
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',
                     'model': 'text',

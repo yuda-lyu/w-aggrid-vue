@@ -17,7 +17,14 @@
                         style="width:620px;"
                         ref="rftable"
                         :opt="opt"
-                    ></WAgGridVue>
+                    >
+                        <template v-slot:head-render="props">
+                            <span v-if="props.key==='make'"><span style="color:#aaa;">生產製造商</span><sup>{{ props.value }}</sup></span>
+                            <span v-else-if="props.key==='model'"><span style="color:#2c6;">車款型號</span><sup>{{ props.value }}</sup></span>
+                            <span v-else-if="props.key==='price'"><span style="color:#f26;">虛擬販售價格</span><sup>{{ props.value }}</sup></span>
+                            <span v-else>{{ props }}</span>
+                        </template>
+                    </WAgGridVue>
 
                     <pre id="ckmsg"></pre>
 
@@ -52,17 +59,6 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpHeadRender: {
-                    'make': function(v) {
-                        return `<span style="color:#aaa;">生產製造商</span><sup>${v}</sup>`
-                    },
-                    'model': function(v) {
-                        return `<span style="color:#2c6;">車款型號</span><sup>${v}</sup>`
-                    },
-                    'price': function(v) {
-                        return `<span style="color:#f26;">虛擬販售價格</span><sup>${v}</sup>`
-                    },
-                },
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',
                     'model': 'text',

@@ -140,6 +140,171 @@ function parseText(contentPaste) {
 }
 
 
+//CellSlotRenderer, 用於cell-render與cell-tooltip slot的Vue組件
+let CellSlotRenderer = {
+    render(h) {
+        let cellRenderSlotFn = this.params.cellRenderSlotFn
+        if (cellRenderSlotFn) {
+            let vnodes = cellRenderSlotFn({
+                value: this.params.value,
+                key: this.params.colDef.field,
+                row: this.params.data,
+            })
+            return h('span', vnodes)
+        }
+        let v = this.params.value
+        return h('span', v != null ? String(v) : '')
+    },
+    mounted() {
+        let cellTooltipSlotFn = this.params.cellTooltipSlotFn
+        if (cellTooltipSlotFn) {
+            let vnodes = cellTooltipSlotFn({
+                value: this.params.value,
+                key: this.params.colDef.field,
+                row: this.params.data,
+            })
+            let VueCtor = this.$root.constructor
+            let vm = new VueCtor({
+                render: h => h('div', vnodes),
+            }).$mount()
+            let t = vm.$el.innerHTML
+            vm.$destroy()
+            t = cstr(t)
+            let kmsg = str2md5(t)
+            dtmsg[kmsg] = t
+            this.params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
+        }
+    },
+}
+
+
+//HeaderSlotRenderer, 用於head-render與head-tooltip slot的Vue組件
+let HeaderSlotRenderer = {
+    data() {
+        return {
+            currentSort: null,
+        }
+    },
+    render(h) {
+        let headRenderSlotFn = this.params.headRenderSlotFn
+        let cJustifyContent = this.params.cJustifyContent || 'center'
+        let displayName = this.params.displayName
+        let key = this.params.column.colId
+
+        //header content
+        let headerContent
+        if (headRenderSlotFn) {
+            headerContent = headRenderSlotFn({
+                value: displayName,
+                key,
+            })
+        }
+        else {
+            headerContent = [displayName]
+        }
+
+        //sort icons
+        let sortChildren = []
+        if (this.currentSort === 'asc') {
+            sortChildren.push(
+                h('span', { class: 'ag-header-icon ag-sort-ascending-icon' }, [
+                    h('span', { class: 'ag-icon ag-icon-asc' }),
+                ])
+            )
+        }
+        else if (this.currentSort === 'desc') {
+            sortChildren.push(
+                h('span', { class: 'ag-header-icon ag-sort-descending-icon' }, [
+                    h('span', { class: 'ag-icon ag-icon-desc' }),
+                ])
+            )
+        }
+
+        //menu button
+        let menuChildren = []
+        if (this.params.enableMenu) {
+            menuChildren.push(
+                h('span', {
+                    class: 'ag-header-icon ag-header-cell-menu-button',
+                    on: {
+                        click: (e) => {
+                            e.stopPropagation()
+                            this.params.showColumnMenu(e.target)
+                        },
+                    },
+                }, [
+                    h('span', { class: 'ag-icon ag-icon-menu' }),
+                ])
+            )
+        }
+
+        return h('div', {
+            class: 'ag-cell-label-container',
+            attrs: { role: 'presentation' },
+            on: { click: this.onSortClicked },
+        }, [
+            ...menuChildren,
+            h('div', {
+                class: 'ag-header-cell-label',
+                style: { 'justify-content': cJustifyContent },
+                attrs: { role: 'presentation' },
+            }, [
+                h('span', {
+                    class: 'ag-header-cell-text',
+                    attrs: { role: 'columnheader' },
+                }, headerContent),
+                ...sortChildren,
+            ]),
+        ])
+    },
+    methods: {
+        onSortClicked(event) {
+            if (this.params.enableSorting !== false) {
+                this.params.progressSort(event.shiftKey)
+            }
+        },
+        onSortChanged() {
+            if (this.params.column) {
+                this.currentSort = this.params.column.getSort() || null
+            }
+        },
+    },
+    mounted() {
+        //sort listener
+        if (this.params.column) {
+            this.params.column.addEventListener('sortChanged', this.onSortChanged)
+            this.onSortChanged()
+        }
+
+        //head tooltip
+        let headTooltipSlotFn = this.params.headTooltipSlotFn
+        if (headTooltipSlotFn) {
+            let displayName = this.params.displayName
+            let key = this.params.column.colId
+            let vnodes = headTooltipSlotFn({
+                value: displayName,
+                key,
+            })
+            let VueCtor = this.$root.constructor
+            let vm = new VueCtor({
+                render: h => h('div', vnodes),
+            }).$mount()
+            let t = vm.$el.innerHTML
+            vm.$destroy()
+            t = cstr(t)
+            let kmsg = str2md5(t)
+            dtmsg[kmsg] = t
+            this.$el.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
+        }
+    },
+    beforeDestroy() {
+        if (this.params.column) {
+            this.params.column.removeEventListener('sortChanged', this.onSortChanged)
+        }
+    },
+}
+
+
 /**
  * @vue-prop {Object} opt 輸入資料設定物件
  * @vue-prop {Array} opt.keys 輸入資料各欄位keys
@@ -148,7 +313,10 @@ function parseText(contentPaste) {
  * @vue-prop {Number} [opt.defHeadMinWidth=null] 輸入cell預設最小寬度數字，預設為null
  * @vue-prop {Number} [opt.defHeadMaxWidth=null] 輸入cell預設最小寬度數字，預設為null
  * @vue-prop {Object} [opt.kpHeadWidth={}] 輸入key對應cell之寬度物件，預設各key值為undefined
- * @vue-prop {Object} [opt.kpHeadTooltip={}] 輸入key對應需tooltip的html字串物件，於各head處滑鼠移入時觸發，預設各key值為undefined
+ * @vue-slot {Object} cell-render 輸入cell之渲染slot，slot props為{ value, key, row }
+ * @vue-slot {Object} cell-tooltip 輸入cell之tooltip渲染slot，slot props為{ value, key, row }
+ * @vue-slot {Object} head-render 輸入head之渲染slot，slot props為{ value, key }
+ * @vue-slot {Object} head-tooltip 輸入head之tooltip渲染slot，slot props為{ value, key }
  * @vue-prop {String} [opt.defHeadAlignH='center'] 輸入head預設之左右對齊字串，預設為'center'
  * @vue-prop {Object} [opt.kpHeadAlignH={}] 輸入key對應head之左右對齊字串物件，預設各key值為defHeadAlignH
  * @vue-prop {Boolean} [opt.defHeadSort=true] 輸入head預設之是否允許排序布林值，預設為true
@@ -160,7 +328,6 @@ function parseText(contentPaste) {
  * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設各key值為defHeadFilter
  * @vue-prop {String} [opt.defHeadFilterType='num'] 輸入head預設過濾器字串，可選'num'、'text'、'time'、'set'，預設為'num'
  * @vue-prop {Object} [opt.kpHeadFilterType={}] 輸入key對應head之過濾器物件，可使用'num'、'text'、'time'、'set'，預設各key值為'num'
- * @vue-prop {Object} [opt.kpHeadRender={}] 輸入key對應head之渲染函數物件，預設各key值為undefined
  * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
  * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設各key值為defHeadDrag
  * @vue-prop {Object} [opt.kpHeadCheckBox={}] 輸入key對應head與key的各列是否使用核選方塊物件，預設各key值為false
@@ -172,8 +339,6 @@ function parseText(contentPaste) {
  * @vue-prop {Function} [opt.genRowsPinnBottom=null] 輸入產生置底rows函數，輸入為表內全部數據，預設為null
  * @vue-prop {Object} [opt.kpColStyle={}] 輸入key對應col style之物件，可設定各key欄之col style，預設各key值為undefined
  * @vue-prop {Object} [opt.kpColSpan={}] 輸入key對應col span之物件，可設定各key欄之col span，預設各key值為undefined
- * @vue-prop {Object} [opt.kpCellRender={}] 輸入key對應cell之渲染函數物件，預設各key值為undefined
- * @vue-prop {Object} [opt.kpCellTooltip={}] 輸入key對應cell之tooltip的html字串物件，於各cell處滑鼠移入時觸發，預設各key值為undefined
  * @vue-prop {String} [opt.defCellAlignH='center'] 輸入cell預設之左右對齊字串，預設為'center'
  * @vue-prop {Object} [opt.kpCellAlignH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlignH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
@@ -200,6 +365,8 @@ function parseText(contentPaste) {
 export default {
     components: {
         AgGridVue: useAgGridVue,
+        CellSlotRenderer,
+        HeaderSlotRenderer,
     },
     props: {
         opt: {
@@ -240,7 +407,7 @@ export default {
             defHeadMinWidth: null,
             defHeadMaxWidth: null,
             kpHeadWidth: {},
-            kpHeadTooltip: {},
+
             defHeadAlignH: null,
             kpHeadAlignH: {},
             defHeadSort: null,
@@ -253,7 +420,7 @@ export default {
             defHeadFilterType: null,
             kpHeadFilterType: {},
             defHeadDrag: null,
-            kpHeadRender: {},
+
             kpHeadDrag: {},
             kpHeadCheckBox: {},
             kpHeadFocusHighlight: {},
@@ -262,8 +429,7 @@ export default {
             kpRowDrag: {},
             kpColStyle: {},
             kpColSpan: {},
-            kpCellRender: {},
-            kpCellTooltip: {},
+
             defCellAlignH: null,
             kpCellAlignH: {},
             defCellEditable: null,
@@ -1314,30 +1480,6 @@ export default {
                 //flex
                 // o.flex = 1
 
-                //funHeadTooltip
-                let funHeadTooltip = vo.kpHeadTooltip[key]
-
-                //header onmouseenter
-                let headerMouseenter = ''
-                if (isfun(funHeadTooltip)) {
-
-                    //tooltip
-                    let t = funHeadTooltip(vo.kpHead[key], key)
-
-                    //cstr
-                    t = cstr(t)
-
-                    //kmsg
-                    let kmsg = str2md5(t)
-
-                    //add dtmsg
-                    dtmsg[kmsg] = t
-
-                    //onmouseenter
-                    headerMouseenter = `onmouseenter="ttWAgGridVue(this,'${kmsg}')"`
-
-                }
-
                 //text-align
                 let cTextAlign = vo.kpHeadAlignH[key]
 
@@ -1349,49 +1491,36 @@ export default {
                 }
                 let cJustifyContent = kpTA2JC[cTextAlign]
 
-                //headTemplate, 基於ref=eText來尋覓與給予head字串, 但會限於純文字而不能給予html
-                let headTemplate = `
-                    <div class="ag-cell-label-container" role="presentation"" ${headerMouseenter}>
-                        <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
-                        <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
-                            <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
-                            <span ref="eSortOrder" class="ag-header-icon ag-sort-order ag-hidden" ></span>
-                            <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon ag-hidden" ></span>
-                            <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon ag-hidden" ></span>
-                            <span ref="eSortMixed" class="ag-header-icon ag-sort-mixed-icon ag-hidden"></span>
-                            <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon ag-hidden" ></span>
-                            <span ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
-                        </div>
-                    </div>
-                `
-
-                //kpHeadRender
-                if (iseobj(vo.kpHeadRender)) {
-                    let head = o.headerName
-                    if (haskey(vo.kpHeadRender, key)) {
-                        let funRender = vo.kpHeadRender[key]
-                        if (isfun(funRender)) {
-                            head = funRender(o.headerName, key, keys)
-                        }
+                //head-render, head-tooltip slot
+                let headRenderSlot = vo.$scopedSlots['head-render']
+                let headTooltipSlot = vo.$scopedSlots['head-tooltip']
+                if (headRenderSlot || headTooltipSlot) {
+                    o.headerComponent = 'HeaderSlotRenderer'
+                    o.headerComponentParams = {
+                        headRenderSlotFn: headRenderSlot || null,
+                        headTooltipSlotFn: headTooltipSlot || null,
+                        cJustifyContent,
                     }
-                    headTemplate = `
-                        <div class="ag-cell-label-container" role="presentation"" ${headerMouseenter}>
+                }
+                else {
+                    //headTemplate, 基於ref=eText來尋覓與給予head字串
+                    let headTemplate = `
+                        <div class="ag-cell-label-container" role="presentation">
                             <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
                             <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
-                                <span class="ag-header-cell-text" role="columnheader">${head}</span>
-                                <span ref="eSortOrder" class="ag-header-icon ag-sort-order" ></span>
-                                <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon" ></span>
-                                <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon" ></span>
-                                <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon" ></span>
+                                <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
+                                <span ref="eSortOrder" class="ag-header-icon ag-sort-order ag-hidden" ></span>
+                                <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon ag-hidden" ></span>
+                                <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon ag-hidden" ></span>
+                                <span ref="eSortMixed" class="ag-header-icon ag-sort-mixed-icon ag-hidden"></span>
+                                <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon ag-hidden" ></span>
                                 <span ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
                             </div>
                         </div>
                     `
-                }
-
-                //複寫header template
-                o.headerComponentParams = {
-                    template: headTemplate,
+                    o.headerComponentParams = {
+                        template: headTemplate,
+                    }
                 }
 
                 //funColSpan
@@ -1428,48 +1557,20 @@ export default {
                     }
                 }
 
-                //funCellTooltip
-                let funCellTooltip = vo.kpCellTooltip[key]
-
-                //funCellRender
-                let funCellRender = vo.kpCellRender[key]
-
-                //cellRenderer
-                o.cellRenderer = function(params) {
-                    //console.log('cellRenderer', params)
-
-                    //待加入於編輯cell後可顯示編輯後值的tooltip
-                    // console.log('trueRowId', params.node.id, 'trueColKey', params.column.colId)
-
-                    //funCellTooltip
-                    if (isfun(funCellTooltip)) {
-
-                        //tooltip
-                        let t = funCellTooltip(params.value, params.colDef.field, cloneDeep(params.data))
-
-                        //cstr
-                        t = cstr(t)
-
-                        //kmsg
-                        let kmsg = str2md5(t)
-
-                        //add dtmsg
-                        dtmsg[kmsg] = t
-
-                        //onmouseenter
-                        params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
-
+                //cell-render, cell-tooltip slot
+                let cellRenderSlot = vo.$scopedSlots['cell-render']
+                let cellTooltipSlot = vo.$scopedSlots['cell-tooltip']
+                if (cellRenderSlot || cellTooltipSlot) {
+                    o.cellRenderer = 'CellSlotRenderer'
+                    o.cellRendererParams = {
+                        cellRenderSlotFn: cellRenderSlot || null,
+                        cellTooltipSlotFn: cellTooltipSlot || null,
                     }
-
-                    //h
-                    let h = params.value
-
-                    //funCellRender
-                    if (isfun(funCellRender)) {
-                        h = funCellRender(params.value, params.colDef.field, cloneDeep(params.data))
+                }
+                else {
+                    o.cellRenderer = function(params) {
+                        return params.value
                     }
-
-                    return h
                 }
 
                 //cellStyle
@@ -1588,12 +1689,6 @@ export default {
                 vo.opt.kpHead
             )
 
-            //kpHeadTooltip
-            vo.kpHeadTooltip = {}
-            if (isobj(vo.opt.kpHeadTooltip)) {
-                vo.kpHeadTooltip = vo.opt.kpHeadTooltip
-            }
-
             //defHeadAlignH
             vo.defHeadAlignH = 'center'
             if (arrHas(vo.opt.defHeadAlignH, ['left', 'center', 'right'])) {
@@ -1669,12 +1764,6 @@ export default {
                 },
                 vo.opt.kpHeadFilterType
             )
-
-            //kpHeadRender
-            vo.kpHeadRender = {}
-            if (iseobj(vo.opt.kpHeadRender)) {
-                vo.kpHeadRender = vo.opt.kpHeadRender
-            }
 
             //defHeadDrag
             vo.defHeadDrag = true
@@ -1764,18 +1853,6 @@ export default {
             vo.kpHeadWidth = {}
             if (iseobj(vo.opt.kpHeadWidth)) {
                 vo.kpHeadWidth = vo.opt.kpHeadWidth
-            }
-
-            //kpCellRender
-            vo.kpCellRender = {}
-            if (iseobj(vo.opt.kpCellRender)) {
-                vo.kpCellRender = vo.opt.kpCellRender
-            }
-
-            //kpCellTooltip
-            vo.kpCellTooltip = {}
-            if (iseobj(vo.opt.kpCellTooltip)) {
-                vo.kpCellTooltip = vo.opt.kpCellTooltip
             }
 
             //defCellAlignH

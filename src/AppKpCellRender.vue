@@ -17,7 +17,14 @@
                         style="width:620px;"
                         ref="rftable"
                         :opt="opt"
-                    ></WAgGridVue>
+                    >
+                        <template v-slot:cell-render="props">
+                            <span style="color:#aaa;" v-if="props.key==='make'">{{ props.value }}</span>
+                            <span style="color:#2c6;" v-else-if="props.key==='model'">{{ props.value }}</span>
+                            <span style="color:#f26;" v-else-if="props.key==='price'">{{ props.value }}</span>
+                            <span style="color:#aaa;" v-else>{{ props }}</span>
+                        </template>
+                    </WAgGridVue>
 
                     <pre id="ckmsg"></pre>
 
@@ -52,17 +59,6 @@ export default {
         return {
             'opt': {
                 keys: ['make', 'model', 'price'],
-                kpCellRender: {
-                    'make': function(v) {
-                        return '<span style="color:#aaa;">make: </span>' + v
-                    },
-                    'model': function(v) {
-                        return '<span style="color:#2c6;">model: </span>' + v
-                    },
-                    'price': function(v) {
-                        return '<span style="color:#f26;">price: </span>' + v
-                    },
-                },
                 kpHeadFilterType: { //default: num (num,text,time,set)
                     'make': 'text',
                     'model': 'text',
