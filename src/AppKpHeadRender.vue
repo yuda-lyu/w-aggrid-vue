@@ -13,7 +13,7 @@
 
                 <div style="position:relative;">
 
-                    <WAgGridVue
+                    <WAggridVue
                         style="width:620px;"
                         ref="rftable"
                         :opt="opt"
@@ -24,7 +24,7 @@
                             <span v-else-if="props.key==='price'"><span style="color:#f26;">虛擬販售價格</span><sup>{{ props.value }}</sup></span>
                             <span v-else>{{ props }}</span>
                         </template>
-                    </WAgGridVue>
+                    </WAggridVue>
 
                     <pre id="ckmsg"></pre>
 
@@ -48,12 +48,12 @@
 </template>
 
 <script>
-import WAgGridVue from './components/WAgGridVue.vue'
+import WAggridVue from './components/WAggridVue.vue'
 import jv from 'w-jsonview-tree'
 
 export default {
     components: {
-        WAgGridVue,
+        WAggridVue,
     },
     data: function() {
         return {

@@ -1,7 +1,7 @@
 <template>
     <div
         ref="shell"
-        class="CompCssWAgGridVue"
+        class="CompCssWAggridVue"
         :changeParam="changeParam"
         :changeFilterall="changeFilterall"
     >
@@ -115,7 +115,7 @@ let useAgGridVue = vcAgGridVue || wdAgGridVue
 
 //tooltip, 通過key查msg避免特殊html符號無法顯示
 let dtmsg = {}
-window.ttWAgGridVue = function(ele, kmsg) {
+window.ttWAggridVue = function(ele, kmsg) {
     if (!isestr(kmsg)) {
         return
     }
@@ -172,7 +172,7 @@ let CellSlotRenderer = {
             t = cstr(t)
             let kmsg = str2md5(t)
             dtmsg[kmsg] = t
-            this.params.eGridCell.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
+            this.params.eGridCell.setAttribute('onmouseenter', `ttWAggridVue(this,'${kmsg}')`)
         }
     },
 }
@@ -294,7 +294,7 @@ let HeaderSlotRenderer = {
             t = cstr(t)
             let kmsg = str2md5(t)
             dtmsg[kmsg] = t
-            this.$el.setAttribute('onmouseenter', `ttWAgGridVue(this,'${kmsg}')`)
+            this.$el.setAttribute('onmouseenter', `ttWAggridVue(this,'${kmsg}')`)
         }
     },
     beforeDestroy() {
@@ -2667,13 +2667,13 @@ export default {
 </script>
 
 <style>
-.CompCssWAgGridVue .ag-theme-balham, .ag-header {
+.CompCssWAggridVue .ag-theme-balham, .ag-header {
     font-family: inherit;
 }
-.CompCssWAgGridVue .ag-theme-balham .ag-header {
+.CompCssWAggridVue .ag-theme-balham .ag-header {
     font-family: inherit;
 }
-.CompCssWAgGridVue .ag-header-cell .ag-input-field-input, .ag-filter .ag-input-field-input {
+.CompCssWAggridVue .ag-header-cell .ag-input-field-input, .ag-filter .ag-input-field-input {
     transition: all 0.5s;
     padding: 3px 8px;
     box-shadow: inherit !important;
@@ -2681,10 +2681,10 @@ export default {
     border: 1px solid #ccc;
     border-radius: 5px;
 }
-.CompCssWAgGridVue .ag-input-field-input:focus {
+.CompCssWAggridVue .ag-input-field-input:focus {
     border: 1px solid #777;
 }
-.CompCssWAgGridVue .no-border.ag-cell:focus{
+.CompCssWAggridVue .no-border.ag-cell:focus{
   border-color: transparent !important;
   outline: none;
 }

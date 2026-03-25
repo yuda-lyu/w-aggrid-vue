@@ -13,10 +13,10 @@
 
                 <div style="width:100%; min-width:620px; position:relative;">
 
-                    <WAgGridVue
+                    <WAggridVue
                         ref="rftable"
                         :opt="opt"
-                    ></WAgGridVue>
+                    ></WAggridVue>
 
                     <pre id="ckmsg"></pre>
 
@@ -40,12 +40,12 @@
 </template>
 
 <script>
-import WAgGridVue from './components/WAgGridVue.vue'
+import WAggridVue from './components/WAggridVue.vue'
 import jv from 'w-jsonview-tree'
 
 export default {
     components: {
-        WAgGridVue,
+        WAggridVue,
     },
     data: function() {
         return {

@@ -6,7 +6,7 @@ let fdTar = './dist'
 
 
 rollupFiles({
-    fns: 'WAgGridVue.vue',
+    fns: 'WAggridVue.vue',
     fdSrc,
     fdTar,
     format: 'umd',

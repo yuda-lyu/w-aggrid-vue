@@ -10,7 +10,7 @@ A wrapper for ag-grid-vue.
 [![jsdelivr download](https://img.shields.io/jsdelivr/npm/hm/w-aggrid-vue.svg)](https://www.jsdelivr.com/package/npm/w-aggrid-vue)
 
 ## Documentation
-To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-aggrid-vue/module-WAgGridVue.html).
+To view documentation or get support, visit [docs](https://yuda-lyu.github.io/w-aggrid-vue/module-WAggridVue.html).
 
 ## Example
 To view some examples for more understanding, visit examples:
@@ -45,5 +45,5 @@ Add script for ag-grid-vue.
 
 Add script for w-aggrid-vue.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.56/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.57/dist/w-aggrid-vue.umd.js"></script>
 ```

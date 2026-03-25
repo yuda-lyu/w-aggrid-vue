@@ -111,41 +111,7 @@
 <body
     style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px; margin:0px;"
 >
-    <div id="app" class="bkh" style>
-        <div class="bkh">
-            <div style="font-size:1.5rem;">kpHeadFixLeft</div>
-            <a
-                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadFixLeft.html"
-                target="_blank"
-                class="item-link"
-            >example</a>
-            <a
-                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadFixLeft.html"
-                target="_blank"
-                class="item-link"
-            >code</a>
-        </div>
-
-        <div class="bkp">
-            <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
-                <div style="position:relative;">
-                    <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
-
-                    <pre id="ckmsg"></pre>
-                </div>
-
-                <div style="padding:0px 20px;">
-                    <div
-                        :style="`border:1px solid #ddd; width:600px; min-width:600px; height:300px; overflow-y:auto;`"
-                    >
-                        <div style="padding-left:5px;">
-                            <div id="optjson" style="font-size:10pt;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="app" class="bkh" style></div>
 
     <script>
   //install
@@ -156,38 +122,10 @@
     el: "#app",
 
     data: function() {
-      return {
-        opt: {
-          keys: ["make", "model", "price"],
-          kpHead: {
-            make: "make(false)",
-            model: "model(true)",
-            price: "price(false)"
-          },
-          kpHeadFixLeft: {
-            //default: false
-            //'make':false,
-            model: true
-            //'price':false,
-          },
-          kpHeadWidth: {
-            make: 300,
-            price: 300
-          },
-          kpHeadFilterType: {
-            //default: num (num,text,time,set)
-            make: "text",
-            model: "text",
-            price: "num"
-          },
-          rows: JSON.parse(JSON.stringify(window.dataEasy))
-        },
-        action: []
-      };
+      return {};
     },
     mounted: function() {
-      let vo = this;
-      jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+      return {};
     },
     computed: {},
     methods: {}

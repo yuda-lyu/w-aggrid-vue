@@ -1,6 +1,6 @@
 {
   "name": "w-aggrid-vue",
-  "version": "2.0.56",
+  "version": "2.0.57",
   "main": "dist/w-aggrid-vue.umd.js",
   "dependencies": {
     "ag-grid-community": "^31.3.4",

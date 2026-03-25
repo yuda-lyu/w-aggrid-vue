@@ -21,7 +21,7 @@ function writeHtml(v) {
     function procHtml(h) {
 
         //change cmp name
-        h = w.replace(h, 'WAgGridVue', 'w-aggrid-vue')
+        h = w.replace(h, 'WAggridVue', 'w-aggrid-vue')
 
         return h
     }
