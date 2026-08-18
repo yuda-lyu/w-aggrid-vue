@@ -91,25 +91,15 @@ import replace from 'wsemi/src/replace.mjs'
 import debounce from 'wsemi/src/debounce.mjs'
 import domDetect from 'wsemi/src/domDetect.mjs'
 import domTooltip from 'wsemi/src/domTooltip.mjs'
-import * as agv from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator, 因無法被rollup編譯, 故須由外部引入cdn
+import * as agv from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator, 已能被rollup打包進dist, 故不再需要由外部引入cdn
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-balham.css'
 // import { AllModules } from '@ag-grid-enterprise/all-modules' //ag-gird-enterprise雖可使用modules擴充支援剪貼簿貼上Excel range數據, 不過由Excel複製的數據會有換行字元, 此導致ag-grid解析多一列的空數據而覆蓋到原數據, 無法用
 import getLangText from './getLangText.mjs'
 
 
-//vcAgGridVue, vue-cli4引用可取到AgGridVue
-let vcAgGridVue = get(agv, 'AgGridVue')
-// console.log('vcAgGridVue',vcAgGridVue)
-
-
-//wdAgGridVue, 因rollup無法編譯ag-grid-vue故動態加載時只能由外部引用cdn
-let wdAgGridVue = get(window, 'agGridVue.AgGridVue')
-// console.log('wdAgGridVue',wdAgGridVue)
-
-
-//useAgGridVue
-let useAgGridVue = vcAgGridVue || wdAgGridVue
+//useAgGridVue, ag-grid-vue已打包進dist, 直接取用不再回退外部cdn
+let useAgGridVue = get(agv, 'AgGridVue')
 // console.log('useAgGridVue',useAgGridVue)
 
 

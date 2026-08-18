@@ -118,7 +118,6 @@ export default {
 
             try {
                 vo.$refs.rftable.uploadData({
-                    pathItems: null, //default: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
                     beforeUpload,
                     // beforeUpload: beforeUploadAsync,
                     parseSheetInd,

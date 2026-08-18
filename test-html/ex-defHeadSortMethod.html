@@ -20,27 +20,6 @@
 
     <!-- extractHtml已自動添加@babel/polyfill與vue -->
 
-    <!-- ag-grid-community, do not include css -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/dist/ag-grid-community.min.noStyle.js"
-    ></script>
-    <script
-        _src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@31.3.4/dist/ag-grid-enterprise.min.noStyle.js"
-    ></script>
-    <link
-        rel="stylesheet"
-        _href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/dist/styles/ag-grid.min.css"
-    />
-    <link
-        rel="stylesheet"
-        _href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/dist/styles/ag-theme-balham.min.css"
-    />
-
-    <!-- ag-grid-vue, 因rollup無法簡單編譯ag-grid-vue故改引用 -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/ag-grid-vue@31.3.4/dist/ag-grid-vue.umd.min.js"
-    ></script>
-
     <!-- w-aggrid-vue -->
     <script src="../dist/w-aggrid-vue.umd.js"></script>
 
@@ -109,7 +88,41 @@
 <body
     style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px; margin:0px;"
 >
-    <div id="app" class="bkh" style></div>
+    <div id="app" class="bkh" style>
+        <div class="bkh">
+            <div style="font-size:1.5rem;">defHeadSortMethod</div>
+            <a
+                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-defHeadSortMethod.html"
+                target="_blank"
+                class="item-link"
+            >example</a>
+            <a
+                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-defHeadSortMethod.html"
+                target="_blank"
+                class="item-link"
+            >code</a>
+        </div>
+
+        <div class="bkp">
+            <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
+                <div style="position:relative;">
+                    <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
+
+                    <pre id="ckmsg"></pre>
+                </div>
+
+                <div style="padding:0px 20px;">
+                    <div
+                        :style="`border:1px solid #ddd; width:600px; min-width:600px; height:300px; overflow-y:auto;`"
+                    >
+                        <div style="padding-left:5px;">
+                            <div id="optjson" style="font-size:10pt;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
   //install
@@ -120,10 +133,18 @@
     el: "#app",
 
     data: function() {
-      return {};
+      return {
+        opt: {
+          keys: ["make", "field1", "field2"],
+          defHeadSortMethod: "auto",
+          rows: JSON.parse(JSON.stringify(window.dataLikeNumber))
+        },
+        action: [{ mode: "drag", x1: 507, y1: 25, x2: 307, y2: 25 }]
+      };
     },
     mounted: function() {
-      return {};
+      let vo = this;
+      jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
     },
     computed: {},
     methods: {}
