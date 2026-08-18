@@ -18,13 +18,11 @@ rollupFiles({
         'ag-grid-community': 'agGrid',
         'ag-grid-vue': 'ag-grid-vue',
         'crypto': 'crypto', //因crypto-js修改使用內建crypto方式, 會偵測nodejs並使用require內建的crypto, 故需剔除
-        'xlsx': 'XLSX', //因getDataFromExcelFileU8ArrDyn會引用getDataFromExcelFileU8Arr並再引用xlsx, 先剔除不打包進來, 於專案使用得安裝xlsx, 使用cdn引用得預先加載xlsx
     },
     external: [
         'ag-grid-community',
         'ag-grid-vue',
         'crypto',
-        'xlsx',
     ],
 })
 

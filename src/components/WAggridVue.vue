@@ -82,9 +82,9 @@ import cint from 'wsemi/src/cint.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
 import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import ltdtkeys2mat from 'wsemi/src/ltdtkeys2mat.mjs'
-import downloadExcelFileFromDataDyn from 'wsemi/src/downloadExcelFileFromDataDyn.mjs'
+import downloadExcelFileFromData from 'wsemi/src/downloadExcelFileFromData.mjs'
 import domShowInputAndGetFilesU8Arrs from 'wsemi/src/domShowInputAndGetFilesU8Arrs.mjs'
-import getDataFromExcelFileU8ArrDyn from 'wsemi/src/getDataFromExcelFileU8ArrDyn.mjs'
+import getDataFromExcelFileU8Arr from 'wsemi/src/getDataFromExcelFileU8Arr.mjs'
 import str2md5 from 'wsemi/src/str2md5.mjs'
 import delay from 'wsemi/src/delay.mjs'
 import replace from 'wsemi/src/replace.mjs'
@@ -507,10 +507,6 @@ export default {
             },
 
             ag: null,
-
-            pathItems: [
-                'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
-            ],
 
         }
     },
@@ -2355,7 +2351,6 @@ export default {
                 useHead,
                 fileName,
                 sheetName,
-                pathItems
             } = opt
 
             //default useHead
@@ -2366,11 +2361,6 @@ export default {
             //default fileName
             if (!isestr(fileName)) {
                 fileName = 'data.xlsx'
-            }
-
-            //default pathItems
-            if (!isearr(pathItems)) {
-                pathItems = vo.pathItems
             }
 
             //show keys
@@ -2418,8 +2408,8 @@ export default {
                 mat = funGetMatHook(mat)
             }
 
-            //downloadExcelFileFromDataDyn
-            downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
+            //downloadExcelFileFromData
+            downloadExcelFileFromData(fileName, sheetName, mat)
                 .catch((err) => {
                     console.log(err)
                 })
@@ -2440,7 +2430,6 @@ export default {
                 useHead,
                 fileName,
                 sheetName,
-                pathItems
             } = opt
 
             //default useHead
@@ -2451,11 +2440,6 @@ export default {
             //default fileName
             if (!isestr(fileName)) {
                 fileName = 'data.xlsx'
-            }
-
-            //default pathItems
-            if (!isearr(pathItems)) {
-                pathItems = vo.pathItems
             }
 
             //keys
@@ -2503,8 +2487,8 @@ export default {
                 mat = funGetMatHook(mat)
             }
 
-            //downloadExcelFileFromDataDyn
-            downloadExcelFileFromDataDyn(fileName, sheetName, mat, pathItems)
+            //downloadExcelFileFromData
+            downloadExcelFileFromData(fileName, sheetName, mat)
                 .catch((err) => {
                     console.log(err)
                 })
@@ -2518,7 +2502,7 @@ export default {
             let vo = this
 
             //params
-            let { pathItems = null, beforeUpload = null, parseSheetInd = 0, uploadMode = 'replace' } = opt
+            let { beforeUpload = null, parseSheetInd = 0, uploadMode = 'replace' } = opt
 
             //parseSheetInd
             if (!isp0int(parseSheetInd)) {
@@ -2527,11 +2511,6 @@ export default {
             parseSheetInd = cint(parseSheetInd)
             // console.log('parseSheetInd', parseSheetInd)
 
-            //pathItems
-            if (!isearr(pathItems)) {
-                pathItems = vo.pathItems
-            }
-
             //domShowInputAndGetFilesU8Arrs
             let d = await domShowInputAndGetFilesU8Arrs()
             // console.log('d', d)
@@ -2539,8 +2518,16 @@ export default {
             //取第一個檔案
             let file = d[0]
 
-            //getDataFromExcelFileU8ArrDyn
-            let r = await getDataFromExcelFileU8ArrDyn(file.u8a, 'ltdt', false, pathItems)
+            //getDataFromExcelFileU8Arr
+            let r = await getDataFromExcelFileU8Arr(file.u8a, { fmt: 'ltdt' })
+
+            //check
+            if (!isarr(r)) {
+                return Promise.reject({
+                    msg: 'can not read excel',
+                    err: r.error,
+                })
+            }
 
             //sh
             let sh = null
