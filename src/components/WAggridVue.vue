@@ -342,11 +342,15 @@ let HeaderSlotRenderer = {
         },
     },
     mounted() {
-        //sort listener
-        if (this.params.column) {
-            this.params.column.addEventListener('sortChanged', this.onSortChanged)
-            this.onSortChanged()
+        //sort listener, 聽grid層級之sortChanged而非單欄之sortChanged
+        //單欄sortChanged於Column.setSort時派送, 此時SortController.updateSortIndex尚未指定各欄sortIndex, 且他欄排序變動時本欄不會收到單欄事件, 序號無法重算
+        //grid層級sortChanged於updateSortIndex之後派送, 與ag-grid之SortIndicatorComp.setupSort一致(其箭頭與序號皆聽grid層級事件)
+        try {
+            this.params.api.addEventListener('sortChanged', this.onSortChanged)
         }
+        catch (err) {
+        }
+        this.onSortChanged()
 
         //filter listener
         if (this.params.column) {
@@ -377,8 +381,17 @@ let HeaderSlotRenderer = {
     },
     beforeDestroy() {
         if (this.params.column) {
-            this.params.column.removeEventListener('sortChanged', this.onSortChanged)
             this.params.column.removeEventListener('filterChanged', this.onFilterChanged)
+        }
+
+        //grid整體destroy時api可能已失效, 故先檢查isDestroyed並try catch
+        try {
+            let api = this.params.api
+            if (api && !(isfun(api.isDestroyed) && api.isDestroyed())) {
+                api.removeEventListener('sortChanged', this.onSortChanged)
+            }
+        }
+        catch (err) {
         }
     },
 }
