@@ -131,6 +131,30 @@ function parseText(contentPaste) {
 }
 
 
+//cvCellText, 供預設cellRenderer與CellSlotRenderer之fallback共用, 使同一儲存格值不論走哪條路徑顯示文字皆相同
+//物件與陣列需字串化, 否則ag-grid會將回傳值視為DOM節點而appendChild拋錯, 且中斷animation frame迴圈導致整表未渲染格全空白
+function cvCellText(v) {
+
+    //null與undefined顯示空字串
+    if (v === null || v === undefined) {
+        return ''
+    }
+
+    //字串、數字、布林由ag-grid直接包成span顯示
+    if (isstr(v) || isnum(v) || isbol(v)) {
+        return v
+    }
+
+    //物件與陣列, 含循環參照時JSON.stringify會拋錯故退為空字串
+    try {
+        return JSON.stringify(v)
+    }
+    catch (err) {
+        return ''
+    }
+}
+
+
 //CellSlotRenderer, 用於cell-render與cell-tooltip slot的Vue組件
 let CellSlotRenderer = {
     render(h) {
@@ -143,8 +167,7 @@ let CellSlotRenderer = {
             })
             return h('span', vnodes)
         }
-        let v = this.params.value
-        return h('span', v != null ? String(v) : '')
+        return h('span', String(cvCellText(this.params.value)))
     },
     mounted() {
         let cellTooltipSlotFn = this.params.cellTooltipSlotFn
@@ -174,6 +197,8 @@ let HeaderSlotRenderer = {
     data() {
         return {
             currentSort: null,
+            filterActive: false,
+            sortOrder: '',
         }
     },
     render(h) {
@@ -211,12 +236,42 @@ let HeaderSlotRenderer = {
             )
         }
 
+        //sort order, 多欄排序時之序號, 對齊預設headTemplate之eSortOrder
+        let sortOrderChildren = []
+        if (this.sortOrder !== '') {
+            sortOrderChildren.push(
+                h('span', { class: 'ag-header-icon ag-sort-order' }, this.sortOrder)
+            )
+        }
+
+        //filter icon, 對齊預設headTemplate之eFilter
+        //ag-grid僅對預設HeaderComp處理filter圖示(HeaderComp.setupFilterIcon->configureFilter), 自訂headerComponent須自行監聽column之filterChanged
+        let filterChildren = []
+        if (this.params.enableFilterIcon !== false) {
+            filterChildren.push(
+                h('span', {
+                    class: 'ag-header-icon ag-header-label-icon ag-filter-icon' + (this.filterActive ? '' : ' ag-hidden'),
+                }, [
+                    h('span', { class: 'ag-icon ag-icon-filter' }),
+                ])
+            )
+        }
+
         //menu button
+        //gridOptions.suppressMenuHide為true時ag-grid會為預設HeaderComp之eMenu加ag-header-menu-always-show使其常駐, 自訂headerComponent須自行加上
+        let cMenuAlwaysShow = ''
+        try {
+            if (this.params.api.getGridOption('suppressMenuHide')) {
+                cMenuAlwaysShow = ' ag-header-menu-always-show'
+            }
+        }
+        catch (err) {
+        }
         let menuChildren = []
         if (this.params.enableMenu) {
             menuChildren.push(
                 h('span', {
-                    class: 'ag-header-icon ag-header-cell-menu-button',
+                    class: 'ag-header-icon ag-header-cell-menu-button' + cMenuAlwaysShow,
                     on: {
                         click: (e) => {
                             e.stopPropagation()
@@ -244,7 +299,9 @@ let HeaderSlotRenderer = {
                     class: 'ag-header-cell-text',
                     attrs: { role: 'columnheader' },
                 }, headerContent),
+                ...sortOrderChildren,
                 ...sortChildren,
+                ...filterChildren,
             ]),
         ])
     },
@@ -258,6 +315,30 @@ let HeaderSlotRenderer = {
             if (this.params.column) {
                 this.currentSort = this.params.column.getSort() || null
             }
+
+            //sortOrder, 僅於超過1欄有排序時顯示序號, 與ag-grid之SortIndicatorComp.updateSortOrder一致
+            let sortOrder = ''
+            let ind = this.params.column ? this.params.column.getSortIndex() : null
+            if (isnum(ind) && ind >= 0) {
+                let n = 0
+                try {
+                    let cs = this.params.api.getColumnState()
+                    n = filter(cs, (v) => {
+                        return isnum(get(v, 'sortIndex'))
+                    }).length
+                }
+                catch (err) {
+                }
+                if (n > 1) {
+                    sortOrder = cstr(ind + 1)
+                }
+            }
+            this.sortOrder = sortOrder
+        },
+        onFilterChanged() {
+            if (this.params.column) {
+                this.filterActive = this.params.column.isFilterActive()
+            }
         },
     },
     mounted() {
@@ -265,6 +346,12 @@ let HeaderSlotRenderer = {
         if (this.params.column) {
             this.params.column.addEventListener('sortChanged', this.onSortChanged)
             this.onSortChanged()
+        }
+
+        //filter listener
+        if (this.params.column) {
+            this.params.column.addEventListener('filterChanged', this.onFilterChanged)
+            this.onFilterChanged()
         }
 
         //head tooltip
@@ -291,6 +378,7 @@ let HeaderSlotRenderer = {
     beforeDestroy() {
         if (this.params.column) {
             this.params.column.removeEventListener('sortChanged', this.onSortChanged)
+            this.params.column.removeEventListener('filterChanged', this.onFilterChanged)
         }
     },
 }
@@ -302,12 +390,12 @@ let HeaderSlotRenderer = {
  * @vue-prop {Array} opt.rows 輸入資料列，各列為物件，內含各欄位keys之值，例[{},{},...,{}]
  * @vue-prop {Object} [opt.kpHead={}] 輸入key對應head物件，預設各key值為本身key值
  * @vue-prop {Number} [opt.defHeadMinWidth=null] 輸入cell預設最小寬度數字，預設為null
- * @vue-prop {Number} [opt.defHeadMaxWidth=null] 輸入cell預設最小寬度數字，預設為null
+ * @vue-prop {Number} [opt.defHeadMaxWidth=null] 輸入cell預設最大寬度數字，預設為null
  * @vue-prop {Object} [opt.kpHeadWidth={}] 輸入key對應cell之寬度物件，預設各key值為undefined
  * @vue-slot {Object} cell-render 輸入cell之渲染slot，slot props為{ value, key, row }
- * @vue-slot {Object} cell-tooltip 輸入cell之tooltip渲染slot，slot props為{ value, key, row }
+ * @vue-slot {Object} cell-tooltip 輸入cell之tooltip渲染slot，slot props為{ value, key, row }，slot內容於掛載時取靜態HTML快照，不支援事件綁定、子組件狀態與響應式更新
  * @vue-slot {Object} head-render 輸入head之渲染slot，slot props為{ value, key }
- * @vue-slot {Object} head-tooltip 輸入head之tooltip渲染slot，slot props為{ value, key }
+ * @vue-slot {Object} head-tooltip 輸入head之tooltip渲染slot，slot props為{ value, key }，slot內容於掛載時取靜態HTML快照，不支援事件綁定、子組件狀態與響應式更新
  * @vue-prop {String} [opt.defHeadAlignH='center'] 輸入head預設之左右對齊字串，預設為'center'
  * @vue-prop {Object} [opt.kpHeadAlignH={}] 輸入key對應head之左右對齊字串物件，預設各key值為defHeadAlignH
  * @vue-prop {Boolean} [opt.defHeadSort=true] 輸入head預設之是否允許排序布林值，預設為true
@@ -379,6 +467,8 @@ export default {
             de: null,
 
             isReady: false,
+
+            bWarnedRemovedKeys: false, //opt含2.0.56已移除之kp鍵時只警告一次
 
             evPaste: null,
             dataPasted: '',
@@ -1501,7 +1591,7 @@ export default {
                                 <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon ag-hidden" ></span>
                                 <span ref="eSortMixed" class="ag-header-icon ag-sort-mixed-icon ag-hidden"></span>
                                 <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon ag-hidden" ></span>
-                                <span ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
+                                <span ref="eFilter" class="ag-header-icon ag-header-label-icon ag-filter-icon"></span>
                             </div>
                         </div>
                     `
@@ -1556,22 +1646,7 @@ export default {
                 }
                 else {
                     o.cellRenderer = function(params) {
-                        let v = params.value
-
-                        //字串、數字、布林、null、undefined由ag-grid直接包成span顯示
-                        if (isstr(v) || isnum(v) || isbol(v) || v === null || v === undefined) {
-                            return v
-                        }
-
-                        //物件與陣列需字串化, 否則ag-grid會將回傳值視為DOM節點而appendChild拋錯, 且中斷animation frame迴圈導致整表未渲染格全空白
-                        let t = ''
-                        try {
-                            t = JSON.stringify(v)
-                        }
-                        catch (err) {
-                            t = ''
-                        }
-                        return t
+                        return cvCellText(params.value)
                     }
                 }
 
@@ -1642,6 +1717,22 @@ export default {
             //check
             if (!iseobj(vo.opt)) {
                 return
+            }
+
+            //check removed keys, 2.0.56起改用slot, 呼叫端沿用舊文件傳入時提示; 僅警告不改行為, 每實例只警告一次
+            if (!vo.bWarnedRemovedKeys) {
+                let kpRemoved = {
+                    kpCellRender: 'cell-render',
+                    kpCellTooltip: 'cell-tooltip',
+                    kpHeadRender: 'head-render',
+                    kpHeadTooltip: 'head-tooltip',
+                }
+                each(kpRemoved, (slotName, k) => {
+                    if (haskey(vo.opt, k)) {
+                        vo.bWarnedRemovedKeys = true
+                        console.warn(`[w-aggrid-vue] opt.${k} was removed in 2.0.56, use scoped slot '${slotName}' instead`)
+                    }
+                })
             }
 
             //check keys
