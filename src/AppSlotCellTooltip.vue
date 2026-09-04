@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">kpCellTooltip</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellTooltip.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellTooltip.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">slot: cell-tooltip</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-slotCellTooltip.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-slotCellTooltip.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">

@@ -132,17 +132,11 @@
 
             <AppKpCellEditable v-if="cmpPick==='kpCellEditable'"></AppKpCellEditable>
 
-            <AppKpCellRender v-if="cmpPick==='kpCellRender'"></AppKpCellRender>
-
-            <AppKpCellTooltip v-if="cmpPick==='kpCellTooltip'"></AppKpCellTooltip>
-
             <AppKpHead v-if="cmpPick==='kpHead'"></AppKpHead>
 
             <AppKpHeadWidth v-if="cmpPick==='kpHeadWidth'"></AppKpHeadWidth>
 
             <AppKpHeadAlignH v-if="cmpPick==='kpHeadAlignH'"></AppKpHeadAlignH>
-
-            <AppKpHeadRender v-if="cmpPick==='kpHeadRender'"></AppKpHeadRender>
 
             <AppKpHeadFilter v-if="cmpPick==='kpHeadFilter'"></AppKpHeadFilter>
 
@@ -154,8 +148,6 @@
 
             <AppKpHeadSortMethod v-if="cmpPick==='kpHeadSortMethod'"></AppKpHeadSortMethod>
 
-            <AppKpHeadTooltip v-if="cmpPick==='kpHeadTooltip'"></AppKpHeadTooltip>
-
             <AppKpHeadDrag v-if="cmpPick==='kpHeadDrag'"></AppKpHeadDrag>
 
             <AppKpHeadCheckBox v-if="cmpPick==='kpHeadCheckBox'"></AppKpHeadCheckBox>
@@ -163,6 +155,14 @@
             <AppKpHeadFocusHighlight v-if="cmpPick==='kpHeadFocusHighlight'"></AppKpHeadFocusHighlight>
 
             <AppKpHeadHide v-if="cmpPick==='kpHeadHide'"></AppKpHeadHide>
+
+            <AppSlotCellRender v-if="cmpPick==='slotCellRender'"></AppSlotCellRender>
+
+            <AppSlotCellTooltip v-if="cmpPick==='slotCellTooltip'"></AppSlotCellTooltip>
+
+            <AppSlotHeadRender v-if="cmpPick==='slotHeadRender'"></AppSlotHeadRender>
+
+            <AppSlotHeadTooltip v-if="cmpPick==='slotHeadTooltip'"></AppSlotHeadTooltip>
 
             <AppDefHeadMinWidth v-if="cmpPick==='defHeadMinWidth'"></AppDefHeadMinWidth>
 
@@ -275,18 +275,14 @@ import AppGetApi from './AppGetApi.vue'
 import AppHighlight from './AppHighlight.vue'
 import AppKpCellAlignH from './AppKpCellAlignH.vue'
 import AppKpCellEditable from './AppKpCellEditable.vue'
-import AppKpCellRender from './AppKpCellRender.vue'
-import AppKpCellTooltip from './AppKpCellTooltip.vue'
 import AppKpHead from './AppKpHead.vue'
 import AppKpHeadWidth from './AppKpHeadWidth.vue'
 import AppKpHeadAlignH from './AppKpHeadAlignH.vue'
-import AppKpHeadRender from './AppKpHeadRender.vue'
 import AppKpHeadFilter from './AppKpHeadFilter.vue'
 import AppKpHeadFilterType from './AppKpHeadFilterType.vue'
 import AppKpHeadFixLeft from './AppKpHeadFixLeft.vue'
 import AppKpHeadSort from './AppKpHeadSort.vue'
 import AppKpHeadSortMethod from './AppKpHeadSortMethod.vue'
-import AppKpHeadTooltip from './AppKpHeadTooltip.vue'
 import AppKpHeadDrag from './AppKpHeadDrag.vue'
 import AppKpHeadCheckBox from './AppKpHeadCheckBox.vue'
 import AppKpHeadFocusHighlight from './AppKpHeadFocusHighlight.vue'
@@ -313,6 +309,10 @@ import AppSetHeadFilter from './AppSetHeadFilter.vue'
 import AppFilterChange from './AppFilterChange.vue'
 import AppShowKeys from './AppShowKeys.vue'
 import AppSimpleData from './AppSimpleData.vue'
+import AppSlotCellRender from './AppSlotCellRender.vue'
+import AppSlotCellTooltip from './AppSlotCellTooltip.vue'
+import AppSlotHeadRender from './AppSlotHeadRender.vue'
+import AppSlotHeadTooltip from './AppSlotHeadTooltip.vue'
 import AppTableHeight from './AppTableHeight.vue'
 import AppTableWidth from './AppTableWidth.vue'
 import AppTableWidthFull from './AppTableWidthFull.vue'
@@ -354,18 +354,14 @@ export default {
         AppHighlight,
         AppKpCellAlignH,
         AppKpCellEditable,
-        AppKpCellRender,
-        AppKpCellTooltip,
         AppKpHead,
         AppKpHeadWidth,
         AppKpHeadAlignH,
-        AppKpHeadRender,
         AppKpHeadFilter,
         AppKpHeadFilterType,
         AppKpHeadFixLeft,
         AppKpHeadSort,
         AppKpHeadSortMethod,
-        AppKpHeadTooltip,
         AppKpHeadDrag,
         AppKpHeadCheckBox,
         AppKpHeadFocusHighlight,
@@ -392,6 +388,10 @@ export default {
         AppFilterChange,
         AppShowKeys,
         AppSimpleData,
+        AppSlotCellRender,
+        AppSlotCellTooltip,
+        AppSlotHeadRender,
+        AppSlotHeadTooltip,
         AppTableHeight,
         AppTableWidth,
         AppTableWidthFull,
@@ -448,8 +448,6 @@ export default {
                         cmps: [
                             { name: 'kpCellAlignH' },
                             { name: 'kpCellEditable' },
-                            { name: 'kpCellRender' },
-                            { name: 'kpCellTooltip' },
                         ],
                     },
                     {
@@ -470,13 +468,11 @@ export default {
                             { name: 'kpHead' },
                             { name: 'kpHeadWidth' },
                             { name: 'kpHeadAlignH' },
-                            { name: 'kpHeadRender' },
                             { name: 'kpHeadFilter' },
                             { name: 'kpHeadFilterType' },
                             { name: 'kpHeadFixLeft' },
                             { name: 'kpHeadSort' },
                             { name: 'kpHeadSortMethod' },
-                            { name: 'kpHeadTooltip' },
                             { name: 'kpHeadDrag' },
                             { name: 'kpHeadCheckBox' },
                             { name: 'kpHeadFocusHighlight' },
@@ -520,6 +516,15 @@ export default {
                             { name: 'kpColSpan' },
                         ],
                     },
+                ],
+            },
+            {
+                name: 'slot',
+                cmps: [
+                    { name: 'slotCellRender' },
+                    { name: 'slotCellTooltip' },
+                    { name: 'slotHeadRender' },
+                    { name: 'slotHeadTooltip' },
                 ],
             },
             {

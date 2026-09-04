@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">kpHeadRender</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadRender.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadRender.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">slot: head-render</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-slotHeadRender.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-slotHeadRender.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">

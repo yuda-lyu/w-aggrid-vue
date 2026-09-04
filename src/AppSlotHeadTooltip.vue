@@ -2,9 +2,9 @@
     <div>
 
         <div class="bkh">
-            <div style="font-size:1.5rem;">kpCellRender</div>
-            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellRender.html" target="_blank" class="item-link">example</a>
-            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellRender.html" target="_blank" class="item-link">code</a>
+            <div style="font-size:1.5rem;">slot: head-tooltip</div>
+            <a href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-slotHeadTooltip.html" target="_blank" class="item-link">example</a>
+            <a href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-slotHeadTooltip.html" target="_blank" class="item-link">code</a>
         </div>
 
         <div class="bkp">
@@ -18,11 +18,11 @@
                         ref="rftable"
                         :opt="opt"
                     >
-                        <template v-slot:cell-render="props">
-                            <span style="color:#aaa;" v-if="props.key==='make'">{{ props.value }}</span>
-                            <span style="color:#2c6;" v-else-if="props.key==='model'">{{ props.value }}</span>
-                            <span style="color:#f26;" v-else-if="props.key==='price'">{{ props.value }}</span>
-                            <span style="color:#aaa;" v-else>{{ props }}</span>
+                        <template v-slot:head-tooltip="props">
+                            <div v-if="props.key==='make'"><div style="font-size:8pt; font-weight:bold; color:#6fe;">[{{ props.value }}]</div><div>生產製造商</div></div>
+                            <div v-else-if="props.key==='model'"><div style="font-size:8pt; font-weight:bold; color:#6fe;">[{{ props.value }}]</div><div>車款型號</div></div>
+                            <div v-else-if="props.key==='price'"><div style="font-size:8pt; font-weight:bold; color:#6fe;">[{{ props.value }}]</div><div>虛擬販售價格</div></div>
+                            <div v-else>{{ props }}</div>
                         </template>
                     </WAggridVue>
 
@@ -67,6 +67,7 @@ export default {
                 rows: JSON.parse(JSON.stringify(window.dataEasy)),
             },
             'action': [
+                { 'mode': 'elehover', 'selector': '[col-id="price"]' }
             ],
         }
     },

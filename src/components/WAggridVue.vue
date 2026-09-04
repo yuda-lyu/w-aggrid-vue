@@ -70,6 +70,7 @@ import isobj from 'wsemi/src/isobj.mjs'
 import iseobj from 'wsemi/src/iseobj.mjs'
 import isarr from 'wsemi/src/isarr.mjs'
 import isearr from 'wsemi/src/isearr.mjs'
+import isstr from 'wsemi/src/isstr.mjs'
 import isestr from 'wsemi/src/isestr.mjs'
 import isnum from 'wsemi/src/isnum.mjs'
 import isfun from 'wsemi/src/isfun.mjs'
@@ -1555,7 +1556,22 @@ export default {
                 }
                 else {
                     o.cellRenderer = function(params) {
-                        return params.value
+                        let v = params.value
+
+                        //字串、數字、布林、null、undefined由ag-grid直接包成span顯示
+                        if (isstr(v) || isnum(v) || isbol(v) || v === null || v === undefined) {
+                            return v
+                        }
+
+                        //物件與陣列需字串化, 否則ag-grid會將回傳值視為DOM節點而appendChild拋錯, 且中斷animation frame迴圈導致整表未渲染格全空白
+                        let t = ''
+                        try {
+                            t = JSON.stringify(v)
+                        }
+                        catch (err) {
+                            t = ''
+                        }
+                        return t
                     }
                 }
 
