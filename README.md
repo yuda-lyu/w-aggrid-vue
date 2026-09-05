@@ -33,5 +33,5 @@ Add script for vue.
 
 Add script for w-aggrid-vue, ag-grid-community and ag-grid-vue have been bundled into the umd file(css included), only vue is required.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.82/dist/w-aggrid-vue.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.0.83/dist/w-aggrid-vue.umd.js"></script>
 ```

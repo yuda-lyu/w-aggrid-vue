@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>example for kpHeadSortMethod</title>
+    <title>example for kpCellFormat</title>
 
     <!-- @babel/polyfill -->
     <script
@@ -90,14 +90,14 @@
 >
     <div id="app" class="bkh" style>
         <div class="bkh">
-            <div style="font-size:1.5rem;">kpHeadSortMethod</div>
+            <div style="font-size:1.5rem;">kpCellFormat</div>
             <a
-                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpHeadSortMethod.html"
+                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-kpCellFormat.html"
                 target="_blank"
                 class="item-link"
             >example</a>
             <a
-                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpHeadSortMethod.html"
+                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-kpCellFormat.html"
                 target="_blank"
                 class="item-link"
             >code</a>
@@ -135,17 +135,27 @@
     data: function() {
       return {
         opt: {
-          keys: ["make", "field1", "field2"],
-          kpHead: {
-            make: "make",
-            field1: "field1(auto)",
-            field2: "field2(auto)"
-          },
-          kpHeadSortMethod: {
-            //default: false
-            //'make':false,
-            field1: "auto",
-            field2: "auto"
+          keys: ["make", "model", "price"],
+          kpCellFormat: {
+            make: function(value, key, row, params) {
+              // console.log(value, key, row, params)
+              //空值(null、undefined、空字串)會原樣傳入, 由呼叫端決定如何處理, 回傳null代表不格式化維持原值
+              if (value === null || value === undefined || value === "") {
+                return null;
+              }
+              return String(value).toUpperCase();
+            },
+            price: function(value, key, row, params) {
+              // console.log(value, key, row, params)
+              //空值不可直接Number(), 否則''與null會變成0.00
+              if (value === null || value === undefined || value === "") {
+                return null;
+              }
+              return Number(value).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              });
+            }
           },
           kpHeadFilterType: {
             //default: num (num,text,time,set)
@@ -153,7 +163,7 @@
             model: "text",
             price: "num"
           },
-          rows: JSON.parse(JSON.stringify(window.dataLikeNumber))
+          rows: JSON.parse(JSON.stringify(window.dataEasy))
         },
         action: []
       };

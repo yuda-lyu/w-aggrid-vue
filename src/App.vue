@@ -132,6 +132,8 @@
 
             <AppKpCellEditable v-if="cmpPick==='kpCellEditable'"></AppKpCellEditable>
 
+            <AppKpCellFormat v-if="cmpPick==='kpCellFormat'"></AppKpCellFormat>
+
             <AppKpHead v-if="cmpPick==='kpHead'"></AppKpHead>
 
             <AppKpHeadWidth v-if="cmpPick==='kpHeadWidth'"></AppKpHeadWidth>
@@ -275,6 +277,7 @@ import AppGetApi from './AppGetApi.vue'
 import AppHighlight from './AppHighlight.vue'
 import AppKpCellAlignH from './AppKpCellAlignH.vue'
 import AppKpCellEditable from './AppKpCellEditable.vue'
+import AppKpCellFormat from './AppKpCellFormat.vue'
 import AppKpHead from './AppKpHead.vue'
 import AppKpHeadWidth from './AppKpHeadWidth.vue'
 import AppKpHeadAlignH from './AppKpHeadAlignH.vue'
@@ -354,6 +357,7 @@ export default {
         AppHighlight,
         AppKpCellAlignH,
         AppKpCellEditable,
+        AppKpCellFormat,
         AppKpHead,
         AppKpHeadWidth,
         AppKpHeadAlignH,
@@ -448,6 +452,7 @@ export default {
                         cmps: [
                             { name: 'kpCellAlignH' },
                             { name: 'kpCellEditable' },
+                            { name: 'kpCellFormat' },
                         ],
                     },
                     {

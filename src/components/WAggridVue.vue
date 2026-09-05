@@ -77,6 +77,8 @@ import isfun from 'wsemi/src/isfun.mjs'
 import ispm from 'wsemi/src/ispm.mjs'
 import isbol from 'wsemi/src/isbol.mjs'
 import isp0int from 'wsemi/src/isp0int.mjs'
+import isnull from 'wsemi/src/isnull.mjs'
+import isundefined from 'wsemi/src/isundefined.mjs'
 import cdbl from 'wsemi/src/cdbl.mjs'
 import cstr from 'wsemi/src/cstr.mjs'
 import cint from 'wsemi/src/cint.mjs'
@@ -135,14 +137,12 @@ function parseText(contentPaste) {
 //物件與陣列需字串化, 否則ag-grid會將回傳值視為DOM節點而appendChild拋錯, 且中斷animation frame迴圈導致整表未渲染格全空白
 function cvCellText(v) {
 
-    //null與undefined顯示空字串
-    if (v === null || v === undefined) {
+    //check
+    if (isnull(v) || isundefined(v)) {
         return ''
     }
-
-    //字串、數字、布林由ag-grid直接包成span顯示
-    if (isstr(v) || isnum(v) || isbol(v)) {
-        return v
+    if (isstr(v) || isnum(v)) {
+        return cstr(v)
     }
 
     //物件與陣列, 含循環參照時JSON.stringify會拋錯故退為空字串
@@ -155,6 +155,20 @@ function cvCellText(v) {
 }
 
 
+//cvCellTextByParams, 該欄有kpCellFormat時優先用其經valueFormatter產生之valueFormatted, 否則用原值
+//須以bCellFormat旗標判定而非valueFormatted是否存在, 因ag-grid對推斷為object之欄會自帶預設valueFormatter產生'[object Object]'
+function cvCellTextByParams(params) {
+    let v = null
+    if (get(params, 'bCellFormat') === true) {
+        v = get(params, 'valueFormatted')
+    }
+    if (isnull(v) || isundefined(v)) {
+        v = get(params, 'value')
+    }
+    return cvCellText(v)
+}
+
+
 //CellSlotRenderer, 用於cell-render與cell-tooltip slot的Vue組件
 let CellSlotRenderer = {
     render(h) {
@@ -162,18 +176,20 @@ let CellSlotRenderer = {
         if (cellRenderSlotFn) {
             let vnodes = cellRenderSlotFn({
                 value: this.params.value,
+                valueFormatted: this.params.bCellFormat === true ? this.params.valueFormatted : undefined, //僅該欄有kpCellFormat時給予, 避免ag-grid對object欄自帶之'[object Object]'流入slot
                 key: this.params.colDef.field,
                 row: this.params.data,
             })
             return h('span', vnodes)
         }
-        return h('span', String(cvCellText(this.params.value)))
+        return h('span', cvCellTextByParams(this.params))
     },
     mounted() {
         let cellTooltipSlotFn = this.params.cellTooltipSlotFn
         if (cellTooltipSlotFn) {
             let vnodes = cellTooltipSlotFn({
                 value: this.params.value,
+                valueFormatted: this.params.bCellFormat === true ? this.params.valueFormatted : undefined, //僅該欄有kpCellFormat時給予, 避免ag-grid對object欄自帶之'[object Object]'流入slot
                 key: this.params.colDef.field,
                 row: this.params.data,
             })
@@ -435,6 +451,7 @@ let HeaderSlotRenderer = {
  * @vue-prop {Object} [opt.kpCellAlignH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlignH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
+ * @vue-prop {Object} [opt.kpCellFormat={}] 輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined
  * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
  * @vue-prop {Function} [opt.rowsChange=()=>{}] 輸入rows change之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.rowClick=()=>{}] 輸入row click之觸發事件，預設為()=>{}
@@ -528,6 +545,7 @@ export default {
             kpCellAlignH: {},
             defCellEditable: null,
             kpCellEditable: {},
+            kpCellFormat: {},
             kpConvertKeysWhenUploadData: null,
 
             tableClickEnable: false,
@@ -1265,7 +1283,7 @@ export default {
             let kpPinned = {}
             each(cs, (v) => {
                 kpHide[v.colId] = v.hide
-                kpPinned[v.colId] = v.pinned !== null
+                kpPinned[v.colId] = !isnull(v.pinned)
             })
             //console.log('kpHide', kpHide)
             //console.log('kpPinned', kpPinned)
@@ -1298,10 +1316,10 @@ export default {
             //console.log('dataPaste', dataPaste)
 
             //default
-            if (showRowIndNow === null) {
+            if (isnull(showRowIndNow)) {
                 showRowIndNow = 0
             }
-            if (showColKeyNow === null) {
+            if (isnull(showColKeyNow)) {
                 showColKeyNow = mShowColKeys[0]
             }
 
@@ -1647,6 +1665,22 @@ export default {
                     }
                 }
 
+                //funCellFormat
+                let funCellFormat = vo.kpCellFormat[key]
+
+                //valueFormatter, 值的格式化(如小數位)於ag-grid之valueFormatter層處理, 使顯示與下載走同一字串(community版無剪貼簿模組, 不涉及複製); 排序與過濾仍依原值(ag-grid過濾器讀原值, 數值過濾須維持數值比較)
+                if (isfun(funCellFormat)) {
+                    o.valueFormatter = function(params) {
+                        // console.log('valueFormatter', params)
+
+                        //row
+                        let row = get(params, 'data', {})
+
+                        //funCellFormat, 回傳值原樣交給ag-grid, 如何回傳由呼叫端決定; 回傳null或undefined時ag-grid之valueFormatted為null, renderer改用原值
+                        return funCellFormat(params.value, key, row, params)
+                    }
+                }
+
                 //cell-render, cell-tooltip slot
                 let cellRenderSlot = vo.$scopedSlots['cell-render']
                 let cellTooltipSlot = vo.$scopedSlots['cell-tooltip']
@@ -1655,11 +1689,15 @@ export default {
                     o.cellRendererParams = {
                         cellRenderSlotFn: cellRenderSlot || null,
                         cellTooltipSlotFn: cellTooltipSlot || null,
+                        bCellFormat: isfun(funCellFormat), //供cvCellTextByParams判定是否採用valueFormatted
                     }
                 }
                 else {
                     o.cellRenderer = function(params) {
-                        return cvCellText(params.value)
+                        return cvCellTextByParams(params)
+                    }
+                    o.cellRendererParams = {
+                        bCellFormat: isfun(funCellFormat), //供cvCellTextByParams判定是否採用valueFormatted
                     }
                 }
 
@@ -1941,6 +1979,12 @@ export default {
             vo.kpColSpan = {}
             if (iseobj(vo.opt.kpColSpan)) {
                 vo.kpColSpan = vo.opt.kpColSpan
+            }
+
+            //kpCellFormat
+            vo.kpCellFormat = {}
+            if (iseobj(vo.opt.kpCellFormat)) {
+                vo.kpCellFormat = vo.opt.kpCellFormat
             }
 
             //defHeadMinWidth
@@ -2351,6 +2395,28 @@ export default {
             return keys
         },
 
+        formatDataByKpCellFormat: function(data, keys) {
+            //console.log('methods formatDataByKpCellFormat')
+
+            let vo = this
+
+            //依kpCellFormat格式化各列指定keys之值, 供下載使用, 使下載與畫面一致; 無格式化函數或函數回傳null/undefined之欄維持原值
+            //直接於data各列寫回不另複製, 呼叫端(downloadData經ltdtmapping、downloadDisplayData經getDisplayData)傳入之各列皆已為新物件, 不會動到vo.rows
+            each(data, (row) => {
+                each(keys, (key) => {
+                    let funCellFormat = vo.kpCellFormat[key]
+                    if (isfun(funCellFormat)) {
+                        let v = funCellFormat(get(row, key), key, row, null)
+                        if (!isnull(v) && !isundefined(v)) {
+                            row[key] = v //回傳值原樣寫回, 如何回傳由呼叫端決定, 後續ltdtkeys2mat依wsemi慣例處理各型別
+                        }
+                    }
+                })
+            })
+
+            return data
+        },
+
         getDisplayData: function() {
             //console.log('methods getDisplayData')
 
@@ -2459,6 +2525,7 @@ export default {
                 funGetLtdtHook,
                 funGetMatHook,
                 useHead,
+                useFormat,
                 fileName,
                 sheetName,
             } = opt
@@ -2466,6 +2533,11 @@ export default {
             //default useHead
             if (!isbol(useHead)) {
                 useHead = false
+            }
+
+            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
+            if (!isbol(useFormat)) {
+                useFormat = true
             }
 
             //default fileName
@@ -2493,6 +2565,12 @@ export default {
 
             //data, 僅組件顯示資料
             let data = vo.getDisplayData()
+
+            //useFormat
+            if (useFormat) {
+                //getDisplayData內已cloneDeep
+                data = vo.formatDataByKpCellFormat(data, useKeys)
+            }
 
             //funGetLtdtHook
             if (isfun(funGetLtdtHook)) {
@@ -2538,6 +2616,7 @@ export default {
                 funGetLtdtHook,
                 funGetMatHook,
                 useHead,
+                useFormat,
                 fileName,
                 sheetName,
             } = opt
@@ -2545,6 +2624,11 @@ export default {
             //default useHead
             if (!isbol(useHead)) {
                 useHead = false
+            }
+
+            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
+            if (!isbol(useFormat)) {
+                useFormat = true
             }
 
             //default fileName
@@ -2572,6 +2656,12 @@ export default {
 
             //ltdtmapping
             let data = ltdtmapping(vo.rows, useKeys)
+
+            //useFormat
+            if (useFormat) {
+                //ltdtmapping提取vo.rows內未有cloneDeep
+                data = vo.formatDataByKpCellFormat(data, useKeys)
+            }
 
             //funGetLtdtHook
             if (isfun(funGetLtdtHook)) {
