@@ -2871,7 +2871,9 @@ export default {
 .CompCssWAggridVue .ag-input-field-input:focus {
     border: 1px solid #777;
 }
-.CompCssWAggridVue .no-border.ag-cell:focus{
+/* kpHeadFocusHighlight為false之欄不顯示焦點框; ag-grid 31之焦點框規則為.ag-cell-focus:focus-within, 儲存格內子控制項(tabindex元素、input、button)取得焦點時儲存格只符合:focus-within不符合:focus, 故須兩者並列; 保留:focus以相容舊版ag-grid */
+.CompCssWAggridVue .no-border.ag-cell:focus,
+.CompCssWAggridVue .no-border.ag-cell:focus-within{
   border-color: transparent !important;
   outline: none;
 }
