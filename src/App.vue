@@ -160,6 +160,8 @@
 
             <AppSlotCellRender v-if="cmpPick==='slotCellRender'"></AppSlotCellRender>
 
+            <AppSlotCellRenderAlign v-if="cmpPick==='slotCellRenderAlign'"></AppSlotCellRenderAlign>
+
             <AppSlotCellTooltip v-if="cmpPick==='slotCellTooltip'"></AppSlotCellTooltip>
 
             <AppSlotHeadRender v-if="cmpPick==='slotHeadRender'"></AppSlotHeadRender>
@@ -223,6 +225,8 @@
             <AppFilterChange v-if="cmpPick==='filterChange'"></AppFilterChange>
 
             <AppShowKeys v-if="cmpPick==='showKeys'"></AppShowKeys>
+
+            <AppShowKeysApplyOrder v-if="cmpPick==='showKeysApplyOrder'"></AppShowKeysApplyOrder>
 
             <AppSimpleData v-if="cmpPick==='simpleData'"></AppSimpleData>
 
@@ -311,8 +315,10 @@ import AppRowDragChange from './AppRowDragChange.vue'
 import AppSetHeadFilter from './AppSetHeadFilter.vue'
 import AppFilterChange from './AppFilterChange.vue'
 import AppShowKeys from './AppShowKeys.vue'
+import AppShowKeysApplyOrder from './AppShowKeysApplyOrder.vue'
 import AppSimpleData from './AppSimpleData.vue'
 import AppSlotCellRender from './AppSlotCellRender.vue'
+import AppSlotCellRenderAlign from './AppSlotCellRenderAlign.vue'
 import AppSlotCellTooltip from './AppSlotCellTooltip.vue'
 import AppSlotHeadRender from './AppSlotHeadRender.vue'
 import AppSlotHeadTooltip from './AppSlotHeadTooltip.vue'
@@ -391,8 +397,10 @@ export default {
         AppSetHeadFilter,
         AppFilterChange,
         AppShowKeys,
+        AppShowKeysApplyOrder,
         AppSimpleData,
         AppSlotCellRender,
+        AppSlotCellRenderAlign,
         AppSlotCellTooltip,
         AppSlotHeadRender,
         AppSlotHeadTooltip,
@@ -527,6 +535,7 @@ export default {
                 name: 'slot',
                 cmps: [
                     { name: 'slotCellRender' },
+                    { name: 'slotCellRenderAlign' },
                     { name: 'slotCellTooltip' },
                     { name: 'slotHeadRender' },
                     { name: 'slotHeadTooltip' },
@@ -566,6 +575,7 @@ export default {
                         cmps: [
                             { name: 'pasteText' },
                             { name: 'showKeys' },
+                            { name: 'showKeysApplyOrder' },
                             { name: 'operateData' },
                         ],
                     },

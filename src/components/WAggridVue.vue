@@ -50,7 +50,6 @@ import each from 'lodash-es/each.js'
 import size from 'lodash-es/size.js'
 import filter from 'lodash-es/filter.js'
 import isEqual from 'lodash-es/isEqual.js'
-import find from 'lodash-es/find.js'
 import merge from 'lodash-es/merge.js'
 import get from 'lodash-es/get.js'
 import set from 'lodash-es/set.js'
@@ -2208,10 +2207,16 @@ export default {
 
         },
 
-        showKeys: function(keys_new) {
-            // console.log('methods showKeys', keys_new)
+        showKeys: function(keys_new, opt = {}) {
+            // console.log('methods showKeys', keys_new, opt)
 
             let vo = this
+
+            //applyOrder, 預設true代表依keys_new之順序調整欄位順序; false代表僅切換顯示與隱藏, 維持目前欄位順序(含使用者拖曳後之順序)
+            let applyOrder = get(opt, 'applyOrder', null)
+            if (!isbol(applyOrder)) {
+                applyOrder = true
+            }
 
             //keys_old
             let keys_old = cloneDeep(vo.keys)
@@ -2221,33 +2226,21 @@ export default {
             let keys_nouse = difference(keys_old, keys_new)
             // console.log('keys_nouse', keys_nouse)
 
-            //cs
-            // let cs = vo.gridOptions.columnApi.getColumnState()
-            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
-            // console.log('cs', cs)
-
-            //csn
+            //csn, 僅給colId與hide, 不回灌getColumnState之width、sort、pinned等其他欄位狀態
             let csn = []
             each(keys_new, function(key) {
-                let c = find(cs, { 'colId': key })
-                c.hide = false
-                csn.push(c)
+                csn.push({ colId: key, hide: false })
             })
             each(keys_nouse, function(key) {
-                let c = find(cs, { 'colId': key })
-                c.hide = true //未顯示column改為隱藏
-                csn.push(c)
+                csn.push({ colId: key, hide: true }) //未顯示column改為隱藏
             })
             // console.log('csn', csn)
 
             //applyColumnState
-            // vo.gridOptions.columnApi.applyColumnState({
-            //     state: csn,
-            //     applyOrder: true, //要依照csn調整欄位順序
-            // })
+            //applyOrder為true時依csn調整欄位順序; 被ag-grid固定(pinned)之欄位不論順序為何, 皆固定顯示於左側區
             vo.getApi().applyColumnState({ //gridOptions.columnApi已歸入api, 並須通過ref取得
                 state: csn,
-                applyOrder: true, //要依照csn調整欄位順序
+                applyOrder,
             })
 
         },
