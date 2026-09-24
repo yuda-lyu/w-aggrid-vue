@@ -1,17 +1,64 @@
-<template>
-    <div
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>WAggridVue.vue - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-WAggridVue.html">WAggridVue</a><ul class='methods'><li data-type='method'><a href="module-WAggridVue.html#uploadData">uploadData</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#getLangText">getLangText</a></li></ul>
+    
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">WAggridVue.vue</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&lt;template>
+    &lt;div
         ref="shell"
         class="CompCssWAggridVue"
         :changeParam="changeParam"
         :changeFilterall="changeFilterall"
     >
 
-        <div
+        &lt;div
             :style="`width:${width}%; height:${height}px; transition:all 0.5s; opacity:${opacity};`"
             @mouseleave="leaveTable"
         >
 
-            <ag-grid-vue
+            &lt;ag-grid-vue
                 ref="agv"
                 style="width:100%; height:100%;"
                 class="ag-theme-balham"
@@ -37,14 +84,14 @@
                 @rowDataUpdated="agRowDataUpdated"
                 @filterChanged="agFilterChanged"
                 @gridReady="agReady"
-            ></ag-grid-vue>
+            >&lt;/ag-grid-vue>
 
-        </div>
+        &lt;/div>
 
-    </div>
-</template>
+    &lt;/div>
+&lt;/template>
 
-<script>
+&lt;script>
 import map from 'lodash-es/map.js'
 import each from 'lodash-es/each.js'
 import size from 'lodash-es/size.js'
@@ -334,7 +381,7 @@ let HeaderSlotRenderer = {
             //sortOrder, 僅於超過1欄有排序時顯示序號, 與ag-grid之SortIndicatorComp.updateSortOrder一致
             let sortOrder = ''
             let ind = this.params.column ? this.params.column.getSortIndex() : null
-            if (isnum(ind) && ind >= 0) {
+            if (isnum(ind) &amp;&amp; ind >= 0) {
                 let n = 0
                 try {
                     let cs = this.params.api.getColumnState()
@@ -402,7 +449,7 @@ let HeaderSlotRenderer = {
         //grid整體destroy時api可能已失效, 故先檢查isDestroyed並try catch
         try {
             let api = this.params.api
-            if (api && !(isfun(api.isDestroyed) && api.isDestroyed())) {
+            if (api &amp;&amp; !(isfun(api.isDestroyed) &amp;&amp; api.isDestroyed())) {
                 api.removeEventListener('sortChanged', this.onSortChanged)
             }
         }
@@ -1214,7 +1261,7 @@ export default {
             let vo = this
 
             //check, 由剪貼簿貼上
-            if (!(param.event.ctrlKey && param.event.code === 'KeyV')) {
+            if (!(param.event.ctrlKey &amp;&amp; param.event.code === 'KeyV')) {
                 return
             }
             //console.log('param', param)
@@ -1345,7 +1392,7 @@ export default {
             // let rowsTemp = cloneDeep(vo.rows)
             let rows = vo.rows //記憶體得用原始記憶體, 否則applyTransaction會無法找到原始數據物件進行更新
             let updateRows = []
-            for (let ii = 0; ii < size(mShowColKeys); ii++) {
+            for (let ii = 0; ii &lt; size(mShowColKeys); ii++) {
                 let v = mShowColKeys[ii]
                 //console.log('v', v)
 
@@ -1390,7 +1437,7 @@ export default {
                 }
 
                 //modify data
-                if (i >= 0 && i < pasteColMax) {
+                if (i >= 0 &amp;&amp; i &lt; pasteColMax) {
                     let pasteColInd = i
                     let trueColKey = v
                     // console.log('pasteColInd', pasteColInd, 'trueColKey', trueColKey)
@@ -1400,9 +1447,9 @@ export default {
                         continue //禁止編輯欄位故跳過, i的增加還是得照常處理, 也就是只有不能編輯欄位的數據不變更
                     }
 
-                    for (let j = 0; j < pasteRowMax; j++) {
+                    for (let j = 0; j &lt; pasteRowMax; j++) {
                         let pasteRowInd = j
-                        if (showRowIndNow + j < size(mShowRowInds)) {
+                        if (showRowIndNow + j &lt; size(mShowRowInds)) {
                             let trueRowInd = mShowRowInds[showRowIndNow + j]
                             // console.log('pasteRowInd', pasteRowInd, 'trueRowInd', trueRowInd)
 
@@ -1487,7 +1534,7 @@ export default {
                         //若值無效
                         let sA = iser(valueA)
                         let sB = iser(valueB)
-                        if (sA && sB) {
+                        if (sA &amp;&amp; sB) {
                             return 0
                         }
                         if (sA) {
@@ -1498,12 +1545,12 @@ export default {
                         }
 
                         //若值為數字
-                        if (isnum(valueA) && isnum(valueB)) {
+                        if (isnum(valueA) &amp;&amp; isnum(valueB)) {
                             return cdbl(valueA) - cdbl(valueB)
                         }
 
                         //若值為字串, 先比長度越小越前面, 長度相同則用localeCompare比較
-                        if (isestr(valueA) && isestr(valueB)) {
+                        if (isestr(valueA) &amp;&amp; isestr(valueB)) {
                             let lenA = size(valueA)
                             let lenB = size(valueB)
                             if (lenA !== lenB) {
@@ -1612,18 +1659,18 @@ export default {
                 else {
                     //headTemplate, 基於ref=eText來尋覓與給予head字串
                     let headTemplate = `
-                        <div class="ag-cell-label-container" role="presentation">
-                            <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
-                            <div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
-                                <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
-                                <span ref="eSortOrder" class="ag-header-icon ag-sort-order ag-hidden" ></span>
-                                <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon ag-hidden" ></span>
-                                <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon ag-hidden" ></span>
-                                <span ref="eSortMixed" class="ag-header-icon ag-sort-mixed-icon ag-hidden"></span>
-                                <span ref="eSortNone" class="ag-header-icon ag-sort-none-icon ag-hidden" ></span>
-                                <span ref="eFilter" class="ag-header-icon ag-header-label-icon ag-filter-icon"></span>
-                            </div>
-                        </div>
+                        &lt;div class="ag-cell-label-container" role="presentation">
+                            &lt;span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button">&lt;/span>
+                            &lt;div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
+                                &lt;span ref="eText" class="ag-header-cell-text" role="columnheader">&lt;/span>
+                                &lt;span ref="eSortOrder" class="ag-header-icon ag-sort-order ag-hidden" >&lt;/span>
+                                &lt;span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon ag-hidden" >&lt;/span>
+                                &lt;span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon ag-hidden" >&lt;/span>
+                                &lt;span ref="eSortMixed" class="ag-header-icon ag-sort-mixed-icon ag-hidden">&lt;/span>
+                                &lt;span ref="eSortNone" class="ag-header-icon ag-sort-none-icon ag-hidden" >&lt;/span>
+                                &lt;span ref="eFilter" class="ag-header-icon ag-header-label-icon ag-filter-icon">&lt;/span>
+                            &lt;/div>
+                        &lt;/div>
                     `
                     o.headerComponentParams = {
                         template: headTemplate,
@@ -1656,7 +1703,7 @@ export default {
                         i = cint(i)
 
                         //check
-                        if (i < 1) {
+                        if (i &lt; 1) {
                             i = 1
                         }
 
@@ -2400,7 +2447,7 @@ export default {
                     let funCellFormat = vo.kpCellFormat[key]
                     if (isfun(funCellFormat)) {
                         let v = funCellFormat(get(row, key), key, row, null)
-                        if (!isnull(v) && !isundefined(v)) {
+                        if (!isnull(v) &amp;&amp; !isundefined(v)) {
                             row[key] = v //回傳值原樣寫回, 如何回傳由呼叫端決定, 後續ltdtkeys2mat依wsemi慣例處理各型別
                         }
                     }
@@ -2861,9 +2908,9 @@ export default {
 
     },
 }
-</script>
+&lt;/script>
 
-<style>
+&lt;style>
 .CompCssWAggridVue .ag-theme-balham, .ag-header {
     font-family: inherit;
 }
@@ -2887,4 +2934,29 @@ export default {
   border-color: transparent !important;
   outline: none;
 }
-</style>
+&lt;/style>
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Sep 24 2026 09:04:22 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+
+
+</body>
+</html>
