@@ -1,0 +1,2962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>WAggridVue.vue - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-WAggridVue.html">WAggridVue</a><ul class='methods'><li data-type='method'><a href="module-WAggridVue.html#uploadData">uploadData</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#getLangText">getLangText</a></li></ul>
+    
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">WAggridVue.vue</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&lt;template>
+    &lt;div
+        ref="shell"
+        class="CompCssWAggridVue"
+        :changeParam="changeParam"
+        :changeFilterall="changeFilterall"
+    >
+
+        &lt;div
+            :style="`width:${width}%; height:${height}px; transition:all 0.5s; opacity:${opacity};`"
+            @mouseleave="leaveTable"
+        >
+
+            &lt;ag-grid-vue
+                ref="agv"
+                style="width:100%; height:100%;"
+                class="ag-theme-balham"
+                :columnDefs="columns"
+                :rowData="filterRows"
+                :rowStyle="getRowsStyle"
+                :rowSelection="'multiple'"
+                :gridOptions="gridOptions"
+                _enableRangeSelection="true"
+                _copyHeadersToClipboard="true"
+                _modules="AllModules"
+                @selectionChanged="agRowSelect"
+                @cellClicked="agCellClick"
+                @cellDoubleClicked="agCellDbClick"
+                @cellValueChanged="agCellChange"
+                @cellMouseOver="agCellMouseEnter"
+                @cellMouseOut="agCellMouseLeave"
+                @cellKeyDown="agCellKeyDown"
+                @rowDragEnter="agRowDragEnter"
+                @rowDragEnd="agRowDragEnd"
+                @rowDragMove="agRowDragMove"
+                @rowDragLeave="agRowDragLeave"
+                @rowDataUpdated="agRowDataUpdated"
+                @filterChanged="agFilterChanged"
+                @gridReady="agReady"
+            >&lt;/ag-grid-vue>
+
+        &lt;/div>
+
+    &lt;/div>
+&lt;/template>
+
+&lt;script>
+import map from 'lodash-es/map.js'
+import each from 'lodash-es/each.js'
+import size from 'lodash-es/size.js'
+import filter from 'lodash-es/filter.js'
+import isEqual from 'lodash-es/isEqual.js'
+import merge from 'lodash-es/merge.js'
+import get from 'lodash-es/get.js'
+import set from 'lodash-es/set.js'
+import join from 'lodash-es/join.js'
+import split from 'lodash-es/split.js'
+import values from 'lodash-es/values.js'
+import cloneDeep from 'lodash-es/cloneDeep.js'
+import concat from 'lodash-es/concat.js'
+import difference from 'lodash-es/difference.js'
+import trim from 'lodash-es/trim.js'
+import haskey from 'wsemi/src/haskey.mjs'
+import arrHas from 'wsemi/src/arrHas.mjs'
+import sep from 'wsemi/src/sep.mjs'
+import pmSeries from 'wsemi/src/pmSeries.mjs'
+import iser from 'wsemi/src/iser.mjs'
+import isobj from 'wsemi/src/isobj.mjs'
+import iseobj from 'wsemi/src/iseobj.mjs'
+import isarr from 'wsemi/src/isarr.mjs'
+import isearr from 'wsemi/src/isearr.mjs'
+import isstr from 'wsemi/src/isstr.mjs'
+import isestr from 'wsemi/src/isestr.mjs'
+import isnum from 'wsemi/src/isnum.mjs'
+import isfun from 'wsemi/src/isfun.mjs'
+import ispm from 'wsemi/src/ispm.mjs'
+import isbol from 'wsemi/src/isbol.mjs'
+import isp0int from 'wsemi/src/isp0int.mjs'
+import isnull from 'wsemi/src/isnull.mjs'
+import isundefined from 'wsemi/src/isundefined.mjs'
+import cdbl from 'wsemi/src/cdbl.mjs'
+import cstr from 'wsemi/src/cstr.mjs'
+import cint from 'wsemi/src/cint.mjs'
+import binstr from 'wsemi/src/binstr.mjs'
+import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
+import ltdtkeys2mat from 'wsemi/src/ltdtkeys2mat.mjs'
+import downloadExcelFileFromData from 'wsemi/src/downloadExcelFileFromData.mjs'
+import domShowInputAndGetFilesU8Arrs from 'wsemi/src/domShowInputAndGetFilesU8Arrs.mjs'
+import getDataFromExcelFileU8Arr from 'wsemi/src/getDataFromExcelFileU8Arr.mjs'
+import str2md5 from 'wsemi/src/str2md5.mjs'
+import delay from 'wsemi/src/delay.mjs'
+import replace from 'wsemi/src/replace.mjs'
+import debounce from 'wsemi/src/debounce.mjs'
+import domDetect from 'wsemi/src/domDetect.mjs'
+import domTooltip from 'wsemi/src/domTooltip.mjs'
+import * as agv from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator, 已能被rollup打包進dist, 故不再需要由外部引入cdn
+import 'ag-grid-community/styles/ag-grid.css'
+import 'ag-grid-community/styles/ag-theme-balham.css'
+// import { AllModules } from '@ag-grid-enterprise/all-modules' //ag-gird-enterprise雖可使用modules擴充支援剪貼簿貼上Excel range數據, 不過由Excel複製的數據會有換行字元, 此導致ag-grid解析多一列的空數據而覆蓋到原數據, 無法用
+import getLangText from './getLangText.mjs'
+
+
+//useAgGridVue, ag-grid-vue已打包進dist, 直接取用不再回退外部cdn
+let useAgGridVue = get(agv, 'AgGridVue')
+// console.log('useAgGridVue',useAgGridVue)
+
+
+//tooltip, 通過key查msg避免特殊html符號無法顯示
+let dtmsg = {}
+window.ttWAggridVue = function(ele, kmsg) {
+    if (!isestr(kmsg)) {
+        return
+    }
+    let msg = dtmsg[kmsg]
+    domTooltip(ele, msg)
+}
+
+
+function parseText(contentPaste) {
+    contentPaste = trim(contentPaste)
+    contentPaste = replace(contentPaste, '\r\n', '\n')
+    contentPaste = replace(contentPaste, '\r', '\n')
+    let pRows = sep(contentPaste, '\n')
+    let pData = []
+    each(pRows, (v) => {
+        if (trim(v) !== '') {
+            let s = split(v, '\t')
+            pData.push(s)
+        }
+    })
+    return pData
+}
+
+
+//cvCellText, 供預設cellRenderer與CellSlotRenderer之fallback共用, 使同一儲存格值不論走哪條路徑顯示文字皆相同
+//物件與陣列需字串化, 否則ag-grid會將回傳值視為DOM節點而appendChild拋錯, 且中斷animation frame迴圈導致整表未渲染格全空白
+function cvCellText(v) {
+
+    //check
+    if (isnull(v) || isundefined(v)) {
+        return ''
+    }
+    if (isstr(v) || isnum(v)) {
+        return cstr(v)
+    }
+
+    //物件與陣列, 含循環參照時JSON.stringify會拋錯故退為空字串
+    try {
+        return JSON.stringify(v)
+    }
+    catch (err) {
+        return ''
+    }
+}
+
+
+//cvCellTextByParams, 該欄有kpCellFormat時優先用其經valueFormatter產生之valueFormatted, 否則用原值
+//須以bCellFormat旗標判定而非valueFormatted是否存在, 因ag-grid對推斷為object之欄會自帶預設valueFormatter產生'[object Object]'
+function cvCellTextByParams(params) {
+    let v = null
+    if (get(params, 'bCellFormat') === true) {
+        v = get(params, 'valueFormatted')
+    }
+    if (isnull(v) || isundefined(v)) {
+        v = get(params, 'value')
+    }
+    return cvCellText(v)
+}
+
+
+//CellSlotRenderer, 用於cell-render與cell-tooltip slot的Vue組件
+let CellSlotRenderer = {
+    render(h) {
+        let cellRenderSlotFn = this.params.cellRenderSlotFn
+        if (cellRenderSlotFn) {
+            let vnodes = cellRenderSlotFn({
+                value: this.params.value,
+                valueFormatted: this.params.bCellFormat === true ? this.params.valueFormatted : undefined, //僅該欄有kpCellFormat時給予, 避免ag-grid對object欄自帶之'[object Object]'流入slot
+                key: this.params.colDef.field,
+                row: this.params.data,
+            })
+            return h('span', vnodes)
+        }
+        return h('span', cvCellTextByParams(this.params))
+    },
+    mounted() {
+        let cellTooltipSlotFn = this.params.cellTooltipSlotFn
+        if (cellTooltipSlotFn) {
+            let vnodes = cellTooltipSlotFn({
+                value: this.params.value,
+                valueFormatted: this.params.bCellFormat === true ? this.params.valueFormatted : undefined, //僅該欄有kpCellFormat時給予, 避免ag-grid對object欄自帶之'[object Object]'流入slot
+                key: this.params.colDef.field,
+                row: this.params.data,
+            })
+            let VueCtor = this.$root.constructor
+            let vm = new VueCtor({
+                render: h => h('div', vnodes),
+            }).$mount()
+            let t = vm.$el.innerHTML
+            vm.$destroy()
+            t = cstr(t)
+            let kmsg = str2md5(t)
+            dtmsg[kmsg] = t
+            this.params.eGridCell.setAttribute('onmouseenter', `ttWAggridVue(this,'${kmsg}')`)
+        }
+    },
+}
+
+
+//HeaderSlotRenderer, 用於head-render與head-tooltip slot的Vue組件
+let HeaderSlotRenderer = {
+    data() {
+        return {
+            currentSort: null,
+            filterActive: false,
+            sortOrder: '',
+        }
+    },
+    render(h) {
+        let headRenderSlotFn = this.params.headRenderSlotFn
+        let cJustifyContent = this.params.cJustifyContent || 'center'
+        let displayName = this.params.displayName
+        let key = this.params.column.colId
+
+        //header content
+        let headerContent
+        if (headRenderSlotFn) {
+            headerContent = headRenderSlotFn({
+                value: displayName,
+                key,
+            })
+        }
+        else {
+            headerContent = [displayName]
+        }
+
+        //sort icons
+        let sortChildren = []
+        if (this.currentSort === 'asc') {
+            sortChildren.push(
+                h('span', { class: 'ag-header-icon ag-sort-ascending-icon' }, [
+                    h('span', { class: 'ag-icon ag-icon-asc' }),
+                ])
+            )
+        }
+        else if (this.currentSort === 'desc') {
+            sortChildren.push(
+                h('span', { class: 'ag-header-icon ag-sort-descending-icon' }, [
+                    h('span', { class: 'ag-icon ag-icon-desc' }),
+                ])
+            )
+        }
+
+        //sort order, 多欄排序時之序號, 對齊預設headTemplate之eSortOrder
+        let sortOrderChildren = []
+        if (this.sortOrder !== '') {
+            sortOrderChildren.push(
+                h('span', { class: 'ag-header-icon ag-sort-order' }, this.sortOrder)
+            )
+        }
+
+        //filter icon, 對齊預設headTemplate之eFilter
+        //ag-grid僅對預設HeaderComp處理filter圖示(HeaderComp.setupFilterIcon->configureFilter), 自訂headerComponent須自行監聽column之filterChanged
+        let filterChildren = []
+        if (this.params.enableFilterIcon !== false) {
+            filterChildren.push(
+                h('span', {
+                    class: 'ag-header-icon ag-header-label-icon ag-filter-icon' + (this.filterActive ? '' : ' ag-hidden'),
+                }, [
+                    h('span', { class: 'ag-icon ag-icon-filter' }),
+                ])
+            )
+        }
+
+        //menu button
+        //gridOptions.suppressMenuHide為true時ag-grid會為預設HeaderComp之eMenu加ag-header-menu-always-show使其常駐, 自訂headerComponent須自行加上
+        let cMenuAlwaysShow = ''
+        try {
+            if (this.params.api.getGridOption('suppressMenuHide')) {
+                cMenuAlwaysShow = ' ag-header-menu-always-show'
+            }
+        }
+        catch (err) {
+        }
+        let menuChildren = []
+        if (this.params.enableMenu) {
+            menuChildren.push(
+                h('span', {
+                    class: 'ag-header-icon ag-header-cell-menu-button' + cMenuAlwaysShow,
+                    on: {
+                        click: (e) => {
+                            e.stopPropagation()
+                            this.params.showColumnMenu(e.target)
+                        },
+                    },
+                }, [
+                    h('span', { class: 'ag-icon ag-icon-menu' }),
+                ])
+            )
+        }
+
+        return h('div', {
+            class: 'ag-cell-label-container',
+            attrs: { role: 'presentation' },
+            on: { click: this.onSortClicked },
+        }, [
+            ...menuChildren,
+            h('div', {
+                class: 'ag-header-cell-label',
+                style: { 'justify-content': cJustifyContent },
+                attrs: { role: 'presentation' },
+            }, [
+                h('span', {
+                    class: 'ag-header-cell-text',
+                    attrs: { role: 'columnheader' },
+                }, headerContent),
+                ...sortOrderChildren,
+                ...sortChildren,
+                ...filterChildren,
+            ]),
+        ])
+    },
+    methods: {
+        onSortClicked(event) {
+            if (this.params.enableSorting !== false) {
+                this.params.progressSort(event.shiftKey)
+            }
+        },
+        onSortChanged() {
+            if (this.params.column) {
+                this.currentSort = this.params.column.getSort() || null
+            }
+
+            //sortOrder, 僅於超過1欄有排序時顯示序號, 與ag-grid之SortIndicatorComp.updateSortOrder一致
+            let sortOrder = ''
+            let ind = this.params.column ? this.params.column.getSortIndex() : null
+            if (isnum(ind) &amp;&amp; ind >= 0) {
+                let n = 0
+                try {
+                    let cs = this.params.api.getColumnState()
+                    n = filter(cs, (v) => {
+                        return isnum(get(v, 'sortIndex'))
+                    }).length
+                }
+                catch (err) {
+                }
+                if (n > 1) {
+                    sortOrder = cstr(ind + 1)
+                }
+            }
+            this.sortOrder = sortOrder
+        },
+        onFilterChanged() {
+            if (this.params.column) {
+                this.filterActive = this.params.column.isFilterActive()
+            }
+        },
+    },
+    mounted() {
+        //sort listener, 聽grid層級之sortChanged而非單欄之sortChanged
+        //單欄sortChanged於Column.setSort時派送, 此時SortController.updateSortIndex尚未指定各欄sortIndex, 且他欄排序變動時本欄不會收到單欄事件, 序號無法重算
+        //grid層級sortChanged於updateSortIndex之後派送, 與ag-grid之SortIndicatorComp.setupSort一致(其箭頭與序號皆聽grid層級事件)
+        try {
+            this.params.api.addEventListener('sortChanged', this.onSortChanged)
+        }
+        catch (err) {
+        }
+        this.onSortChanged()
+
+        //filter listener
+        if (this.params.column) {
+            this.params.column.addEventListener('filterChanged', this.onFilterChanged)
+            this.onFilterChanged()
+        }
+
+        //head tooltip
+        let headTooltipSlotFn = this.params.headTooltipSlotFn
+        if (headTooltipSlotFn) {
+            let displayName = this.params.displayName
+            let key = this.params.column.colId
+            let vnodes = headTooltipSlotFn({
+                value: displayName,
+                key,
+            })
+            let VueCtor = this.$root.constructor
+            let vm = new VueCtor({
+                render: h => h('div', vnodes),
+            }).$mount()
+            let t = vm.$el.innerHTML
+            vm.$destroy()
+            t = cstr(t)
+            let kmsg = str2md5(t)
+            dtmsg[kmsg] = t
+            this.$el.setAttribute('onmouseenter', `ttWAggridVue(this,'${kmsg}')`)
+        }
+    },
+    beforeDestroy() {
+        if (this.params.column) {
+            this.params.column.removeEventListener('filterChanged', this.onFilterChanged)
+        }
+
+        //grid整體destroy時api可能已失效, 故先檢查isDestroyed並try catch
+        try {
+            let api = this.params.api
+            if (api &amp;&amp; !(isfun(api.isDestroyed) &amp;&amp; api.isDestroyed())) {
+                api.removeEventListener('sortChanged', this.onSortChanged)
+            }
+        }
+        catch (err) {
+        }
+    },
+}
+
+
+/**
+ * @vue-prop {Object} opt 輸入資料設定物件
+ * @vue-prop {Array} opt.keys 輸入資料各欄位keys
+ * @vue-prop {Array} opt.rows 輸入資料列，各列為物件，內含各欄位keys之值，例[{},{},...,{}]
+ * @vue-prop {Object} [opt.kpHead={}] 輸入key對應head物件，預設各key值為本身key值
+ * @vue-prop {Number} [opt.defHeadMinWidth=null] 輸入cell預設最小寬度數字，預設為null
+ * @vue-prop {Number} [opt.defHeadMaxWidth=null] 輸入cell預設最大寬度數字，預設為null
+ * @vue-prop {Object} [opt.kpHeadWidth={}] 輸入key對應cell之寬度物件，預設各key值為undefined
+ * @vue-slot {Object} cell-render 輸入cell之渲染slot，slot props為{ value, key, row }
+ * @vue-slot {Object} cell-tooltip 輸入cell之tooltip渲染slot，slot props為{ value, key, row }，slot內容於掛載時取靜態HTML快照，不支援事件綁定、子組件狀態與響應式更新
+ * @vue-slot {Object} head-render 輸入head之渲染slot，slot props為{ value, key }
+ * @vue-slot {Object} head-tooltip 輸入head之tooltip渲染slot，slot props為{ value, key }，slot內容於掛載時取靜態HTML快照，不支援事件綁定、子組件狀態與響應式更新
+ * @vue-prop {String} [opt.defHeadAlignH='center'] 輸入head預設之左右對齊字串，預設為'center'
+ * @vue-prop {Object} [opt.kpHeadAlignH={}] 輸入key對應head之左右對齊字串物件，預設各key值為defHeadAlignH
+ * @vue-prop {Boolean} [opt.defHeadSort=true] 輸入head預設之是否允許排序布林值，預設為true
+ * @vue-prop {Object} [opt.kpHeadSort={}] 輸入key對應head之是否允許排序物件，預設各key值為defHeadSort
+ * @vue-prop {Function|String} [opt.defHeadSortMethod=null] 輸入head預設之排序方式函數或字串，若需自行定義則給予函數，若需使用內建的自動轉型判斷方式則給予'auto'字串，預設為null
+ * @vue-prop {Object} [opt.kpHeadSortMethod={}] 輸入key對應head之排序方式函數或字串，若需自行定義則給予函數，若需使用內建的自動轉型判斷方式則給予'auto'字串，預設各key值為defHeadSortMethod
+ * @vue-prop {Object} [opt.kpHeadFixLeft={}] 輸入key對應head之是否固定於左側物件，預設各key值為false
+ * @vue-prop {Boolean} [opt.defHeadFilter=true] 輸入head預設之是否允許過濾布林值，預設為true
+ * @vue-prop {Object} [opt.kpHeadFilter={}] 輸入key對應head之是否允許過濾物件，預設各key值為defHeadFilter
+ * @vue-prop {String} [opt.defHeadFilterType='num'] 輸入head預設過濾器字串，可選'num'、'text'、'time'、'set'，預設為'num'
+ * @vue-prop {Object} [opt.kpHeadFilterType={}] 輸入key對應head之過濾器物件，可使用'num'、'text'、'time'、'set'，預設各key值為'num'
+ * @vue-prop {Boolean} [opt.defHeadDrag=true] 輸入head預設之是否允許拖曳布林值，預設為true
+ * @vue-prop {Object} [opt.kpHeadDrag={}] 輸入key對應head之是否允許拖曳物件，預設各key值為defHeadDrag
+ * @vue-prop {Object} [opt.kpHeadCheckBox={}] 輸入key對應head與key的各列是否使用核選方塊物件，預設各key值為false
+ * @vue-prop {Object} [opt.kpHeadFocusHighlight={}] 輸入key對應key的各列於獲得焦點時是否高亮顯示物件，預設各key值為true
+ * @vue-prop {Object} [opt.kpHeadHide={}] 輸入key對應head是否隱藏物件，預設各key值為false
+ * @vue-prop {Object} [opt.kpRowStyle={}] 輸入key對應row style之物件，可設定各key欄之函數，函數給予cell值需回傳之row style，預設各key值為undefined
+ * @vue-prop {Object} [opt.kpRowDrag={}] 輸入key對應col之是否能拖曳排序物件，預設各key值為false
+ * @vue-prop {Function} [opt.genRowsPinnTop=null] 輸入產生置頂rows函數，輸入為表內全部數據，預設為null
+ * @vue-prop {Function} [opt.genRowsPinnBottom=null] 輸入產生置底rows函數，輸入為表內全部數據，預設為null
+ * @vue-prop {Object} [opt.kpColStyle={}] 輸入key對應col style之物件，可設定各key欄之col style，預設各key值為undefined
+ * @vue-prop {Object} [opt.kpColSpan={}] 輸入key對應col span之物件，可設定各key欄之col span，預設各key值為undefined
+ * @vue-prop {String} [opt.defCellAlignH='center'] 輸入cell預設之左右對齊字串，預設為'center'
+ * @vue-prop {Object} [opt.kpCellAlignH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlignH
+ * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
+ * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
+ * @vue-prop {Object} [opt.kpCellFormat={}] 輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined
+ * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
+ * @vue-prop {Function} [opt.rowsChange=()=>{}] 輸入rows change之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowClick=()=>{}] 輸入row click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowDbClick=()=>{}] 輸入row double click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowChange=()=>{}] 輸入row change之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowChecked=()=>{}] 輸入row checked之觸發事件，需使用kpHeadCheckBox開啟指定key的head與對應rows使用checkbox，預設為()=>{}
+ * @vue-prop {Function} [opt.rowMouseEnter=()=>{}] 輸入row mouseenter之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.rowMouseLeave=()=>{}] 輸入row mouseleave之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellClick=()=>{}] 輸入cell click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellDbClick=()=>{}] 輸入cell double click之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellChange=()=>{}] 輸入cell change之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellMouseEnter=()=>{}] 輸入cell mouseenter之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.cellMouseLeave=()=>{}] 輸入cell mouseleave之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.filterChange=()=>{}] 輸入filter change之觸發事件，預設為()=>{}
+ * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬布林值，預設false
+ * @vue-prop {String} [opt.language='en'] 輸入指定語系字串，可選'en'、'zh-tw'、'zh-cn'，預設為'en'
+ * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
+ * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
+ */
+export default {
+    components: {
+        AgGridVue: useAgGridVue,
+        CellSlotRenderer,
+        HeaderSlotRenderer,
+    },
+    props: {
+        opt: {
+            type: Object,
+        },
+        height: {
+            type: Number,
+            default: 300
+        },
+        filterall: {
+            type: String,
+            default: ''
+        },
+    },
+    data: function() {
+        let vo = this
+        return {
+            dbc: debounce(),
+            de: null,
+
+            isReady: false,
+
+            bWarnedRemovedKeys: false, //opt含2.0.56已移除之kp鍵時只警告一次
+
+            evPaste: null,
+            dataPasted: '',
+
+            width: 100,
+            opacity: 0,
+
+            autoFitColumn: false,
+
+            language: '',
+
+            rows: [],
+            keys: [],
+            columns: [],
+
+            kpHead: {},
+            defHeadMinWidth: null,
+            defHeadMaxWidth: null,
+            kpHeadWidth: {},
+
+            defHeadAlignH: null,
+            kpHeadAlignH: {},
+            defHeadSort: null,
+            kpHeadSort: {},
+            defHeadSortMethod: null,
+            kpHeadSortMethod: {},
+            kpHeadFixLeft: {},
+            defHeadFilter: null,
+            kpHeadFilter: {},
+            defHeadFilterType: null,
+            kpHeadFilterType: {},
+            defHeadDrag: null,
+
+            kpHeadDrag: {},
+            kpHeadCheckBox: {},
+            kpHeadFocusHighlight: {},
+            kpHeadHide: {},
+            kpRowStyle: {},
+            kpRowDrag: {},
+            kpColStyle: {},
+            kpColSpan: {},
+
+            defCellAlignH: null,
+            kpCellAlignH: {},
+            defCellEditable: null,
+            kpCellEditable: {},
+            kpCellFormat: {},
+            kpConvertKeysWhenUploadData: null,
+
+            tableClickEnable: false,
+            rowsChange: function() {},
+            rowChange: function() {},
+            rowChecked: function() {},
+            rowMouseEnter: function() {},
+            rowMouseLeave: function() {},
+            rowClick: function() {},
+            rowDbClick: function() {},
+            rowDragEnter: function() {},
+            rowDragEnd: function() {},
+            rowDragMove: function() {},
+            rowDragLeave: function() {},
+            rowDragChange: function() {},
+            cellClick: function() {},
+            cellDbClick: function() {},
+            cellChange: function() {},
+            cellMouseEnter: function() {},
+            cellMouseLeave: function() {},
+            filterChange: function() {},
+
+            //因ag-grid只提供mouseout沒有mouseleave, 導致會因為內元素而觸發mouseout, 得通過暫存機制產生mouseleave事件
+            vRowMouseEnter: null,
+            vRowMouseLeave: null,
+            eRowMouseLeaves: [],
+            vCellMouseEnter: null,
+            vCellMouseLeave: null,
+            eCellMouseLeaves: [],
+            iRowDragEnter: null,
+
+            genRowsPinnTop: null,
+            genRowsPinnBottom: null,
+
+            // AllModules,
+            gridOptions: {
+
+                animateRows: true,
+
+                suppressMenuHide: true, //預設為false, 代表標題右側的漢堡按鈕預先隱藏, 滑鼠移入時才顯示
+
+                // rowHoverHighlight: true,
+                suppressRowHoverHighlight: false, //ag-grid 25.3.0已由rowHoverHighlight改為suppressRowHoverHighlight
+
+                // suppressColumnHoverHighlight: false,
+                columnHoverHighlight: false, //ag-grid 26.2.0已由suppressColumnHoverHighlight改為columnHoverHighlight
+
+                // floatingFilter: true, //ag-grid 23.1.0已改為由column給予floatingFilter
+
+                rowDragManaged: true,
+
+                suppressRowClickSelection: true, //若開啟checkboxSelection
+
+                singleClickEdit: true, //單點即可變更
+
+                // stopEditingWhenGridLosesFocus: true,
+                stopEditingWhenCellsLoseFocus: true, //失去焦點則停止編輯, ag-grid 25.2.2改為stopEditingWhenCellsLoseFocus
+
+                // suppressCellFocus: true, //點擊因cell獲得焦點會出現邊框, 若關閉(suppressCellFocus=true)會導致全部cell都關閉, 另用賦予class處理
+
+                // localeText: null,
+                getLocaleText: vo.agGetLocaleText,
+
+                getRowStyle: vo.agGetRowStyle,
+
+                // debounceVerticalScrollbar: true,
+
+                pinnedTopRowData: [],
+                pinnedBottomRowData: [],
+
+            },
+
+            ag: null,
+
+        }
+    },
+    mounted: function() {
+
+        let vo = this
+
+        //監聽dom
+        vo.de = domDetect(() => {
+            return get(vo, '$refs.shell', null)
+        })
+        vo.de.on('resize', (s) => {
+            // console.log('resize', s)
+            if (vo.autoFitColumn) {
+                vo.fitColumns()
+            }
+        })
+        vo.de.on('display', (s) => {
+            // console.log('display', s)
+            if (vo.autoFitColumn) {
+                vo.fitColumns()
+            }
+        })
+
+        //paste
+        vo.evPaste = (e) => {
+            //console.log('paste', e)
+
+            //clipboardData
+            let clipboardData = event.clipboardData || window.clipboardData
+
+            //save dataPasted
+            vo.dataPasted = clipboardData.getData('Text')
+
+        }
+        window.addEventListener('paste', vo.evPaste)
+
+    },
+    beforeDestroy: function() {
+        //console.log('beforeMount')
+
+        let vo = this
+
+        //釋放監聽
+        vo.de.clear()
+
+        //removeEventListener
+        window.removeEventListener('paste', vo.evPaste)
+
+    },
+    computed: {
+
+        changeParam: function() {
+            //console.log('computed changeParam')
+
+            let vo = this
+
+            //trigger
+            let opt = vo.opt
+            vo.__temp__ = { opt }
+
+            //changeOpt
+            vo.changeOpt()
+
+            return ''
+        },
+
+        changeFilterall: function() {
+            // console.log('computed changeFilterall')
+
+            let vo = this
+
+            //trigger
+            let filterall = vo.filterall
+            vo.__temp__ = { filterall }
+
+            //triggerFilterChange
+            vo.triggerFilterChange('filterall')
+
+            return ''
+        },
+
+        getRowsStyle: function(params) {
+            //console.log('computed getRowsStyle', params)
+
+            let vo = this
+
+            if (vo.tableClickEnable) {
+                return {
+                    cursor: 'pointer'
+                }
+            }
+            return {}
+        },
+
+        filterRows: function() {
+            //console.log('computed filterRows')
+
+            let vo = this
+
+            //trigger
+            let rows = vo.rows
+            let filterall = vo.filterall
+
+            //check
+            if (filterall === '') {
+                return rows
+            }
+
+            //filter
+            let frs = filter(rows, function(v, k) {
+                let c = join(values(v), '')
+                return binstr(c, filterall)
+            })
+
+            return frs
+        },
+
+    },
+    methods: {
+
+        getGridOptions: function() {
+            //console.log('methods getGridOptions')
+
+            let vo = this
+
+            return vo.gridOptions
+        },
+
+        getApi: function() {
+            // console.log('getApi')
+
+            let vo = this
+
+            //api, ag-grid 31.1.0的gridOptions.api已改為須由組件ref取得
+            let api = get(vo, '$refs.agv.api', null)
+
+            return api
+        },
+
+        agGetLocaleText: function(params) {
+            // console.log('agGetLocaleText', params)
+
+            let vo = this
+
+            //getLangText
+            let t = getLangText(vo.language, params.key, params.defaultValue)
+
+            return t
+        },
+
+        agGetRowStyle: function(params) {
+            //console.log('agGetRowStyle', params) //由各row呼叫
+
+            let vo = this
+
+            //style
+            let style = {}
+            each(vo.kpRowStyle, function(v, k) {
+                let f = v
+                let d = get(params.data, k)
+                if (isfun(f)) {
+                    style = merge(style, f(d))
+                }
+            })
+
+            return style
+        },
+
+        triggerRowDragChange: function(indFrom, indTo, row, rows) {
+
+            let vo = this
+
+            //check
+            if (indFrom !== indTo) {
+                vo.iRowDragEnter = indTo
+
+                //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+                set(vo, `opt.rows`, rows)
+
+                //rowDragChange
+                vo.rowDragChange(indFrom, indTo, row, rows)
+
+                // //rowsChange, rows是內部已更新數據, 直接用於回傳函數
+                // vo.rowsChange(rows) //agRowDataUpdated也會觸發並再觸發rowsChange, 故此處不觸發
+
+            }
+
+        },
+
+        agRowDragEnter: function(param) {
+            // console.log('methods agRowDragEnter', param)
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragEnter ind', ind)
+
+            //iRowDragEnter
+            vo.iRowDragEnter = ind
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            // //rows
+            // let rows = vo.getNowData()
+            // // console.log('agRowDragEnd rows', cloneDeep(rows))
+
+            //rowDragEnter
+            vo.rowDragEnter(ind, -1, row)
+
+        },
+
+        agRowDragEnd: function(param) {
+            // console.log('methods agRowDragEnd', param)
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragEnd ind', ind)
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            //rows
+            let rows = vo.getNowData()
+            // console.log('agRowDragEnd rows', cloneDeep(rows))
+
+            //rowDragEnd
+            vo.rowDragEnd(vo.iRowDragEnter, ind, row, rows)
+
+            //triggerRowDragChange
+            vo.triggerRowDragChange(vo.iRowDragEnter, ind, row, rows)
+
+        },
+
+        agRowDragMove: function(param) {
+            // console.log('methods agRowDragMove', param)
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragMove ind', ind)
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            // //rows
+            // let rows = vo.getNowData()
+            // // console.log('agRowDragMove rows', cloneDeep(rows))
+
+            //rowDragMove
+            vo.rowDragMove(vo.iRowDragEnter, ind, row)
+
+        },
+
+        agRowDragLeave: function(param) {
+            // console.log('methods agRowDragLeave', param)
+
+            //先move再leave至表格外, 拖曳排序依然有效, 但僅觸發DragLeave不觸發DragEnd, 得聯合處理
+
+            let vo = this
+
+            //ind
+            let ind = get(param, 'node.rowIndex', '')
+            // console.log('agRowDragLeave ind', ind)
+
+            //row
+            let row = get(param, 'node.data', null)
+
+            //rows
+            let rows = vo.getNowData()
+            // console.log('agRowDragLeave rows', cloneDeep(rows))
+
+            //rowDragLeave
+            vo.rowDragLeave(vo.iRowDragEnter, ind, row, rows)
+
+            //triggerRowDragChange
+            vo.triggerRowDragChange(vo.iRowDragEnter, ind, row, rows)
+
+        },
+
+        agRowDataUpdated: function(params) {
+            // console.log('agRowDataUpdated', params)
+
+            let vo = this
+
+            //check, 表格載入數據也會觸發agRowDataUpdated, 通過isReady判斷是否為載入後變更
+            if (!vo.isReady) {
+                return
+            }
+
+            // //rows
+            // let rows = vo.getNowData()
+            // console.log('agRowDataUpdated rows', cloneDeep(rows))
+
+            //rowsChange, 因為記憶體同址vo.rows會出現變更, 故直接用於回傳函數
+            vo.rowsChange(vo.rows)
+
+        },
+
+        agRowSelect: function(params) {
+            // console.log('agRowSelect', params)
+
+            let vo = this
+
+            //rn
+            let rn = params.api.getSelectedNodes() //params.api已是vo.getApi()
+
+            //rs
+            let rs = map(rn, (r) => {
+                return {
+                    rowInd: cint(r.id),
+                    rowIndShow: r.rowIndex,
+                    data: r.data,
+                }
+            })
+
+            //rowChecked
+            vo.rowChecked(cloneDeep(rs))
+
+        },
+
+        agCellClick: function(param) {
+            //console.log('methods agCellClick', param)
+
+            let vo = this
+
+            //cellClick
+            vo.cellClick(param.colDef.field, param.data)
+
+            //rowClick
+            vo.rowClick(param.colDef.field, param.data)
+
+        },
+
+        agCellDbClick: function(param) {
+            //console.log('methods agCellDbClick', param)
+
+            let vo = this
+
+            //cellDbClick
+            vo.cellDbClick(param.colDef.field, param.data)
+
+            //rowDbClick
+            vo.rowDbClick(param.colDef.field, param.data)
+
+        },
+
+        agCellChange: function(param) {
+            // console.log('methods agCellChange', param)
+
+            let vo = this
+
+            //check值變化
+            if (param.oldValue !== param.newValue) {
+                //值變化因為記憶體同址vo.rows會出現變更, 故使用vo.rows
+
+                //refresh
+                vo.refresh()
+
+                //cellChange
+                vo.cellChange(param.colDef.field, param.data, vo.rows)
+
+                //rowChange
+                vo.rowChange(param.colDef.field, param.data, vo.rows)
+
+                //rowsChange, 因為記憶體同址vo.rows會出現變更, 故直接用於回傳函數
+                vo.rowsChange(vo.rows) //agRowDataUpdated不會觸發rowsChange, 故此處須觸發
+
+                //setRowsPinnBottom
+                vo.setRowsPinnBottom(vo.rows)
+
+            }
+
+        },
+
+        agFilterChanged: function(params) {
+            // console.log('methods agFilterChanged', params)
+
+            let vo = this
+
+            //triggerFilterChange
+            vo.triggerFilterChange('heads')
+
+        },
+
+        agReady: function(params) {
+            //console.log('methods agReady', params)
+
+            let vo = this
+
+            //ag
+            vo.ag = params
+
+            if (vo.autoFitColumn) {
+
+                //fitColumns
+                vo.fitColumns(false)
+
+            }
+
+            //setRowsPinnTop
+            vo.setRowsPinnTop(vo.rows)
+
+            //setRowsPinnBottom
+            vo.setRowsPinnBottom(vo.rows)
+
+            //show
+            vo.opacity = 1
+
+            //isReady
+            vo.isReady = true
+
+        },
+
+        leaveTable: function() {
+            //console.log('methods leaveTable')
+
+            let vo = this
+
+            //emitCellMouseLeaves
+            vo.emitCellMouseLeaves()
+
+            //emitRowMouseLeaves
+            vo.emitRowMouseLeaves()
+
+            //clear
+            vo.vRowMouseEnter = null
+            vo.vRowMouseLeave = null
+            vo.vCellMouseEnter = null
+            vo.vCellMouseLeave = null
+
+        },
+
+        emitCellMouseLeaves: function() {
+            //console.log('methods emitCellMouseLeaves')
+
+            let vo = this
+
+            //cellMouseLeave
+            each(vo.eCellMouseLeaves, (v) => {
+                vo.cellMouseLeave(cloneDeep(v.field), cloneDeep(v.data))
+                //console.log('cellMouseLeave', cloneDeep(v.field), cloneDeep(v.data))
+            })
+
+            //clear
+            vo.eCellMouseLeaves = []
+
+        },
+
+        emitRowMouseLeaves: function() {
+            //console.log('methods emitRowMouseLeaves')
+
+            let vo = this
+
+            //rowMouseLeave
+            each(vo.eRowMouseLeaves, (v) => {
+                vo.rowMouseLeave(cloneDeep(v.field), cloneDeep(v.data))
+                //console.log('rowMouseLeave', cloneDeep(v.field), cloneDeep(v.data))
+            })
+
+            //clear
+            vo.eRowMouseLeaves = []
+
+        },
+
+        agCellMouseEnter: function(param) {
+            //console.log('methods agCellMouseEnter', param)
+
+            let vo = this
+
+            //tvCellMouseEnter, tvRowMouseEnter
+            let tvCellMouseEnter = {
+                field: param.colDef.field,
+                data: param.data,
+            }
+            let tvRowMouseEnter = {
+                data: param.data, //紀錄資料只會比對data, data不一樣才觸發
+            }
+
+            //cellMouseEnter
+            if (!isEqual(vo.vCellMouseEnter, tvCellMouseEnter)) {
+
+                //emitCellMouseLeaves, 要觸發enter前先觸發leave, 避免cell leave偵測失效或過慢導致連發
+                vo.emitCellMouseLeaves()
+
+                //field, data
+                let field = cloneDeep(param.colDef.field)
+                let data = cloneDeep(param.data)
+
+                //update vCellMouseEnter
+                vo.vCellMouseEnter = tvCellMouseEnter
+
+                //cellMouseEnter
+                vo.cellMouseEnter(field, data)
+
+                //push, 儲存需離開事件資訊
+                vo.eCellMouseLeaves.push({
+                    field,
+                    data,
+                })
+
+            }
+
+            //rowMouseEnter
+            if (!isEqual(vo.vRowMouseEnter, tvRowMouseEnter)) {
+
+                //emitRowMouseLeaves, 要觸發enter前先觸發leave, 避免row leave偵測失效或過慢導致連發
+                vo.emitRowMouseLeaves()
+
+                //field, data
+                let field = cloneDeep(param.colDef.field)
+                let data = cloneDeep(param.data)
+
+                //update vRowMouseEnter
+                vo.vRowMouseEnter = tvRowMouseEnter
+
+                //rowMouseEnter
+                vo.rowMouseEnter(field, data) //滑鼠最初移入的欄位依然作為資料emit出去
+
+                //push, 儲存需離開事件資訊
+                vo.eRowMouseLeaves.push({
+                    field,
+                    data,
+                })
+
+                //update vRowMouseLeave, 因一進列可能在同列儲存格間移動, 故需先儲存更新列數據, 若移動到相鄰儲存格時, 則可判斷因數據相同故不用觸發rowLeave
+                vo.vRowMouseLeave = {
+                    data: cloneDeep(param.data),
+                }
+
+            }
+
+        },
+
+        agCellMouseLeave: function(param) {
+            //console.log('methods agCellMouseLeave', param)
+
+            let vo = this
+
+            //check
+            if (param.event.target.contains(param.event.relatedTarget)) { //離開元素包含進入元素時則跳出, 因可能為父元素進入內元素而觸發
+                //console.log('進入元素包含離開元素時則跳出')
+                return
+            }
+
+            //role
+            let role = null
+            try {
+                role = param.event.target.getAttribute('role') //離開元素的role
+            }
+            catch (err) {
+                //console.log(err)
+            }
+
+            //check
+            if (role !== 'gridcell') { //離開元素的role不是gridcell則跳出, 因有可能是cell內元素觸發
+                //console.log('離開元素的role不是gridcell則跳出', param.event.target)
+                return
+            }
+
+            //tvCellMouseLeave
+            let tvCellMouseLeave = {
+                field: cloneDeep(param.colDef.field),
+                data: cloneDeep(param.data),
+            }
+
+            //tvRowMouseLeave
+            let tvRowMouseLeave = {
+                data: cloneDeep(param.data),
+            }
+
+            //emitCellMouseLeaves
+            if (!isEqual(vo.vCellMouseLeave, tvCellMouseLeave)) {
+                vo.vCellMouseLeave = tvCellMouseLeave
+                vo.emitCellMouseLeaves()
+            }
+
+            //emitRowMouseLeaves
+            if (!isEqual(vo.vRowMouseLeave, tvRowMouseLeave)) {
+                vo.vRowMouseLeave = tvRowMouseLeave
+                vo.emitRowMouseLeaves()
+            }
+
+        },
+
+        agCellKeyDown: function(param) {
+            //console.log('methods agCellKeyDown', param)
+
+            let vo = this
+
+            //check, 由剪貼簿貼上
+            if (!(param.event.ctrlKey &amp;&amp; param.event.code === 'KeyV')) {
+                return
+            }
+            //console.log('param', param)
+
+            //showRowIndNow
+            let showRowIndNow = param.rowIndex
+            // console.log('showRowIndNow', showRowIndNow)
+
+            //showColKeyNow
+            let showColKeyNow = param.column.colId
+            // console.log('showColKeyNow', showColKeyNow)
+
+            //stopEditing, 停止cell的編輯狀態
+            vo.getApi().stopEditing()
+
+            //pasteText
+            vo.pasteText(vo.dataPasted, showRowIndNow, showColKeyNow)
+
+        },
+
+        pasteText: function(text, showRowIndNow = null, showColKeyNow = null) {
+            // console.log('methods pasteText', text, showRowIndNow, showColKeyNow)
+
+            let vo = this
+
+            //mShowRowInds
+            let mShowRowInds = []
+            let mData = []
+            vo.getApi().forEachNodeAfterFilterAndSort(function(node, k) {
+                //console.log('node', node)
+                mShowRowInds.push(node.id)
+                mData.push(node.data)
+            })
+            // console.log('mShowRowInds', mShowRowInds)
+            // console.log('mData', mData)
+
+            //check
+            if (size(mShowRowInds) === 0) {
+                //console.log('無有效之當前顯示數據')
+                return
+            }
+
+            //mShowColKeys
+            // let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
+            let mShowColKeys = vo.getApi().getAllGridColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            mShowColKeys = map(mShowColKeys, (v, k) => {
+                // console.log('v', v, v.getId)
+                return v.getId()
+            })
+            // console.log('mShowColKeys', mShowColKeys)
+
+            //check
+            if (size(mShowColKeys) === 0) {
+                //console.log('無有效之當前顯示數據')
+                return
+            }
+
+            //cs
+            // let cs = vo.gridOptions.columnApi.getColumnState()
+            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            // console.log('cs', cs)
+
+            //kpHide, kpPinned
+            let kpHide = {}
+            let kpPinned = {}
+            each(cs, (v) => {
+                kpHide[v.colId] = v.hide
+                kpPinned[v.colId] = !isnull(v.pinned)
+            })
+            //console.log('kpHide', kpHide)
+            //console.log('kpPinned', kpPinned)
+
+            //check
+            if (kpHide[showColKeyNow]) {
+                //console.log('貼於禁止編輯的儲存格, 強制取消')
+                return
+            }
+
+            //pasteOnPinned
+            let pasteOnPinned = null
+            if (kpPinned[showColKeyNow]) {
+                pasteOnPinned = showColKeyNow
+            }
+            //console.log('pasteOnPinned', pasteOnPinned)
+
+            //kpEditable
+            // let cd = vo.gridOptions.columnDefs
+            let cd = vo.getApi().getColumnDefs() //gridOptions.columnDefs已歸入api, 並須通過ref取得
+            // console.log('cd', cd)
+            let kpEditable = {}
+            each(cd, (v) => {
+                kpEditable[v.field] = v.editable
+            })
+            //console.log('kpEditable', kpEditable)
+
+            //dataPaste
+            let dataPaste = parseText(text)
+            //console.log('dataPaste', dataPaste)
+
+            //default
+            if (isnull(showRowIndNow)) {
+                showRowIndNow = 0
+            }
+            if (isnull(showColKeyNow)) {
+                showColKeyNow = mShowColKeys[0]
+            }
+
+            //pasteRowMax, pasteColMax
+            let pasteRowMax = null
+            let pasteColMax = null
+            try {
+                pasteRowMax = size(dataPaste)
+            }
+            catch (err) {
+                //console.log('無法計算貼上數據列的總量', err)
+                return
+            }
+            try {
+                pasteColMax = size(dataPaste[0])
+            }
+            catch (err) {
+                //console.log('無法計算貼上數據行的總量', err)
+                return
+            }
+
+            //paste
+            let i = -1
+            // let rowsTemp = cloneDeep(vo.rows)
+            let rows = vo.rows //記憶體得用原始記憶體, 否則applyTransaction會無法找到原始數據物件進行更新
+            let updateRows = []
+            for (let ii = 0; ii &lt; size(mShowColKeys); ii++) {
+                let v = mShowColKeys[ii]
+                //console.log('v', v)
+
+                //check
+                if (kpHide[v]) {
+                    continue //數據貼到隱藏欄位故跳過
+                }
+
+                //check
+                if (pasteOnPinned) { //貼於固定欄位時
+                    if (kpPinned[v]) {
+                        if (pasteOnPinned === v) { //v !== pasteOnPinned
+                            //console.log('已貼到固定欄位')
+                            pasteOnPinned = true //已貼到固定欄位, 強制修改為true
+                        }
+                        else if (pasteOnPinned === true) {
+                            //console.log('已貼過固定欄位, 允許貼至其他固定欄位')
+                        }
+                        else {
+                            //console.log('雖然是貼到固定欄位, 但尚未貼到原本固定欄位, 強制取消')
+                            continue
+                        }
+                    }
+                    else {
+                        //console.log('貼於固定欄位時, 數據只允許貼到該固定欄位上', pasteOnPinned, v)
+                        continue //貼於固定欄位時, 數據只允許貼到該固定欄位上
+                    }
+                }
+                else { //不是貼於固定欄位時
+                    if (kpPinned[v]) {
+                        //console.log('不是貼於固定欄位時, 數據貼到固定欄位則跳過', pasteOnPinned, v, kpPinned[v])
+                        continue //不是貼於固定欄位時, 數據貼到固定欄位則跳過
+                    }
+                }
+
+                //add i
+                if (v === showColKeyNow) {
+                    i = 0
+                }
+                else if (i >= 0) { //當出現>=0就代表已經找到showColKey
+                    i += 1
+                }
+
+                //modify data
+                if (i >= 0 &amp;&amp; i &lt; pasteColMax) {
+                    let pasteColInd = i
+                    let trueColKey = v
+                    // console.log('pasteColInd', pasteColInd, 'trueColKey', trueColKey)
+
+                    //check
+                    if (!kpEditable[trueColKey]) {
+                        continue //禁止編輯欄位故跳過, i的增加還是得照常處理, 也就是只有不能編輯欄位的數據不變更
+                    }
+
+                    for (let j = 0; j &lt; pasteRowMax; j++) {
+                        let pasteRowInd = j
+                        if (showRowIndNow + j &lt; size(mShowRowInds)) {
+                            let trueRowInd = mShowRowInds[showRowIndNow + j]
+                            // console.log('pasteRowInd', pasteRowInd, 'trueRowInd', trueRowInd)
+
+                            // //pasteValue
+                            // let pasteValue = dataPaste[pasteRowInd][pasteColInd]
+                            // console.log('pasteValue', pasteValue)
+
+                            // //trueValue
+                            // let trueValue = rowsTemp[trueRowInd][trueColKey]
+                            // console.log('trueValue', trueValue)
+
+                            //save
+                            rows[trueRowInd][trueColKey] = dataPaste[pasteRowInd][pasteColInd]
+
+                            //push, 只紀錄需變更的rows
+                            updateRows.push(rows[trueRowInd])
+
+                        }
+
+                    }
+                }
+
+            }
+
+            //applyTransaction, 只變更必要資料加速, 注意記憶體得用原始記憶體, 也就是updateRows得使用原始vo.rows來給予欲變更之rows, 否則applyTransaction會無法找到原始數據物件進行更新
+            vo.getApi().applyTransaction({ update: updateRows })
+            // console.log('applyTransaction', cloneDeep(updateRows))
+
+            //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+            set(vo, `opt.rows`, rows)
+
+            // //rowsChange, rows是內部已更新數據, 直接用於回傳函數
+            // vo.rowsChange(rows) //agRowDataUpdated也會觸發並再觸發rowsChange, 故此處不觸發
+
+        },
+
+        refresh: async function() {
+            //console.log('methods refresh')
+
+            let vo = this
+
+            //delay
+            await delay(1)
+
+            //redrawRows, 因資料變更不會觸發getRowStyle, 給自行redrawRows
+            //可能因使用者切換組件被destroy, 故需try catch
+            try {
+                vo.getApi().redrawRows()
+            }
+            catch (err) {
+                //console.log(err)
+            }
+
+        },
+
+        keys2columns: function(keys) {
+            //console.log('methods keys2columns')
+
+            let vo = this
+
+            //cs
+            let cs = map(keys, function(key) {
+                let o = {}
+
+                //key
+                o.field = key
+
+                //text
+                o.headerName = vo.kpHead[key]
+
+                //sort
+                o.sortable = vo.kpHeadSort[key]
+
+                //comparator
+                let funHeadSortMethod = vo.kpHeadSortMethod[key]
+                if (isfun(funHeadSortMethod)) {
+                    o.comparator = funHeadSortMethod
+                }
+                else if (funHeadSortMethod === 'auto') {
+                    o.comparator = function(valueA, valueB, nodeA, nodeB, isInverted) {
+
+                        //若值無效
+                        let sA = iser(valueA)
+                        let sB = iser(valueB)
+                        if (sA &amp;&amp; sB) {
+                            return 0
+                        }
+                        if (sA) {
+                            return -1
+                        }
+                        if (sB) {
+                            return 1
+                        }
+
+                        //若值為數字
+                        if (isnum(valueA) &amp;&amp; isnum(valueB)) {
+                            return cdbl(valueA) - cdbl(valueB)
+                        }
+
+                        //若值為字串, 先比長度越小越前面, 長度相同則用localeCompare比較
+                        if (isestr(valueA) &amp;&amp; isestr(valueB)) {
+                            let lenA = size(valueA)
+                            let lenB = size(valueB)
+                            if (lenA !== lenB) {
+                                return lenA - lenB
+                            }
+                            else {
+                                return valueA.localeCompare(valueB)
+                            }
+                        }
+
+                        return 0 //不比較
+                    }
+                }
+
+                //filter, 欄位標題右邊的選單按鈕, 可使用數字過濾器'agNumberColumnFilter'或文字過濾器'agTextColumnFilter'
+                if (vo.kpHeadFilter[key]) {
+                    let t = vo.kpHeadFilterType[key]
+                    if (t === 'text') {
+                        o.filter = 'agTextColumnFilter'
+                    }
+                    else if (t === 'time') {
+                        o.filter = 'agDateColumnFilter'
+                    }
+                    else if (t === 'set') {
+                        o.filter = 'agSetColumnFilter'
+                    }
+                    else { //其他皆為num
+                        o.filter = 'agNumberColumnFilter'
+                    }
+                }
+                else {
+                    o.filter = false
+                }
+
+                //floatingFilter, 欄位標題下方的文字過濾輸入區, 因ag-grid 23.1.0已改為由column給予floatingFilter, 若全部column都false, 則標題下方查詢區就會自動清除騰出空間
+                o.floatingFilter = vo.kpHeadFilter[key]
+
+                //suppressMenu
+                //o.suppressMenu = true //關閉欄位標題右邊的選單按鈕
+
+                //filterParams
+                o.filterParams = {
+                    // caseSensitive: true, //過濾區分大小寫, 會導致數字欄位無法被過濾
+                    // applyButton: true, //彈出選單下方可加入使用按鈕
+                    // clearButton: true, //彈出選單下方可加入取消按鈕
+                    // filterParams: {
+                    //     comparator: function(ft, cv) {
+                    //         console.log('comparator', ft, cv)
+                    //     }
+                    // }
+                }
+                //filter plus, 欄位標題下方加入文字過濾輸入框
+                // o.floatingFilterComponentParams = { suppressFilterButton: true }
+                o.suppressFloatingFilterButton = true //關閉文字過濾輸入框右邊按鈕, 需suppressFloatingFilterButton=true, 因ag-grid 31.1.0已廢棄floatingFilterComponentParams.suppressFilterButton, 須改用suppressFloatingFilterButton
+
+                //lockPosition, 若不拖曳而設定欄位lockPosition為true時, 該欄位會強制置左, 故不使用
+                //o.lockPosition = !vo.kpHeadDrag[key]
+
+                //suppressMovable, 指定欄位不能拖曳, 但會被其他欄位拖曳而改變位置
+                o.suppressMovable = !vo.kpHeadDrag[key]
+
+                //resizable
+                o.resizable = true
+
+                //editable
+                o.editable = vo.kpCellEditable[key]
+                // console.log(key, 'vo.kpCellEditable[key]', vo.kpCellEditable[key])
+
+                //row selection
+                if (vo.kpHeadCheckBox[key]) {
+                    o.headerCheckboxSelection = true
+                    o.headerCheckboxSelectionFilteredOnly = true //若有使用過濾filter, 點header的全選全取消核選方塊時, 僅針對過濾的rows來操作
+                    o.checkboxSelection = true
+                }
+
+                //cell highlight when focused
+                if (!vo.kpHeadFocusHighlight[key]) {
+                    o.cellClass = 'no-border'
+                }
+
+                //flex
+                // o.flex = 1
+
+                //text-align
+                let cTextAlign = vo.kpHeadAlignH[key]
+
+                //justify-content
+                let kpTA2JC = {
+                    'left': 'flex-start',
+                    'center': 'center',
+                    'right': 'flex-end',
+                }
+                let cJustifyContent = kpTA2JC[cTextAlign]
+
+                //head-render, head-tooltip slot
+                let headRenderSlot = vo.$scopedSlots['head-render']
+                let headTooltipSlot = vo.$scopedSlots['head-tooltip']
+                if (headRenderSlot || headTooltipSlot) {
+                    o.headerComponent = 'HeaderSlotRenderer'
+                    o.headerComponentParams = {
+                        headRenderSlotFn: headRenderSlot || null,
+                        headTooltipSlotFn: headTooltipSlot || null,
+                        cJustifyContent,
+                    }
+                }
+                else {
+                    //headTemplate, 基於ref=eText來尋覓與給予head字串
+                    let headTemplate = `
+                        &lt;div class="ag-cell-label-container" role="presentation">
+                            &lt;span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button">&lt;/span>
+                            &lt;div ref="eLabel" class="ag-header-cell-label" style="justify-content:${cJustifyContent};" role="presentation">
+                                &lt;span ref="eText" class="ag-header-cell-text" role="columnheader">&lt;/span>
+                                &lt;span ref="eSortOrder" class="ag-header-icon ag-sort-order ag-hidden" >&lt;/span>
+                                &lt;span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon ag-hidden" >&lt;/span>
+                                &lt;span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon ag-hidden" >&lt;/span>
+                                &lt;span ref="eSortMixed" class="ag-header-icon ag-sort-mixed-icon ag-hidden">&lt;/span>
+                                &lt;span ref="eSortNone" class="ag-header-icon ag-sort-none-icon ag-hidden" >&lt;/span>
+                                &lt;span ref="eFilter" class="ag-header-icon ag-header-label-icon ag-filter-icon">&lt;/span>
+                            &lt;/div>
+                        &lt;/div>
+                    `
+                    o.headerComponentParams = {
+                        template: headTemplate,
+                    }
+                }
+
+                //funColSpan
+                let funColSpan = vo.kpColSpan[key]
+
+                //colSpan
+                if (isfun(funColSpan)) {
+                    o.colSpan = function(params) {
+                        // console.log('colSpan', params)
+
+                        //row
+                        let row = get(params, 'data', {})
+
+                        //value
+                        let value = get(row, key)
+
+                        //funColSpan
+                        let i = funColSpan(value, key, row, params)
+
+                        //check
+                        if (!isnum(i)) {
+                            i = 1
+                        }
+
+                        //cint
+                        i = cint(i)
+
+                        //check
+                        if (i &lt; 1) {
+                            i = 1
+                        }
+
+                        return i
+                    }
+                }
+
+                //funCellFormat
+                let funCellFormat = vo.kpCellFormat[key]
+
+                //valueFormatter, 值的格式化(如小數位)於ag-grid之valueFormatter層處理, 使顯示與下載走同一字串(community版無剪貼簿模組, 不涉及複製); 排序與過濾仍依原值(ag-grid過濾器讀原值, 數值過濾須維持數值比較)
+                if (isfun(funCellFormat)) {
+                    o.valueFormatter = function(params) {
+                        // console.log('valueFormatter', params)
+
+                        //row
+                        let row = get(params, 'data', {})
+
+                        //funCellFormat, 回傳值原樣交給ag-grid, 如何回傳由呼叫端決定; 回傳null或undefined時ag-grid之valueFormatted為null, renderer改用原值
+                        return funCellFormat(params.value, key, row, params)
+                    }
+                }
+
+                //cell-render, cell-tooltip slot
+                let cellRenderSlot = vo.$scopedSlots['cell-render']
+                let cellTooltipSlot = vo.$scopedSlots['cell-tooltip']
+                if (cellRenderSlot || cellTooltipSlot) {
+                    o.cellRenderer = 'CellSlotRenderer'
+                    o.cellRendererParams = {
+                        cellRenderSlotFn: cellRenderSlot || null,
+                        cellTooltipSlotFn: cellTooltipSlot || null,
+                        bCellFormat: isfun(funCellFormat), //供cvCellTextByParams判定是否採用valueFormatted
+                    }
+                }
+                else {
+                    o.cellRenderer = function(params) {
+                        return cvCellTextByParams(params)
+                    }
+                    o.cellRendererParams = {
+                        bCellFormat: isfun(funCellFormat), //供cvCellTextByParams判定是否採用valueFormatted
+                    }
+                }
+
+                //cellStyle
+                let cellStyle = {
+                    'text-align': vo.kpCellAlignH[key] //add align
+                }
+                let funColStyle = vo.kpColStyle[key]
+                if (isfun(funColStyle)) {
+                    cellStyle = merge(cellStyle, funColStyle()) //add col style
+                }
+                o.cellStyle = cellStyle
+
+                //fix
+                if (isbol(vo.kpHeadFixLeft[key])) {
+
+                    //pinned
+                    o.pinned = vo.kpHeadFixLeft[key] ? 'left' : ''
+
+                    // //suppressSizeToFit, true代表禁止欄位被sizeColumnsToFit, 因有pinned也需能resize與自動調整寬度, 故取消此功能
+                    // if (vo.kpHeadFixLeft[key]) {
+                    //     o.suppressSizeToFit = true
+                    // }
+
+                }
+
+                //width, 內容物超過width不會自動撐開
+                if (isnum(vo.kpHeadWidth[key])) {
+                    let w = cdbl(vo.kpHeadWidth[key])
+                    o.width = w
+                }
+
+                //minWidth, ag-grid設定minWidth還是會自動被處理調整成寬度, 例如minWidth給150, 實際會依照內容長度轉成width如200, 而內容物超過轉換後的width不會自動撐開
+                if (isnum(vo.defHeadMinWidth)) {
+                    o.minWidth = vo.defHeadMinWidth
+                }
+
+                //maxWidth
+                if (isnum(vo.defHeadMaxWidth)) {
+                    o.maxWidth = vo.defHeadMaxWidth
+                }
+
+                //rowDrag
+                let rowDrag = false //default
+                if (isbol(vo.kpRowDrag[key])) {
+                    rowDrag = vo.kpRowDrag[key]
+                }
+                o.rowDrag = rowDrag
+
+                //hide
+                let hide = false //default
+                if (isbol(vo.kpHeadHide[key])) {
+                    hide = vo.kpHeadHide[key]
+                }
+                o.hide = hide
+
+                return o
+            })
+
+            return cs
+        },
+
+        changeOpt: function() {
+            //console.log('methods changeOpt')
+
+            let vo = this
+
+            //check
+            if (!iseobj(vo.opt)) {
+                return
+            }
+
+            //check removed keys, 2.0.56起改用slot, 呼叫端沿用舊文件傳入時提示; 僅警告不改行為, 每實例只警告一次
+            if (!vo.bWarnedRemovedKeys) {
+                let kpRemoved = {
+                    kpCellRender: 'cell-render',
+                    kpCellTooltip: 'cell-tooltip',
+                    kpHeadRender: 'head-render',
+                    kpHeadTooltip: 'head-tooltip',
+                }
+                each(kpRemoved, (slotName, k) => {
+                    if (haskey(vo.opt, k)) {
+                        vo.bWarnedRemovedKeys = true
+                        console.warn(`[w-aggrid-vue] opt.${k} was removed in 2.0.56, use scoped slot '${slotName}' instead`)
+                    }
+                })
+            }
+
+            //check keys
+            let tKeys = get(vo, 'opt.keys')
+            if (!isearr(tKeys)) {
+                console.log('invalid opt.keys')
+                return
+            }
+
+            //check rows
+            let tRows = get(vo, 'opt.rows')
+            if (!isarr(tRows)) {
+                console.log('invalid opt.rows')
+                return
+            }
+
+            //setobj
+            function setobj(keys, def, kpobj) {
+                let o = {}
+                each(keys, function(key) {
+                    let h = def(key)
+                    if (isobj(kpobj)) {
+                        if (haskey(kpobj, key)) {
+                            h = kpobj[key]
+                        }
+                    }
+                    o[key] = h
+                })
+                return o
+            }
+
+            //autoFitColumn, ag-grid僅有
+            let autoFitColumn = false
+            if (isbol(vo.opt.autoFitColumn)) {
+                autoFitColumn = vo.opt.autoFitColumn
+            }
+            vo.autoFitColumn = autoFitColumn
+
+            //keys
+            vo.keys = vo.opt.keys
+
+            //kpHead
+            vo.kpHead = setobj(vo.keys,
+                function(key) {
+                    return key //預設使用key做head
+                },
+                vo.opt.kpHead
+            )
+
+            //defHeadAlignH
+            vo.defHeadAlignH = 'center'
+            if (arrHas(vo.opt.defHeadAlignH, ['left', 'center', 'right'])) {
+                vo.defHeadAlignH = vo.opt.defHeadAlignH
+            }
+
+            //kpHeadAlignH
+            vo.kpHeadAlignH = setobj(vo.keys,
+                function(key) {
+                    return vo.defHeadAlignH
+                },
+                vo.opt.kpHeadAlignH
+            )
+
+            //defHeadSort
+            vo.defHeadSort = true
+            if (isbol(vo.opt.defHeadSort)) {
+                vo.defHeadSort = vo.opt.defHeadSort
+            }
+
+            //kpHeadSort
+            vo.kpHeadSort = setobj(vo.keys,
+                function(key) {
+                    return vo.defHeadSort
+                },
+                vo.opt.kpHeadSort
+            )
+
+            //defHeadSortMethod
+            vo.defHeadSortMethod = null
+            if (isfun(vo.opt.defHeadSortMethod) || isestr(vo.opt.defHeadSortMethod)) {
+                vo.defHeadSortMethod = vo.opt.defHeadSortMethod
+            }
+
+            //kpHeadSortMethod
+            vo.kpHeadSortMethod = setobj(vo.keys,
+                function(key) {
+                    return vo.defHeadSortMethod
+                },
+                vo.opt.kpHeadSortMethod
+            )
+
+            //kpHeadFixLeft
+            vo.kpHeadFixLeft = {}
+            if (iseobj(vo.opt.kpHeadFixLeft)) {
+                vo.kpHeadFixLeft = vo.opt.kpHeadFixLeft
+            }
+
+            //defHeadFilter
+            vo.defHeadFilter = true
+            if (isbol(vo.opt.defHeadFilter)) {
+                vo.defHeadFilter = vo.opt.defHeadFilter
+            }
+
+            //kpHeadFilter
+            vo.kpHeadFilter = setobj(vo.keys,
+                function(key) {
+                    return vo.defHeadFilter
+                },
+                vo.opt.kpHeadFilter
+            )
+
+            //defHeadFilterType
+            vo.defHeadFilterType = 'num'
+            if (arrHas(vo.opt.defHeadFilterType, ['num', 'text', 'time', 'set'])) {
+                vo.defHeadFilterType = vo.opt.defHeadFilterType
+            }
+
+            //kpHeadFilterType
+            vo.kpHeadFilterType = setobj(vo.keys,
+                function(key) {
+                    return vo.defHeadFilterType
+                },
+                vo.opt.kpHeadFilterType
+            )
+
+            //defHeadDrag
+            vo.defHeadDrag = true
+            if (isbol(vo.opt.defHeadDrag)) {
+                vo.defHeadDrag = vo.opt.defHeadDrag
+            }
+
+            //kpHeadDrag
+            vo.kpHeadDrag = setobj(vo.keys,
+                function(key) {
+                    return vo.defHeadDrag
+                },
+                vo.opt.kpHeadDrag
+            )
+
+            //kpHeadCheckBox
+            vo.kpHeadCheckBox = setobj(vo.keys,
+                function(key) {
+                    return false //每個col皆預設false
+                },
+                vo.opt.kpHeadCheckBox
+            )
+
+            //kpHeadFocusHighlight
+            vo.kpHeadFocusHighlight = setobj(vo.keys,
+                function(key) {
+                    return true //每個col皆預設true
+                },
+                vo.opt.kpHeadFocusHighlight
+            )
+
+            //kpHeadHide
+            vo.kpHeadHide = {}
+            if (iseobj(vo.opt.kpHeadHide)) {
+                vo.kpHeadHide = vo.opt.kpHeadHide
+            }
+
+            //kpRowStyle
+            vo.kpRowStyle = {}
+            if (iseobj(vo.opt.kpRowStyle)) {
+                vo.kpRowStyle = vo.opt.kpRowStyle
+            }
+
+            //kpRowDrag
+            vo.kpRowDrag = {}
+            if (iseobj(vo.opt.kpRowDrag)) {
+                vo.kpRowDrag = vo.opt.kpRowDrag
+            }
+
+            //genRowsPinnTop
+            vo.genRowsPinnTop = null
+            if (isfun(vo.opt.genRowsPinnTop)) {
+                vo.genRowsPinnTop = vo.opt.genRowsPinnTop
+            }
+
+            //genRowsPinnBottom
+            vo.genRowsPinnBottom = null
+            if (isfun(vo.opt.genRowsPinnBottom)) {
+                vo.genRowsPinnBottom = vo.opt.genRowsPinnBottom
+            }
+
+            //kpColStyle
+            vo.kpColStyle = {}
+            if (iseobj(vo.opt.kpColStyle)) {
+                vo.kpColStyle = vo.opt.kpColStyle
+            }
+
+            //kpColSpan
+            vo.kpColSpan = {}
+            if (iseobj(vo.opt.kpColSpan)) {
+                vo.kpColSpan = vo.opt.kpColSpan
+            }
+
+            //kpCellFormat
+            vo.kpCellFormat = {}
+            if (iseobj(vo.opt.kpCellFormat)) {
+                vo.kpCellFormat = vo.opt.kpCellFormat
+            }
+
+            //defHeadMinWidth
+            vo.defHeadMinWidth = null
+            if (isnum(vo.opt.defHeadMinWidth)) {
+                vo.defHeadMinWidth = vo.opt.defHeadMinWidth
+            }
+
+            //defHeadMaxWidth
+            vo.defHeadMaxWidth = null
+            if (isnum(vo.opt.defHeadMaxWidth)) {
+                vo.defHeadMaxWidth = vo.opt.defHeadMaxWidth
+            }
+
+            //kpHeadWidth
+            vo.kpHeadWidth = {}
+            if (iseobj(vo.opt.kpHeadWidth)) {
+                vo.kpHeadWidth = vo.opt.kpHeadWidth
+            }
+
+            //defCellAlignH
+            vo.defCellAlignH = 'center'
+            if (arrHas(vo.opt.defCellAlignH, ['left', 'center', 'right'])) {
+                vo.defCellAlignH = vo.opt.defCellAlignH
+            }
+
+            //kpCellAlignH
+            vo.kpCellAlignH = setobj(vo.keys,
+                function(key) {
+                    return vo.defCellAlignH
+                },
+                vo.opt.kpCellAlignH
+            )
+
+            //defCellEditable
+            vo.defCellEditable = false
+            if (isbol(vo.opt.defCellEditable)) {
+                vo.defCellEditable = vo.opt.defCellEditable
+            }
+
+            //kpCellEditable
+            vo.kpCellEditable = setobj(vo.keys,
+                function(key) {
+                    return vo.defCellEditable
+                },
+                vo.opt.kpCellEditable
+            )
+
+            //tableClickEnable
+            vo.tableClickEnable = false
+
+            //rowsChange
+            vo.rowsChange = function() {}
+            if (isfun(vo.opt.rowsChange)) {
+                vo.rowsChange = vo.opt.rowsChange
+            }
+
+            //rowClick
+            vo.rowClick = function() {}
+            if (isfun(vo.opt.rowClick)) {
+                vo.rowClick = vo.opt.rowClick
+                vo.tableClickEnable = true
+            }
+
+            //rowDbClick
+            vo.rowDbClick = function() {}
+            if (isfun(vo.opt.rowDbClick)) {
+                vo.rowDbClick = vo.opt.rowDbClick
+                vo.tableClickEnable = true
+            }
+
+            //rowChange
+            vo.rowChange = function() {}
+            if (isfun(vo.opt.rowChange)) {
+                vo.rowChange = vo.opt.rowChange
+            }
+
+            //rowChecked
+            vo.rowChecked = function() {}
+            if (isfun(vo.opt.rowChecked)) {
+                vo.rowChecked = vo.opt.rowChecked
+            }
+
+            //rowMouseEnter
+            vo.rowMouseEnter = function() {}
+            if (isfun(vo.opt.rowMouseEnter)) {
+                vo.rowMouseEnter = vo.opt.rowMouseEnter
+            }
+
+            //rowMouseLeave
+            vo.rowMouseLeave = function() {}
+            if (isfun(vo.opt.rowMouseLeave)) {
+                vo.rowMouseLeave = vo.opt.rowMouseLeave
+            }
+
+            //rowDragEnter
+            vo.rowDragEnter = function() {}
+            if (isfun(vo.opt.rowDragEnter)) {
+                vo.rowDragEnter = vo.opt.rowDragEnter
+            }
+
+            //rowDragEnd
+            vo.rowDragEnd = function() {}
+            if (isfun(vo.opt.rowDragEnd)) {
+                vo.rowDragEnd = vo.opt.rowDragEnd
+            }
+
+            //rowDragMove
+            vo.rowDragMove = function() {}
+            if (isfun(vo.opt.rowDragMove)) {
+                vo.rowDragMove = vo.opt.rowDragMove
+            }
+
+            //rowDragLeave
+            vo.rowDragLeave = function() {}
+            if (isfun(vo.opt.rowDragLeave)) {
+                vo.rowDragLeave = vo.opt.rowDragLeave
+            }
+
+            //rowDragChange
+            vo.rowDragChange = function() {}
+            if (isfun(vo.opt.rowDragChange)) {
+                vo.rowDragChange = vo.opt.rowDragChange
+            }
+
+            //cellClick
+            vo.cellClick = function() {}
+            if (isfun(vo.opt.cellClick)) {
+                vo.cellClick = vo.opt.cellClick
+                vo.tableClickEnable = true
+            }
+
+            //cellDbClick
+            vo.cellDbClick = function() {}
+            if (isfun(vo.opt.cellDbClick)) {
+                vo.cellDbClick = vo.opt.cellDbClick
+                vo.tableClickEnable = true
+            }
+
+            //cellChange
+            vo.cellChange = function() {}
+            if (isfun(vo.opt.cellChange)) {
+                vo.cellChange = vo.opt.cellChange
+            }
+
+            //cellMouseEnter
+            vo.cellMouseEnter = function() {}
+            if (isfun(vo.opt.cellMouseEnter)) {
+                vo.cellMouseEnter = vo.opt.cellMouseEnter
+            }
+
+            //cellMouseLeave
+            vo.cellMouseLeave = function() {}
+            if (isfun(vo.opt.cellMouseLeave)) {
+                vo.cellMouseLeave = vo.opt.cellMouseLeave
+            }
+
+            //filterChange
+            vo.filterChange = function() {}
+            if (isfun(vo.opt.filterChange)) {
+                vo.filterChange = vo.opt.filterChange
+            }
+
+            //kpConvertKeysWhenUploadData
+            vo.kpConvertKeysWhenUploadData = {}
+            if (iseobj(vo.opt.kpConvertKeysWhenUploadData)) {
+                vo.kpConvertKeysWhenUploadData = vo.opt.kpConvertKeysWhenUploadData
+            }
+
+            //language
+            vo.language = 'en' //'en', 'zh-tw', 'zh-cn'
+            if (isestr(vo.opt.language)) {
+                vo.language = vo.opt.language
+            }
+
+            //columns, 需放在給予rows之前, 避免給予rows沒有column設定
+            vo.columns = vo.keys2columns(vo.keys)
+
+            //rows
+            vo.rows = vo.opt.rows
+
+        },
+
+        setRowsPinnTop: function(rows) {
+            // console.log('methods setRowsPinnTop', rows)
+
+            let vo = this
+
+            //check
+            if (isfun(vo.genRowsPinnTop)) {
+
+                //pinnedTopRowData
+                let pinnedTopRowData = vo.genRowsPinnTop(rows)
+                // console.log('pinnedTopRowData', pinnedTopRowData)
+
+                //update
+                // vo.getApi().setPinnedTopRowData(pinnedBottomRowData)
+                vo.getApi().setGridOption('pinnedTopRowData', pinnedTopRowData) //setPinnedTopRowData已統一改為setGridOption('pinnedTopRowData',newValue)
+
+            }
+
+        },
+
+        setRowsPinnBottom: function(rows) {
+            // console.log('methods setRowsPinnBottom', rows)
+
+            let vo = this
+
+            //check
+            if (isfun(vo.genRowsPinnBottom)) {
+
+                //pinnedBottomRowData
+                let pinnedBottomRowData = vo.genRowsPinnBottom(rows)
+                // console.log('pinnedBottomRowData', pinnedBottomRowData)
+
+                //update
+                // vo.getApi().setPinnedBottomRowData(pinnedBottomRowData)
+                vo.getApi().setGridOption('pinnedBottomRowData', pinnedBottomRowData) //setPinnedBottomRowData已統一改為setGridOption('pinnedBottomRowData',newValue)
+
+            }
+
+        },
+
+        showKeys: function(keys_new, opt = {}) {
+            // console.log('methods showKeys', keys_new, opt)
+
+            let vo = this
+
+            //applyOrder, 預設true代表依keys_new之順序調整欄位順序; false代表僅切換顯示與隱藏, 維持目前欄位順序(含使用者拖曳後之順序)
+            let applyOrder = get(opt, 'applyOrder', null)
+            if (!isbol(applyOrder)) {
+                applyOrder = true
+            }
+
+            //keys_old
+            let keys_old = cloneDeep(vo.keys)
+            // console.log('keys_old', keys_old)
+
+            //keys_nouse
+            let keys_nouse = difference(keys_old, keys_new)
+            // console.log('keys_nouse', keys_nouse)
+
+            //csn, 僅給colId與hide, 不回灌getColumnState之width、sort、pinned等其他欄位狀態
+            let csn = []
+            each(keys_new, function(key) {
+                csn.push({ colId: key, hide: false })
+            })
+            each(keys_nouse, function(key) {
+                csn.push({ colId: key, hide: true }) //未顯示column改為隱藏
+            })
+            // console.log('csn', csn)
+
+            //applyColumnState
+            //applyOrder為true時依csn調整欄位順序; 被ag-grid固定(pinned)之欄位不論順序為何, 皆固定顯示於左側區
+            vo.getApi().applyColumnState({ //gridOptions.columnApi已歸入api, 並須通過ref取得
+                state: csn,
+                applyOrder,
+            })
+
+        },
+
+        getFilters: async function() {
+            // console.log('methods getFilters')
+
+            let vo = this
+
+            //keys
+            let keys = cloneDeep(vo.keys)
+            // console.log('keys_old', keys_old)
+
+            //flts
+            let flts = []
+            await pmSeries(keys, async (key) => {
+
+                //md
+                let md = null
+                try {
+
+                    //ft
+                    // let ft = vo.getApi().getFilterInstance(key)
+                    let ft = await vo.getApi().getColumnFilterInstance(key) //ag-grid 31.1.0準備廢棄getFilterInstance, 改用getColumnFilterInstance, 此回傳為promise
+                    // console.log(key, 'ft', ft)
+
+                    //md
+                    // md = ft.getModel()
+                    md = ft.appliedModel //已改用getColumnFilterInstance, 此時直接用appliedModel為model
+                    // console.log(key, 'md', md)
+
+                }
+                catch (err) {
+                    console.log(err)
+                }
+
+                //check
+                if (iseobj(md)) {
+
+                    //push
+                    flts.push(md)
+
+                }
+
+            })
+
+            return flts
+        },
+
+        clearHeadFilterAll: async function() {
+            //console.log('methods clearHeadFilterAll')
+
+            let vo = this
+
+            //reset all filters
+            vo.getApi().setFilterModel(null)
+
+            //fire onFilterChanged
+            vo.getApi().onFilterChanged()
+
+        },
+
+        clearHeadFilter: async function(key) {
+            //console.log('methods clearHeadFilter', key)
+
+            let vo = this
+
+            //setModel
+            // ft.setModel(null)
+            await vo.getApi().setColumnFilterModel(key, null) //setModel改為setColumnFilterModel
+
+            //fire onFilterChanged
+            vo.getApi().onFilterChanged()
+
+        },
+
+        setHeadFilter: async function(key, value, type = 'contains') {
+            //console.log('methods setHeadFilter', key, value, type)
+
+            let vo = this
+
+            // let tpsText = [
+            //     'empty',
+            //     'equals',
+            //     'notEqual',
+            //     'lessThan',
+            //     'lessThanOrEqual',
+            //     'greaterThan',
+            //     'greaterThanOrEqual',
+            //     'inRange',
+            //     'contains',
+            //     'notContains',
+            //     'startsWith',
+            //     'endsWith',
+            //     'blank',
+            //     'notBlank',
+            // ]
+
+            // let tpsNumber = [
+            //     'empty',
+            //     'equals',
+            //     'notEqual',
+            //     'lessThan',
+            //     'lessThanOrEqual',
+            //     'greaterThan',
+            //     'greaterThanOrEqual',
+            //     'inRange',
+            //     'contains',
+            //     'notContains',
+            //     'startsWith',
+            //     'endsWith',
+            //     'blank',
+            //     'notBlank',
+            // ]
+
+            //m
+            let m = {
+                type,
+                // filter: cstr(value), //ag-grid 23版有修改filter判斷式, 其內使用trim故限定value需為字串
+                filter: value, //ag-grid 31.1.0已修復
+            }
+
+            //setModel
+            // ft.setModel(m)
+            await vo.getApi().setColumnFilterModel(key, m) //setModel改為setColumnFilterModel
+
+            //fire onFilterChanged
+            vo.getApi().onFilterChanged()
+
+        },
+
+        getDisplayDataKeys: function() {
+            //console.log('methods getDisplayDataKeys')
+
+            let vo = this
+
+            //cs
+            // let cs = vo.gridOptions.columnApi.getColumnState()
+            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            // console.log('cs', cs)
+
+            //show keys
+            let keys = map(filter(cs, { 'hide': false }), 'colId')
+
+            return keys
+        },
+
+        formatDataByKpCellFormat: function(data, keys) {
+            //console.log('methods formatDataByKpCellFormat')
+
+            let vo = this
+
+            //依kpCellFormat格式化各列指定keys之值, 供下載使用, 使下載與畫面一致; 無格式化函數或函數回傳null/undefined之欄維持原值
+            //直接於data各列寫回不另複製, 呼叫端(downloadData經ltdtmapping、downloadDisplayData經getDisplayData)傳入之各列皆已為新物件, 不會動到vo.rows
+            each(data, (row) => {
+                each(keys, (key) => {
+                    let funCellFormat = vo.kpCellFormat[key]
+                    if (isfun(funCellFormat)) {
+                        let v = funCellFormat(get(row, key), key, row, null)
+                        if (!isnull(v) &amp;&amp; !isundefined(v)) {
+                            row[key] = v //回傳值原樣寫回, 如何回傳由呼叫端決定, 後續ltdtkeys2mat依wsemi慣例處理各型別
+                        }
+                    }
+                })
+            })
+
+            return data
+        },
+
+        getDisplayData: function() {
+            //console.log('methods getDisplayData')
+
+            let vo = this
+
+            //rs
+            let rs = []
+            vo.getApi().forEachNodeAfterFilterAndSort((node) => {
+                rs.push(cloneDeep(node.data))
+            })
+
+            //show keys
+            let keys = vo.getDisplayDataKeys()
+
+            //ltdtmapping
+            let data = ltdtmapping(rs, keys)
+
+            return data
+        },
+
+        getNowData: function() {
+            //console.log('methods getNowData')
+
+            let vo = this
+
+            //rs
+            let rs = []
+            vo.getApi().forEachNode((node) => {
+                rs.push(cloneDeep(node.data))
+            })
+
+            //ltdtmapping
+            let data = ltdtmapping(rs, vo.keys)
+
+            return data
+        },
+
+        fitColumns: function(bDebounce = true) {
+            // console.log('methods fitColumns', bDebounce)
+
+            let vo = this
+
+            //fit
+            async function fit(w) {
+                // console.log('call fit', w)
+                try {
+
+                    //width
+                    vo.width = w
+
+                    // //delay
+                    // await delay(30)
+
+                    //api
+                    let api = vo.getApi()
+
+                    //sizeColumnsToFit, 有可能於高頻初始化與解構時, 例如切換分頁, 導致可能取不到sizeColumnsToFit
+                    let funSizeColumnsToFit = get(api, 'sizeColumnsToFit')
+                    if (isfun(funSizeColumnsToFit)) {
+                        api.sizeColumnsToFit()
+                    }
+
+                }
+                catch (err) {
+                    console.log('fitColumns error', err)
+                }
+            }
+
+            //core
+            async function core() {
+                // console.log('call core')
+
+                //ag-grid 24.1.0已能正常fit至100%, 不會因微小差距而出現水平捲軸, 故關閉先縮小再還原機制, 但縮放第3次時有些欄位header會爆版, 故還是得使用先縮小再還原機制
+
+                // //先微縮小fit
+                // await fit(99.5)
+
+                // //delay
+                // await delay(30) //不能過短, 否則先縮小再還原機制會失效, header會爆版
+
+                //還原fit, ag-grid 27.3.0已能正常fit至100%
+                await fit(100)
+
+            }
+
+            //core
+            if (bDebounce) {
+                vo.dbc(() => {
+                    core()
+                })
+            }
+            else {
+                core()
+            }
+
+        },
+
+        downloadDisplayData: function(opt = {}) {
+            //console.log('methods downloadDisplayData', opt)
+
+            let vo = this
+
+            //spread
+            let {
+                funGetKeysHook,
+                funGetLtdtHook,
+                funGetMatHook,
+                useHead,
+                useFormat,
+                fileName,
+                sheetName,
+            } = opt
+
+            //default useHead
+            if (!isbol(useHead)) {
+                useHead = false
+            }
+
+            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
+            if (!isbol(useFormat)) {
+                useFormat = true
+            }
+
+            //default fileName
+            if (!isestr(fileName)) {
+                fileName = 'data.xlsx'
+            }
+
+            //show keys
+            let keys = vo.getDisplayDataKeys()
+
+            //useKeys
+            let useKeys = cloneDeep(keys)
+            if (isfun(funGetKeysHook)) {
+                useKeys = funGetKeysHook(useKeys)
+            }
+            if (!isearr(useKeys)) {
+                useKeys = cloneDeep(keys)
+            }
+
+            //check
+            if (!isearr(useKeys)) {
+                console.log('invalid useKeys')
+                return
+            }
+
+            //data, 僅組件顯示資料
+            let data = vo.getDisplayData()
+
+            //useFormat
+            if (useFormat) {
+                //getDisplayData內已cloneDeep
+                data = vo.formatDataByKpCellFormat(data, useKeys)
+            }
+
+            //funGetLtdtHook
+            if (isfun(funGetLtdtHook)) {
+                data = funGetLtdtHook(data)
+            }
+
+            //ltdtkeys2mat
+            let mat = ltdtkeys2mat(data, useKeys) //依照funGetKeysHook回傳的keys再次提取數據
+
+            //heads
+            let heads = keys
+            if (useHead) {
+                heads = map(keys, (v) => {
+                    return vo.kpHead[v]
+                })
+            }
+
+            //concat
+            mat = concat([heads], mat)
+
+            //funGetMatHook
+            if (isfun(funGetMatHook)) {
+                mat = funGetMatHook(mat)
+            }
+
+            //downloadExcelFileFromData
+            downloadExcelFileFromData(fileName, sheetName, mat)
+                .catch((err) => {
+                    console.log(err)
+                })
+
+            return mat
+        },
+
+        downloadData: function(opt = {}) {
+            //console.log('methods downloadData', opt)
+
+            let vo = this
+
+            //spread
+            let {
+                funGetKeysHook,
+                funGetLtdtHook,
+                funGetMatHook,
+                useHead,
+                useFormat,
+                fileName,
+                sheetName,
+            } = opt
+
+            //default useHead
+            if (!isbol(useHead)) {
+                useHead = false
+            }
+
+            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
+            if (!isbol(useFormat)) {
+                useFormat = true
+            }
+
+            //default fileName
+            if (!isestr(fileName)) {
+                fileName = 'data.xlsx'
+            }
+
+            //keys
+            let keys = vo.keys
+
+            //useKeys
+            let useKeys = cloneDeep(keys)
+            if (isfun(funGetKeysHook)) {
+                useKeys = funGetKeysHook(useKeys) //依照funGetKeysHook回傳的keys再次提取數據
+            }
+            if (!isearr(useKeys)) {
+                useKeys = cloneDeep(keys)
+            }
+
+            //check
+            if (!isearr(useKeys)) {
+                console.log('invalid useKeys')
+                return
+            }
+
+            //ltdtmapping
+            let data = ltdtmapping(vo.rows, useKeys)
+
+            //useFormat
+            if (useFormat) {
+                //ltdtmapping提取vo.rows內未有cloneDeep
+                data = vo.formatDataByKpCellFormat(data, useKeys)
+            }
+
+            //funGetLtdtHook
+            if (isfun(funGetLtdtHook)) {
+                data = funGetLtdtHook(data)
+            }
+
+            //ltdtkeys2mat
+            let mat = ltdtkeys2mat(data, useKeys)
+
+            //heads
+            let heads = useKeys
+            if (useHead) {
+                heads = map(useKeys, (v) => {
+                    return vo.kpHead[v]
+                })
+            }
+
+            //concat
+            mat = concat([heads], mat)
+
+            //funGetMatHook
+            if (isfun(funGetMatHook)) {
+                mat = funGetMatHook(mat)
+            }
+
+            //downloadExcelFileFromData
+            downloadExcelFileFromData(fileName, sheetName, mat)
+                .catch((err) => {
+                    console.log(err)
+                })
+
+            return mat
+        },
+
+        /**
+         * 開啟上傳視窗讀取Excel檔案，並以其數據取代或附加於表格數據
+         *
+         * @param {Object} [opt={}] 輸入設定物件，預設{}
+         * @param {Function} [opt.beforeUpload=null] 輸入寫入表格前之數據處理函數，輸入為讀取Excel所得(已依opt.kpConvertKeysWhenUploadData轉換鍵值)之各列數據陣列，需回傳處理後之數據陣列，亦可回傳Promise，預設null
+         * @param {Number} [opt.parseSheetInd=0] 輸入讀取Excel檔案之第幾個sheet之非負整數，預設0
+         * @param {String} [opt.uploadMode='replace'] 輸入上傳模式字串，可選'replace'(取代表格數據)、'append'(附加於表格數據之後)，預設'replace'
+         * @returns {Promise} 回傳Promise，resolve回傳上傳後之表格數據陣列，reject回傳錯誤物件{ msg, err }：使用者於選檔視窗取消時msg為'no file'、err為'file selection was canceled'，此時未呼叫beforeUpload亦未變動表格數據，呼叫端可依msg判斷為取消而不提示；無法讀取Excel時msg為'can not read excel'；指定之sheet不存在時msg為'can not get data from sheet'
+         */
+        uploadData: async function(opt = {}) {
+            //console.log('methods uploadData', opt)
+
+            let vo = this
+
+            //params
+            let { beforeUpload = null, parseSheetInd = 0, uploadMode = 'replace' } = opt
+
+            //parseSheetInd
+            if (!isp0int(parseSheetInd)) {
+                parseSheetInd = 0
+            }
+            parseSheetInd = cint(parseSheetInd)
+            // console.log('parseSheetInd', parseSheetInd)
+
+            //domShowInputAndGetFilesU8Arrs
+            let d = await domShowInputAndGetFilesU8Arrs()
+            // console.log('d', d)
+
+            //check, 使用者取消選檔時wsemi以空陣列resolve(不視為錯誤), 若直接取d[0].u8a會拋TypeError, 故於此攔截並以msg='no file'標示, 呼叫端可依msg判斷為取消而不提示; 此時尚未呼叫beforeUpload亦未變動表格數據
+            if (!isearr(d)) {
+                return Promise.reject({
+                    msg: 'no file',
+                    err: 'file selection was canceled',
+                })
+            }
+
+            //取第一個檔案
+            let file = d[0]
+
+            //getDataFromExcelFileU8Arr
+            let r = await getDataFromExcelFileU8Arr(file.u8a, { fmt: 'ltdt' })
+
+            //check
+            if (!isarr(r)) {
+                return Promise.reject({
+                    msg: 'can not read excel',
+                    err: r.error,
+                })
+            }
+
+            //sh
+            let sh = null
+            try {
+                sh = r[parseSheetInd] //取第parseSheetInd個sheet
+            }
+            catch (err) {
+                return Promise.reject({
+                    msg: 'invalid parseSheetInd',
+                    err,
+                })
+            }
+            // console.log('data', sh.data)
+
+            //rows
+            let rows = []
+            try {
+                rows = sh.data
+            }
+            catch (err) {
+                return Promise.reject({
+                    msg: 'can not get data from sheet',
+                    err,
+                })
+            }
+
+            //kpConvertKeysWhenUploadData
+            if (iseobj(vo.kpConvertKeysWhenUploadData)) {
+                rows = map(rows, (row) => {
+                    let t = {}
+                    each(row, (v, k) => {
+                        let rk = k
+                        let rv = v
+                        if (haskey(vo.kpConvertKeysWhenUploadData, k)) {
+                            rk = vo.kpConvertKeysWhenUploadData[k]
+                        }
+                        t[rk] = rv
+                    })
+                    return t
+                })
+            }
+
+            //beforeUpload
+            if (isfun(beforeUpload)) {
+                let r = beforeUpload(rows)
+                if (ispm(r)) {
+                    rows = await r
+                }
+                else {
+                    rows = r
+                }
+            }
+
+            //ltdtmapping
+            rows = ltdtmapping(rows, vo.keys)
+
+            //uploadMode
+            if (uploadMode === 'replace') {
+                // rows=rows
+            }
+            else if (uploadMode === 'append') {
+
+                //rowsTemp
+                let rowsTemp = get(vo, 'opt.rows', [])
+                rowsTemp = cloneDeep(rowsTemp)
+
+                //push
+                each(rows, (v) => {
+                    rowsTemp.push(v)
+                })
+
+                //save
+                rows = rowsTemp
+
+                // //setTimeout, 變更數據後頁面會先渲染, delay後才能調捲軸, 否則太快執行會被頁面渲染蓋掉
+                // setTimeout(() => {
+
+                //     //getGridOptions
+                //     let o = vo.getGridOptions()
+
+                //     //ensureIndexVisible, scrollTo(index)
+                //     o.api.ensureIndexVisible(size(rowsTemp) - 1, 'bottom') //捲到最下
+
+                // }, 1)
+
+            }
+
+            //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
+            set(vo, `opt.rows`, rows)
+
+            // //rowsChange, rows是內部已更新數據, 直接用於回傳函數
+            // vo.rowsChange(rows) //agRowDataUpdated也會觸發並再觸發rowsChange, 故此處不觸發
+
+            return rows
+        },
+
+        triggerFilterChange: async function(from) {
+            //console.log('methods triggerFilterChange', from)
+
+            let vo = this
+
+            //filterall
+            let filterall = vo.filterall
+
+            //flts
+            let flts = await vo.getFilters()
+
+            //isFilter
+            let isFilter = isestr(filterall) || size(flts) > 0
+
+            //filterChange
+            vo.filterChange({
+                from,
+                filterall,
+                flts,
+                isFilter,
+                // ev,
+            })
+
+        },
+
+    },
+}
+&lt;/script>
+
+&lt;style>
+.CompCssWAggridVue .ag-theme-balham, .ag-header {
+    font-family: inherit;
+}
+.CompCssWAggridVue .ag-theme-balham .ag-header {
+    font-family: inherit;
+}
+.CompCssWAggridVue .ag-header-cell .ag-input-field-input, .ag-filter .ag-input-field-input {
+    transition: all 0.5s;
+    padding: 3px 8px;
+    box-shadow: inherit !important;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.CompCssWAggridVue .ag-input-field-input:focus {
+    border: 1px solid #777;
+}
+/* kpHeadFocusHighlight為false之欄不顯示焦點框; ag-grid 31之焦點框規則為.ag-cell-focus:focus-within, 儲存格內子控制項(tabindex元素、input、button)取得焦點時儲存格只符合:focus-within不符合:focus, 故須兩者並列; 保留:focus以相容舊版ag-grid */
+.CompCssWAggridVue .no-border.ag-cell:focus,
+.CompCssWAggridVue .no-border.ag-cell:focus-within{
+  border-color: transparent !important;
+  outline: none;
+}
+&lt;/style>
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Sep 24 2026 09:04:22 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+
+
+</body>
+</html>
