@@ -625,18 +625,12 @@ export default {
 
         let vo = this
 
-        //監聽dom
+        //監聽dom, 由隱藏恢復顯示時domDetect亦發出resize, 故顯示時亦會重算欄寬
         vo.de = domDetect(() => {
             return get(vo, '$refs.shell', null)
         })
         vo.de.on('resize', (s) => {
             // console.log('resize', s)
-            if (vo.autoFitColumn) {
-                vo.fitColumns()
-            }
-        })
-        vo.de.on('display', (s) => {
-            // console.log('display', s)
             if (vo.autoFitColumn) {
                 vo.fitColumns()
             }
