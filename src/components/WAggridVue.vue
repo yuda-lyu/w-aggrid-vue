@@ -59,6 +59,9 @@ import values from 'lodash-es/values.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import concat from 'lodash-es/concat.js'
 import difference from 'lodash-es/difference.js'
+import every from 'lodash-es/every.js'
+import some from 'lodash-es/some.js'
+import findIndex from 'lodash-es/findIndex.js'
 import trim from 'lodash-es/trim.js'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrHas from 'wsemi/src/arrHas.mjs'
@@ -165,6 +168,177 @@ function cvCellTextByParams(params) {
         v = get(params, 'value')
     }
     return cvCellText(v)
+}
+
+
+//downloadCore, downloadData與downloadDisplayData共用之下載流程, 兩者僅欄位keys與來源列rows不同
+//寫成模組層函數而非methods, 避免經ref外露為對外API; 不呼叫grid API, 使downloadData可於表格就緒前使用
+//同步可偵測之失敗一律拋錯且不產檔; 寫檔為非同步, 其失敗僅由wsemi記錄於console, 無法回報呼叫端
+function downloadCore(vo, name, keys, rows, opt) {
+
+    //newError, 訊息加前綴供辨識來源, 呼叫端(如w-table-vue)可能只顯示固定訊息而不顯示錯誤內容
+    let newError = (msg) => {
+        return new Error(`[w-aggrid-vue] ${name}: ${msg}`)
+    }
+
+    //checkSync, 掛鉤僅支援同步回傳, 回傳Promise時先接手其rejection避免出現未處理之rejection, 再拋錯
+    let checkSync = (r, nameHook) => {
+        if (ispm(r)) {
+            r.catch(() => {})
+            throw newError(`${nameHook} must return synchronously, Promise is not supported`)
+        }
+    }
+
+    //check opt, 非物件(例如null)視為未給予
+    if (!isobj(opt)) {
+        opt = {}
+    }
+
+    //spread
+    let {
+        funGetKeysHook,
+        funGetLtdtHook,
+        funGetMatHook,
+        useHead,
+        useFormat,
+        fileName,
+        sheetName,
+    } = opt
+
+    //check hooks, 於執行任何掛鉤前檢查; 給予非函數者拋錯(例如誤給陣列之funGetKeysHook若被略過會輸出欲排除之欄位), null、undefined、false視為未給予
+    each({ funGetKeysHook, funGetLtdtHook, funGetMatHook }, (fun, nameHook) => {
+        if (fun && !isfun(fun)) {
+            throw newError(`${nameHook} must be a function`)
+        }
+    })
+
+    //default useHead
+    if (!isbol(useHead)) {
+        useHead = false
+    }
+
+    //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
+    if (!isbol(useFormat)) {
+        useFormat = true
+    }
+
+    //default fileName, 無副檔名時補.xlsx(同ag-grid匯出), 否則瀏覽器會依無型別之Blob另給副檔名
+    if (!isestr(fileName)) {
+        fileName = 'data.xlsx'
+    }
+    if (fileName.indexOf('.') < 0) {
+        fileName += '.xlsx'
+    }
+
+    //check sheetName, 非字串或空字串交wsemi預設'data'; 其餘依Excel分頁名稱規則(同wsemi寫檔器hucre之validateSheetName)同步檢查, 否則寫檔時才失敗且無法回報
+    if (isestr(sheetName)) {
+        if (size(sheetName) > 31 || /[[\]:*?/\\]/.test(sheetName) || sheetName.startsWith(`'`) || sheetName.endsWith(`'`) || sheetName.toLowerCase() === 'history') {
+            throw newError(`invalid sheetName[${sheetName}]`)
+        }
+    }
+
+    //useKeys
+    let useKeys = cloneDeep(keys)
+    if (isfun(funGetKeysHook)) {
+        useKeys = funGetKeysHook(useKeys)
+        checkSync(useKeys, 'funGetKeysHook')
+        if (!isarr(useKeys)) {
+            throw newError('funGetKeysHook must return an array of keys')
+        }
+        if (!every(useKeys, (key) => isestr(key) || isnum(key))) {
+            throw newError('funGetKeysHook must return an array of non-empty strings')
+        }
+        useKeys = [...useKeys] //快照, 避免掛鉤保留回傳陣列之參照於後續改寫
+    }
+
+    //check
+    if (size(useKeys) === 0) {
+        throw newError('no downloadable keys')
+    }
+
+    //data, 由來源列依useKeys提取; 格式化函數之row為完整來源列且讀原值, 與畫面valueFormatter之params.data一致; 取出之值cloneDeep, 掛鉤改寫不影響表格數據
+    let data = map(rows, (row) => {
+        let r = {}
+        each(useKeys, (key) => {
+            let v = get(row, key)
+            if (useFormat) {
+                let funCellFormat = vo.kpCellFormat[key]
+                if (isfun(funCellFormat)) {
+                    let vf = funCellFormat(v, key, row, null)
+                    if (!isnull(vf) && !isundefined(vf)) {
+                        v = vf //回傳值原樣使用, 如何回傳由呼叫端決定
+                    }
+                }
+            }
+            if (isundefined(v)) {
+                v = '' //同ltdtmapping對無值之預設
+            }
+            r[key] = cloneDeep(v)
+        })
+        return r
+    })
+
+    //funGetLtdtHook, 收到格式化後之值, 可回傳空陣列(僅輸出表頭)
+    if (isfun(funGetLtdtHook)) {
+        data = funGetLtdtHook(data)
+        checkSync(data, 'funGetLtdtHook')
+        if (!isarr(data)) {
+            throw newError('funGetLtdtHook must return an array')
+        }
+        let ind = findIndex(data, (r) => {
+            return !iseobj(r)
+        })
+        if (ind >= 0) {
+            throw newError(`funGetLtdtHook must return an array of non-empty objects, invalid row[${ind}]`)
+        }
+    }
+
+    //dataOut, null轉空字串與畫面cvCellText一致, 否則ltdtkeys2mat會轉為字串'null'; 另建列物件不改動掛鉤回傳之物件
+    let dataOut = map(data, (r) => {
+        let t = { ...r }
+        each(useKeys, (key) => {
+            if (isnull(t[key])) {
+                t[key] = ''
+            }
+        })
+        return t
+    })
+
+    //ltdtkeys2mat
+    let mat = ltdtkeys2mat(dataOut, useKeys)
+
+    //heads, 一律產生新陣列避免與useKeys同址; useHead時取kpHead, 無對應者退回key(同kpHead預設)
+    let heads = map(useKeys, (key) => {
+        if (useHead && haskey(vo.kpHead, key)) {
+            return vo.kpHead[key]
+        }
+        return key
+    })
+
+    //concat
+    mat = concat([heads], mat)
+
+    //funGetMatHook, 須回傳二維陣列且至少一列非空
+    if (isfun(funGetMatHook)) {
+        mat = funGetMatHook(mat)
+        checkSync(mat, 'funGetMatHook')
+        if (!isarr(mat) || !every(mat, isarr)) {
+            throw newError('funGetMatHook must return a two-dimensional array')
+        }
+        if (!some(mat, (r) => {
+            return size(r) > 0
+        })) {
+            throw newError('funGetMatHook must return at least one non-empty row')
+        }
+    }
+
+    //downloadExcelFileFromData, 非同步寫檔, 其失敗由wsemi記錄於console
+    downloadExcelFileFromData(fileName, sheetName, mat)
+        .catch((err) => {
+            console.log(err)
+        })
+
+    return mat
 }
 
 
@@ -450,7 +624,7 @@ let HeaderSlotRenderer = {
  * @vue-prop {Object} [opt.kpCellAlignH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlignH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
- * @vue-prop {Object} [opt.kpCellFormat={}] 輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined
+ * @vue-prop {Object} [opt.kpCellFormat={}] 輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時row同為該列完整數據、params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined
  * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
  * @vue-prop {Function} [opt.rowsChange=()=>{}] 輸入rows change之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.rowClick=()=>{}] 輸入row click之觸發事件，預設為()=>{}
@@ -2371,37 +2545,15 @@ export default {
 
             let vo = this
 
-            //cs
-            // let cs = vo.gridOptions.columnApi.getColumnState()
-            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
-            // console.log('cs', cs)
+            //cols, 顯示中之欄位且依畫面欄序(左固定、中間、右固定), 同ag-grid匯出之預設欄位; getColumnState之順序不反映固定欄(kpHeadFixLeft)之位置故不使用
+            let cols = vo.getApi().getAllDisplayedColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
 
             //show keys
-            let keys = map(filter(cs, { 'hide': false }), 'colId')
-
-            return keys
-        },
-
-        formatDataByKpCellFormat: function(data, keys) {
-            //console.log('methods formatDataByKpCellFormat')
-
-            let vo = this
-
-            //依kpCellFormat格式化各列指定keys之值, 供下載使用, 使下載與畫面一致; 無格式化函數或函數回傳null/undefined之欄維持原值
-            //直接於data各列寫回不另複製, 呼叫端(downloadData經ltdtmapping、downloadDisplayData經getDisplayData)傳入之各列皆已為新物件, 不會動到vo.rows
-            each(data, (row) => {
-                each(keys, (key) => {
-                    let funCellFormat = vo.kpCellFormat[key]
-                    if (isfun(funCellFormat)) {
-                        let v = funCellFormat(get(row, key), key, row, null)
-                        if (!isnull(v) && !isundefined(v)) {
-                            row[key] = v //回傳值原樣寫回, 如何回傳由呼叫端決定, 後續ltdtkeys2mat依wsemi慣例處理各型別
-                        }
-                    }
-                })
+            let keys = map(cols, (col) => {
+                return col.getColId()
             })
 
-            return data
+            return keys
         },
 
         getDisplayData: function() {
@@ -2501,186 +2653,61 @@ export default {
 
         },
 
+        /**
+         * 下載表格顯示中之數據為Excel檔案，欄位為顯示中之欄位且依畫面欄序(含拖曳後之順序，固定於左右之欄依其畫面位置)，數據為經表頭過濾、filterall與排序後之列，不含置頂置底列；須表格存在，元件銷毀後呼叫會拋錯
+         *
+         * 選項、處理順序、回傳值與拋錯皆同downloadData，訊息前綴改為'[w-aggrid-vue] downloadDisplayData: '，另於表格不存在時拋'grid is not available'；opt.funGetKeysHook加入隱藏欄時亦輸出其值
+         *
+         * @param {Object} [opt={}] 輸入設定物件，各選項同downloadData，預設{}
+         * @returns {Array} 回傳下載內容之二維陣列，同downloadData
+         * @throws {Error} 同downloadData，另於表格不存在時拋錯
+         */
         downloadDisplayData: function(opt = {}) {
             //console.log('methods downloadDisplayData', opt)
 
             let vo = this
 
-            //spread
-            let {
-                funGetKeysHook,
-                funGetLtdtHook,
-                funGetMatHook,
-                useHead,
-                useFormat,
-                fileName,
-                sheetName,
-            } = opt
-
-            //default useHead
-            if (!isbol(useHead)) {
-                useHead = false
+            //api, 元件銷毀後取不到
+            let api = vo.getApi()
+            if (!api) {
+                throw new Error('[w-aggrid-vue] downloadDisplayData: grid is not available')
             }
 
-            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
-            if (!isbol(useFormat)) {
-                useFormat = true
-            }
-
-            //default fileName
-            if (!isestr(fileName)) {
-                fileName = 'data.xlsx'
-            }
-
-            //show keys
+            //keys, 顯示中之欄位且依畫面欄序
             let keys = vo.getDisplayDataKeys()
 
-            //useKeys
-            let useKeys = cloneDeep(keys)
-            if (isfun(funGetKeysHook)) {
-                useKeys = funGetKeysHook(useKeys)
-            }
-            if (!isearr(useKeys)) {
-                useKeys = cloneDeep(keys)
-            }
+            //rows, 經表頭過濾、filterall與排序後之列, 於執行任何掛鉤前取定
+            let rows = []
+            api.forEachNodeAfterFilterAndSort((node) => {
+                rows.push(node.data)
+            })
 
-            //check
-            if (!isearr(useKeys)) {
-                console.log('invalid useKeys')
-                return
-            }
-
-            //data, 僅組件顯示資料
-            let data = vo.getDisplayData()
-
-            //useFormat
-            if (useFormat) {
-                //getDisplayData內已cloneDeep
-                data = vo.formatDataByKpCellFormat(data, useKeys)
-            }
-
-            //funGetLtdtHook
-            if (isfun(funGetLtdtHook)) {
-                data = funGetLtdtHook(data)
-            }
-
-            //ltdtkeys2mat
-            let mat = ltdtkeys2mat(data, useKeys) //依照funGetKeysHook回傳的keys再次提取數據
-
-            //heads
-            let heads = keys
-            if (useHead) {
-                heads = map(keys, (v) => {
-                    return vo.kpHead[v]
-                })
-            }
-
-            //concat
-            mat = concat([heads], mat)
-
-            //funGetMatHook
-            if (isfun(funGetMatHook)) {
-                mat = funGetMatHook(mat)
-            }
-
-            //downloadExcelFileFromData
-            downloadExcelFileFromData(fileName, sheetName, mat)
-                .catch((err) => {
-                    console.log(err)
-                })
-
-            return mat
+            return downloadCore(vo, 'downloadDisplayData', keys, rows, opt)
         },
 
+        /**
+         * 下載表格全部數據為Excel檔案，欄位依opt.keys之順序且含隱藏欄，數據為opt.rows全部列(不受表頭過濾、filterall與排序影響)，不含置頂置底列；不需表格就緒即可呼叫，惟opt變更後須待$nextTick再呼叫，否則取得變更前之數據
+         *
+         * 處理順序：欄位keys → opt.funGetKeysHook → 依keys由各列取值並依opt.kpCellFormat格式化 → opt.funGetLtdtHook → 轉為二維陣列並加上表頭列 → opt.funGetMatHook → 觸發下載；各掛鉤皆須同步回傳，不支援Promise
+         *
+         * @param {Object} [opt={}] 輸入設定物件，非物件時視為{}，預設{}
+         * @param {Function} [opt.funGetKeysHook=null] 輸入欄位處理函數，輸入為欄位keys陣列之副本，可增刪或調整順序後回傳(可加入隱藏欄，數據列無該key時其值為空字串)，須回傳由非空字串組成之陣列，回傳空陣列代表無可下載欄位而拋錯，預設null
+         * @param {Function} [opt.funGetLtdtHook=null] 輸入數據處理函數，輸入為依keys提取之各列物件陣列(值已依useFormat格式化且為副本，無數據列時為空陣列)，須回傳物件陣列且各列皆為非空物件，回傳空陣列時僅輸出表頭列，本函數新增或修改之值不再格式化，預設null
+         * @param {Function} [opt.funGetMatHook=null] 輸入二維陣列處理函數，輸入之首列為表頭，須回傳二維陣列且至少一列非空，預設null
+         * @param {Boolean} [opt.useHead=false] 輸入表頭是否使用opt.kpHead之名稱布林值，false時使用key，opt.kpHead無對應之key仍使用key；下載檔欲上傳回表格時須另設opt.kpConvertKeysWhenUploadData為反向對照，且名稱須非空且不重複，預設false
+         * @param {Boolean} [opt.useFormat=true] 輸入是否依opt.kpCellFormat格式化各欄值布林值，true時與畫面一致(格式化函數之row為該列完整數據、params為null)，false時下載原值；下載檔欲上傳回表格時宜給false，預設true
+         * @param {String} [opt.fileName='data.xlsx'] 輸入檔名字串，無副檔名時自動補'.xlsx'，預設'data.xlsx'
+         * @param {String} [opt.sheetName='data'] 輸入分頁名稱字串，須符合Excel規則(至多31字、不含[ ] : * ? / \、首尾非單引號、非History)，非字串或空字串時為'data'，預設'data'
+         * @returns {Array} 回傳下載內容之二維陣列(opt.funGetMatHook處理後)，未經opt.funGetMatHook改寫之儲存格中null為空字串、布林值為'true'或'false'、物件與陣列為JSON字串
+         * @throws {Error} 下列情形同步拋錯且不產生檔案，訊息前綴為'[w-aggrid-vue] downloadData: '：掛鉤給予非函數('<掛鉤名> must be a function')、sheetName不符規則('invalid sheetName[...]')、掛鉤回傳Promise('<掛鉤名> must return synchronously, Promise is not supported')、opt.funGetKeysHook未回傳陣列或含非字串之key、無可下載欄位('no downloadable keys')、opt.funGetLtdtHook未回傳陣列或含非物件之列、opt.funGetMatHook未回傳二維陣列或全為空列；掛鉤與opt.kpCellFormat之函數自身拋錯時原樣拋出；觸發下載後之寫檔失敗僅記錄於console，無法回報
+         */
         downloadData: function(opt = {}) {
             //console.log('methods downloadData', opt)
 
             let vo = this
 
-            //spread
-            let {
-                funGetKeysHook,
-                funGetLtdtHook,
-                funGetMatHook,
-                useHead,
-                useFormat,
-                fileName,
-                sheetName,
-            } = opt
-
-            //default useHead
-            if (!isbol(useHead)) {
-                useHead = false
-            }
-
-            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
-            if (!isbol(useFormat)) {
-                useFormat = true
-            }
-
-            //default fileName
-            if (!isestr(fileName)) {
-                fileName = 'data.xlsx'
-            }
-
-            //keys
-            let keys = vo.keys
-
-            //useKeys
-            let useKeys = cloneDeep(keys)
-            if (isfun(funGetKeysHook)) {
-                useKeys = funGetKeysHook(useKeys) //依照funGetKeysHook回傳的keys再次提取數據
-            }
-            if (!isearr(useKeys)) {
-                useKeys = cloneDeep(keys)
-            }
-
-            //check
-            if (!isearr(useKeys)) {
-                console.log('invalid useKeys')
-                return
-            }
-
-            //ltdtmapping
-            let data = ltdtmapping(vo.rows, useKeys)
-
-            //useFormat
-            if (useFormat) {
-                //ltdtmapping提取vo.rows內未有cloneDeep
-                data = vo.formatDataByKpCellFormat(data, useKeys)
-            }
-
-            //funGetLtdtHook
-            if (isfun(funGetLtdtHook)) {
-                data = funGetLtdtHook(data)
-            }
-
-            //ltdtkeys2mat
-            let mat = ltdtkeys2mat(data, useKeys)
-
-            //heads
-            let heads = useKeys
-            if (useHead) {
-                heads = map(useKeys, (v) => {
-                    return vo.kpHead[v]
-                })
-            }
-
-            //concat
-            mat = concat([heads], mat)
-
-            //funGetMatHook
-            if (isfun(funGetMatHook)) {
-                mat = funGetMatHook(mat)
-            }
-
-            //downloadExcelFileFromData
-            downloadExcelFileFromData(fileName, sheetName, mat)
-                .catch((err) => {
-                    console.log(err)
-                })
-
-            return mat
+            //keys為opt.keys之順序且含隱藏欄, rows為全部列
+            return downloadCore(vo, 'downloadData', vo.keys, vo.rows, opt)
         },
 
         /**
