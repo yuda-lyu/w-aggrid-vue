@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>upload matrix</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <button id="btnUpload" @click="doUpload">upload</button>
+        <w-aggrid-vue id="g1" ref="g1" style="width:700px;" :opt="opt"></w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let initRows = function() {
+            return [
+                { make: 'Toyota', model: 'Celica', price: 35000 },
+                { make: 'Ford', model: 'Mondeo', price: 32000 },
+            ]
+        }
+        //w-table-vue 以參照比對之無有效數據錯誤物件(哨兵)
+        window.SENT = { msg: 'no effective data' }
+        let hb = function(f) {
+            //包一層計數
+            return function(rows) {
+                window.__log.calls++
+                return f(rows)
+            }
+        }
+        //wtWrap: 仿 w-table-vue WTableEdit.uploadData 之 beforeUpload 包裝(Promise 鏈; 未給呼叫端 hook 時去除各 key 值皆空之列; 處理後無數據即 reject 哨兵)
+        let wtWrap = function(callerHook) {
+            return function(rows) {
+                window.__log.calls++
+                return Promise.resolve()
+                    .then(function() {
+                        if (typeof callerHook === 'function') {
+                            return callerHook(rows)
+                        }
+                        return rows.filter(function(row) {
+                            return !['make', 'model', 'price'].every(function(k) {
+                                let v = row[k]
+                                return v === '' || v === null || v === undefined
+                            })
+                        })
+                    })
+                    .then(function(rs) {
+                        if (!Array.isArray(rs) || rs.length === 0) {
+                            return Promise.reject(window.SENT)
+                        }
+                        return rs
+                    })
+            }
+        }
+        //各案例之 uploadData 選項; 檔案由測試端於選檔視窗餵入
+        window.__cases = {
+            C_replace_ok: { beforeUpload: hb(function(rs) { return rs }) },
+            C_append_ok: { beforeUpload: hb(function(rs) { return rs }), uploadMode: 'append' },
+            C_cancel: { beforeUpload: hb(function(rs) { return rs }) },
+            U1_noReturn_replace: { beforeUpload: hb(function(rs) { rs.length }) },
+            U1a_noReturn_append: { beforeUpload: hb(function(rs) { rs.length }), uploadMode: 'append' },
+            U2_returnObj: { beforeUpload: hb(function() { return {} }) },
+            U3_asyncUndefined: { beforeUpload: hb(async function(rs) { rs.length }) },
+            U3b_asyncObj: { beforeUpload: hb(async function() { return {} }) },
+            U7_returnArrays: { beforeUpload: hb(function(rs) { return rs.map(function(r) { return [r.make, r.model] }) }) },
+            U7a_returnNulls: { beforeUpload: hb(function() { return [null, null] }) },
+            U7b_returnEmptyObj: { beforeUpload: hb(function() { return [{}] }) },
+            U7c_returnMixed: { beforeUpload: hb(function(rs) { return [rs[0], null] }) },
+            U4_throw: { beforeUpload: hb(function() { throw new Error('hook boom') }) },
+            U5_rejectSentinel: { beforeUpload: hb(function() { return Promise.reject(window.SENT) }) },
+            U6_returnEmpty_replace: { beforeUpload: hb(function() { return [] }) },
+            U6a_headOnly_noHook: {},
+            U6b_headOnly_append: { uploadMode: 'append' },
+            U8_cnHead_noMap: {},
+            U8a_cnHead_map: {},
+            U8b_partial: {},
+            U16_blankRow: {},
+            U15_notXlsx: {},
+            U9_sheetIndOut: { parseSheetInd: 5 },
+            U9a_sheetIndNeg: { parseSheetInd: -1 },
+            U9b_sheetIndFloat: { parseSheetInd: 1.5 },
+            U9c_sheetIndNull: { parseSheetInd: null },
+            U9d_sheetIndStr1: { parseSheetInd: '1' },
+            U10_modeTypo: { uploadMode: 'apend' },
+            U10a_modeNull: { uploadMode: null },
+            U11_optNull: null,
+            U12_hookNotFun: { beforeUpload: 'x' },
+            W_wtable_hook_headOnly: { beforeUpload: wtWrap(function(rs) { return rs }) },
+            W_wtable_default_cnHead: { beforeUpload: wtWrap(null) },
+            W_wtable_default_ok: { beforeUpload: wtWrap(null) },
+            R_optString: 'append',
+            R_optArray: ['append'],
+            R_modeEmpty: { uploadMode: '' },
+            R_modeUpper: { uploadMode: 'Append' },
+            R_sheetIndTrue: { parseSheetInd: true },
+            R_sheetIndEmptyStr: { parseSheetInd: '' },
+            R_sheetIndInfinity: { parseSheetInd: Infinity },
+            R_thenable: { beforeUpload: hb(function(rs) { return { then: function(res) { res(rs) } } }) },
+            R_thenableReject: { beforeUpload: hb(function() { return { then: function(res, rej) { rej(window.SENT) } } }) },
+            R_noteMixed_noHook: {},
+            R_noteMixed_identity: { beforeUpload: hb(function(rs) { return rs }) },
+            R_noteOnly_noHook: {},
+            R_noteOnly_identity: { beforeUpload: hb(function(rs) { return rs }) },
+            R_hookTwoEmptyObj: { beforeUpload: hb(function() { return [{}, {}] }) },
+            R_hookUndefinedVals: { beforeUpload: hb(function(rs) { return rs.map(function(r) { return { make: r.製造商 } }) }) },
+            R_allBlank_replace: {},
+            R_allBlank_append: { uploadMode: 'append' },
+            R_dateCell: {},
+            R_zeroFalse: { beforeUpload: hb(function() { return [{ make: 0, model: false, price: '' }] }) },
+            R_inplaceNoReturn: { beforeUpload: hb(function(rs) { rs.forEach(function(r) { r.make = r.make + '!' }) }) },
+            R_inplaceReturn: { beforeUpload: hb(function(rs) { rs.forEach(function(r) { r.make = r.make + '!' }); return rs }) },
+            W_wtable_identity_noteMixed: { beforeUpload: wtWrap(function(rs) { return rs }) },
+            W_wtable_default_noteMixed: { beforeUpload: wtWrap(null) },
+            W_wtable_default_allBlank: { beforeUpload: wtWrap(null) },
+            W_wtable_default_headOnly: { beforeUpload: wtWrap(null) },
+            W_wtable_identity_allBlank: { beforeUpload: wtWrap(function(rs) { return rs }) },
+            W_wtable_identity_noteOnly: { beforeUpload: wtWrap(function(rs) { return rs }) },
+            W_wtable_hook_arrays: { beforeUpload: wtWrap(function(rs) { return rs.map(function(r) { return [r.make] }) }) },
+        }
+        window.__case = null
+        window.__log = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt: {
+                        keys: ['make', 'model', 'price'],
+                        kpHeadFilterType: { make: 'text', model: 'text', price: 'num' },
+                        rows: initRows(),
+                    },
+                }
+            },
+            methods: {
+                reset: function(kpConvert) {
+                    //每案例執行前重設數據與鍵轉換
+                    this.opt = {
+                        keys: ['make', 'model', 'price'],
+                        kpHeadFilterType: { make: 'text', model: 'text', price: 'num' },
+                        rows: initRows(),
+                        kpConvertKeysWhenUploadData: kpConvert || {},
+                    }
+                },
+                doUpload: function() {
+                    //宿主之上傳鈕: 由使用者點擊觸發, 瀏覽器才允許開啟選檔視窗
+                    let opt = window.__cases[window.__case]
+                    window.__log = { calls: 0, result: 'pending' }
+                    let p
+                    try {
+                        p = this.$refs.g1.uploadData(opt)
+                    }
+                    catch (e) {
+                        window.__log.result = { settled: 'syncThrow', name: e && e.name, message: e && e.message }
+                        return
+                    }
+                    p.then(function(r) {
+                        window.__log.result = { settled: 'resolve', isArray: Array.isArray(r), value: r === undefined ? '__undefined__' : r }
+                    })
+                        .catch(function(err) {
+                            window.__log.result = {
+                                settled: 'reject',
+                                isSentinel: err === window.SENT,
+                                name: err && err.name,
+                                message: err && err.message,
+                                raw: err && !err.name ? JSON.stringify(err) : undefined,
+                            }
+                        })
+                },
+            },
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>download extended</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <w-aggrid-vue id="t1" ref="t1" style="width:900px;" :height="120" :opt="opt1"></w-aggrid-vue>
+        <w-aggrid-vue id="t2" ref="t2" style="width:900px;" :height="120" :opt="opt2"></w-aggrid-vue>
+        <w-aggrid-vue id="t4" ref="t4" style="width:900px;" :height="120" :opt="opt4"></w-aggrid-vue>
+        <w-aggrid-vue id="t6" ref="t6" style="width:900px;" :height="330" :opt="opt6"></w-aggrid-vue>
+        <w-aggrid-vue id="t7" ref="t7" style="width:900px;" :height="120" :opt="opt7"></w-aggrid-vue>
+        <w-aggrid-vue id="t8" ref="t8" style="width:900px;" :height="120" :opt="opt8"></w-aggrid-vue>
+        <w-aggrid-vue id="t9" ref="t9" style="width:900px;" :height="120" :opt="opt9" :filterall="'Ford'"></w-aggrid-vue>
+        <w-aggrid-vue id="t10" ref="t10" style="width:900px;" :height="150" :opt="opt10"></w-aggrid-vue>
+        <w-aggrid-vue id="t11" ref="t11" style="width:900px;" :height="120" :opt="opt11"></w-aggrid-vue>
+        <w-aggrid-vue id="t13" ref="t13" style="width:900px;" :height="120" :opt="opt13"></w-aggrid-vue>
+        <w-aggrid-vue id="t14" ref="t14" style="width:900px;" :height="120" :opt="opt14"></w-aggrid-vue>
+        <w-aggrid-vue id="t15" ref="t15" style="width:900px;" :height="120" :opt="opt15"></w-aggrid-vue>
+        <w-aggrid-vue id="t16" ref="t16" style="width:900px;" :height="120" :opt="opt16"></w-aggrid-vue>
+        <w-aggrid-vue id="t16e" ref="t16e" style="width:900px;" :height="120" :opt="opt16e"></w-aggrid-vue>
+        <w-aggrid-vue id="t17" ref="t17" style="width:900px;" :height="120" :opt="opt17"></w-aggrid-vue>
+        <w-aggrid-vue id="t18" ref="t18" style="width:900px;" :height="120" :opt="opt18"></w-aggrid-vue>
+        <w-aggrid-vue id="t19" ref="t19" style="width:900px;" :height="120" :opt="opt19"></w-aggrid-vue>
+        <div id="dyn"></div>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let keys = ['id', 'make', 'model', 'price']
+        let kpHead = { id: '主鍵', make: '製造商', model: '型號', price: '價格' }
+        let ft = { id: 'text', make: 'text', model: 'text', price: 'num' }
+        let rows = function() {
+            return [
+                { id: 'r1', make: 'Toyota', model: 'Celica', price: 35000 },
+                { id: 'r2', make: 'Ford', model: 'Mondeo', price: 32000 },
+            ]
+        }
+        let exclMake = function(ks) { return ks.filter(function(k) { return k !== 'make' }) }
+        //R_constKeys: 掛鉤回傳呼叫端持有之常數陣列, mat 掛鉤改寫表頭列
+        window.EXPORT_KEYS = ['make', 'model']
+        let constKeysOpt = {
+            funGetKeysHook: function() { return window.EXPORT_KEYS },
+            funGetMatHook: function(mat) { mat[0][0] = 'MAKE(改)'; return mat },
+        }
+        let postConstKeys = function() { return 'post: EXPORT_KEYS=' + JSON.stringify(window.EXPORT_KEYS) }
+        let wtKeysHook = function(ks) {
+            //w-table-vue WTableEdit.downloadData 之呼叫形態: 以 pull 就地移除 id 後回傳同一陣列
+            let i = ks.indexOf('id')
+            if (i >= 0) {
+                ks.splice(i, 1)
+            }
+            return ks
+        }
+        //manyKeys: 原 4 欄後接 c4 起之欄位至共 n 欄; fillMat: 表頭以外之空白格填 v<欄索引>; widenMat: 各列補欄至共 n 欄(表頭 c<j>、數據 v<j>)
+        let manyKeys = function(n) {
+            let a = keys.slice()
+            for (let i = a.length; i < n; i++) {
+                a.push('c' + i)
+            }
+            return a
+        }
+        let fillMat = function(mat) {
+            return mat.map(function(row, i) { return i === 0 ? row : row.map(function(v, j) { return v === '' ? 'v' + j : v }) })
+        }
+        let widenMat = function(n, onlyRow) {
+            return function(mat) {
+                return mat.map(function(row, i) {
+                    if (onlyRow !== undefined && i !== onlyRow) {
+                        return row
+                    }
+                    let r = row.slice()
+                    for (let j = row.length; j < n; j++) {
+                        r.push(i === 0 ? 'c' + j : 'v' + j)
+                    }
+                    return r
+                })
+            }
+        }
+        //tallMat: 表頭後接同一個空白列至共 n 列(含表頭), 記憶體只需一列
+        let tallMat = function(n) {
+            return function(mat) {
+                let r = mat[0].map(function() { return '' })
+                let m = [mat[0]]
+                for (let i = 1; i < n; i++) {
+                    m.push(r)
+                }
+                return m
+            }
+        }
+        //setCell: 把第 1 列 make 欄之值換為給定之值
+        let setCell = function(v) {
+            return function(mat) {
+                mat[1][1] = v
+                return mat
+            }
+        }
+        //動態元件: 掛載後同一 tick 呼叫(早於 gridReady); 與已 $destroy 之元件
+        function mountDyn(opt) {
+            let el = document.createElement('div')
+            document.getElementById('dyn').appendChild(el)
+            let vm = new Vue({ render: function(h) { return h('w-aggrid-vue', { ref: 'x', props: { opt: opt }, style: 'width:600px;' }) } }).$mount(el)
+            return vm.$refs.x
+        }
+        //各案例: [目標(ref 名或函數), 方法, 選項, post(r, comp) 於呼叫後同步執行並回傳附註, 呼叫次數(預設 1)]
+        window.__cases = {
+            V_types_raw: ['t6', 'downloadData', {}],
+            V_types_disp: ['t6', 'downloadDisplayData', {}],
+            S_sheetSlash: ['t1', 'downloadData', { sheetName: '2026/10' }],
+            S_sheet32: ['t1', 'downloadData', { sheetName: 'x'.repeat(32) }],
+            S_sheetApos: ['t1', 'downloadData', { sheetName: "'q3" }],
+            S_sheetHistory: ['t1', 'downloadData', { sheetName: 'History' }],
+            S_sheetValid: ['t1', 'downloadData', { sheetName: '報表2026-10' }],
+            S_sheetEmpty: ['t1', 'downloadData', { sheetName: '' }],
+            S_sheetEmoji16: ['t1', 'downloadData', { sheetName: '😀'.repeat(16) }],
+            S_sheetEmoji16_disp: ['t1', 'downloadDisplayData', { sheetName: '😀'.repeat(16) }],
+            S_sheetEmoji15: ['t1', 'downloadData', { sheetName: '😀'.repeat(15) }],
+            S_sheetExtB16: ['t1', 'downloadData', { sheetName: '𠀀'.repeat(16) }],
+            S_sheetUnits31: ['t1', 'downloadData', { sheetName: 'x'.repeat(29) + '😀' }],
+            S_sheetUnits32: ['t1', 'downloadData', { sheetName: 'x'.repeat(30) + '😀' }],
+            C_keys16384: ['t1', 'downloadData', { funGetKeysHook: function() { return manyKeys(16384) }, funGetMatHook: fillMat }],
+            C_keys16385: ['t1', 'downloadData', { funGetKeysHook: function() { return manyKeys(16385) } }],
+            C_keys16385_disp: ['t1', 'downloadDisplayData', { funGetKeysHook: function() { return manyKeys(16385) } }],
+            C_mat16384: ['t1', 'downloadData', { funGetMatHook: widenMat(16384) }],
+            C_mat16385: ['t1', 'downloadData', { funGetMatHook: widenMat(16385) }],
+            C_matRow1Wide: ['t1', 'downloadData', { funGetMatHook: widenMat(16385, 1) }],
+            C_keysWideMatTrim: ['t1', 'downloadData', { funGetKeysHook: function() { return manyKeys(16385) }, funGetMatHook: function(mat) { return mat.map(function(r) { return r.slice(0, 3) }) } }],
+            C_rows1048576: ['t1', 'downloadData', { funGetMatHook: tallMat(1048576) }],
+            C_rows1048577: ['t1', 'downloadData', { funGetMatHook: tallMat(1048577) }],
+            C_rows1048577_disp: ['t1', 'downloadDisplayData', { funGetMatHook: tallMat(1048577) }],
+            S_sheetBoxed: ['t1', 'downloadData', { sheetName: new String('boxed') }],
+            M_cellStyleBad: ['t1', 'downloadData', { funGetMatHook: setCell({ value: 'x', style: 'bold' }) }],
+            M_cellObject: ['t1', 'downloadData', { funGetMatHook: setCell({ a: 1 }) }],
+            H_addHidden: ['t4', 'downloadDisplayData', { funGetKeysHook: function(ks) { return ['id'].concat(ks) } }],
+            H_hiddenOnly: ['t4', 'downloadDisplayData', { funGetKeysHook: function() { return ['id'] } }],
+            H_allHiddenAdd: ['t2', 'downloadDisplayData', { funGetKeysHook: function() { return ['make'] } }],
+            P_pinnedLeft_disp: ['t7', 'downloadDisplayData', {}],
+            P_pinnedLeft_raw: ['t7', 'downloadData', {}],
+            P_moved_disp: ['t8', 'downloadDisplayData', {}],
+            Q_sort_disp: ['t8', 'downloadDisplayData', {}],
+            Q_sort_raw: ['t8', 'downloadData', {}],
+            Q_filterall_disp: ['t9', 'downloadDisplayData', {}],
+            Q_filterall_raw: ['t9', 'downloadData', {}],
+            Q_pinnedRows_disp: ['t10', 'downloadDisplayData', {}],
+            Q_pinnedRows_raw: ['t10', 'downloadData', {}],
+            Q_filteredToZero_disp: ['t8', 'downloadDisplayData', { useHead: true }],
+            R_retMutate: ['t1', 'downloadData', {}, function(r) { r[1][1] = 'MUTATED'; r.push(['ADDED']); return 'post: 呼叫後同步改寫回傳值 r[1][1] 並 push 一列' }],
+            R_nestedRaw: ['t11', 'downloadData', { funGetLtdtHook: function(ltdt) { ltdt.forEach(function(r) { if (r.meta && typeof r.meta === 'object') { r.meta.n = 999 } }); return ltdt } }, function(r, comp) { return 'post: 呼叫後 vo.rows[0].meta.n=' + comp.rows[0].meta.n }],
+            R_nestedDisp: ['t11', 'downloadDisplayData', { funGetLtdtHook: function(ltdt) { ltdt.forEach(function(r) { if (r.meta && typeof r.meta === 'object') { r.meta.n = 999 } }); return ltdt } }, function(r, comp) { return 'post: 呼叫後 vo.rows[0].meta.n=' + comp.rows[0].meta.n }],
+            R_constKeys1: ['t1', 'downloadData', constKeysOpt, postConstKeys],
+            R_constKeys2: ['t1', 'downloadData', constKeysOpt, postConstKeys, 2],
+            R_constKeysDisp1: ['t1', 'downloadDisplayData', constKeysOpt, postConstKeys],
+            R_constKeysDisp2: ['t1', 'downloadDisplayData', constKeysOpt, postConstKeys, 2],
+            L_keysAlias: ['t1', 'downloadData', { funGetKeysHook: function() { return window.KA }, funGetLtdtHook: function(ltdt) { window.KA.length = 0; return ltdt } }],
+            D_hideViaHook: ['t17', 'downloadDisplayData', { funGetKeysHook: function(ks) { window.__vm.$refs.t17.getApi().setColumnsVisible(['id', 'make', 'model', 'price'], false); return ks } }],
+            F_rowDep_raw_exclMake: ['t13', 'downloadData', { funGetKeysHook: exclMake }],
+            F_rowDep_disp_exclMake: ['t13', 'downloadDisplayData', { funGetKeysHook: exclMake }],
+            F_rowDep_raw: ['t13', 'downloadData', {}],
+            F_order_raw: ['t14', 'downloadData', {}],
+            F_order_raw_reorder: ['t14', 'downloadData', { funGetKeysHook: function() { return ['id', 'price', 'model'] } }],
+            F_throw_raw: ['t15', 'downloadData', {}],
+            K_dupFmt: ['t19', 'downloadData', { funGetKeysHook: function() { return ['price', 'price'] } }],
+            L_addRowsNoSource: ['t18', 'downloadData', { funGetLtdtHook: function() { return [{ id: 'new', make: 'X', model: 'Y', price: 5 }] } }],
+            O_keysHookArray: ['t1', 'downloadData', { funGetKeysHook: ['make'] }],
+            O_optNull: ['t1', 'downloadData', null],
+            O_useHeadStr: ['t1', 'downloadData', { useHead: 'true' }],
+            O_hookFalse: ['t1', 'downloadData', { funGetLtdtHook: false }],
+            K_unknownHead: ['t1', 'downloadData', { funGetKeysHook: function() { return ['make', 'foo'] }, useHead: true }],
+            K_asyncKeys: ['t1', 'downloadData', { funGetKeysHook: async function(ks) { return ks } }],
+            K_permute_disp: ['t1', 'downloadDisplayData', { funGetKeysHook: function(ks) { return ks.slice().reverse() }, useHead: true }],
+            K_permute_raw: ['t1', 'downloadData', { funGetKeysHook: function(ks) { return ks.slice().reverse() }, useHead: true }],
+            K_badElem: ['t1', 'downloadData', { funGetKeysHook: function() { return [null, 'make'] } }],
+            K_emptyStr: ['t1', 'downloadData', { funGetKeysHook: function() { return [''] } }],
+            K_rejected: ['t1', 'downloadData', { funGetKeysHook: function() { return Promise.reject(new Error('keys async denied')) } }],
+            L_rejected: ['t1', 'downloadData', { funGetLtdtHook: function() { return Promise.reject(new Error('ltdt async denied')) } }],
+            M_rejected: ['t1', 'downloadData', { funGetMatHook: function() { return Promise.reject(new Error('mat async denied')) } }],
+            L_mixedRows: ['t1', 'downloadData', { funGetLtdtHook: function(ltdt) { return [ltdt[0], {}] } }],
+            L_singleEmpty: ['t1', 'downloadData', { funGetLtdtHook: function() { return [{}] } }],
+            M_1d: ['t1', 'downloadData', { funGetMatHook: function() { return ['a', 'b'] } }],
+            M_ltdt: ['t1', 'downloadData', { funGetMatHook: function() { return [{ x: 1, y: 2 }] } }],
+            M_nullRow: ['t1', 'downloadData', { funGetMatHook: function(mat) { return mat.concat([null]) } }],
+            M_emptyRows: ['t1', 'downloadData', { funGetMatHook: function() { return [[], []] } }],
+            M_oneBlankRow: ['t1', 'downloadData', { funGetMatHook: function() { return [[]] } }],
+            N_preReady_disp: [function() { return mountDyn({ keys: keys, rows: rows() }) }, 'downloadDisplayData', {}],
+            N_preReady_raw: [function() { return mountDyn({ keys: keys, rows: rows() }) }, 'downloadData', {}],
+            N_noOpt_raw: [function() { return mountDyn(null) }, 'downloadData', {}],
+            N_noOpt_disp: [function() { return mountDyn(null) }, 'downloadDisplayData', {}],
+            N_destroyed_disp: [function() { let c = mountDyn({ keys: keys, rows: rows() }); c.$parent.$destroy(); return c }, 'downloadDisplayData', {}],
+            N_destroyed_raw: [function() { let c = mountDyn({ keys: keys, rows: rows() }); c.$parent.$destroy(); return c }, 'downloadData', {}],
+            W_wtable_raw: ['t1', 'downloadData', { funGetKeysHook: wtKeysHook, funGetLtdtHook: null, funGetMatHook: null, useHead: false, useFormat: true, fileName: 'data.xlsx', sheetName: 'data' }],
+            W_wtable_disp: ['t1', 'downloadDisplayData', { funGetKeysHook: wtKeysHook, funGetLtdtHook: null, funGetMatHook: null, useHead: true, useFormat: true, fileName: 'data.xlsx', sheetName: 'data' }],
+            W_wtable_singleCol: ['t16', 'downloadData', { funGetKeysHook: wtKeysHook, funGetLtdtHook: null, funGetMatHook: null }],
+            W_wtable_emptyHead: ['t16e', 'downloadData', { funGetKeysHook: function(ks) { return ks }, funGetLtdtHook: null, funGetMatHook: null, useHead: true }],
+            Fn_noExt: ['t1', 'downloadData', { fileName: 'report' }],
+            G_getDisplayData_pinned: ['t7', 'getDisplayData', undefined],
+            G_getDisplayData_plain: ['t1', 'getDisplayData', undefined],
+            G_keys_pinned: ['t7', 'getDisplayDataKeys', undefined],
+        }
+        window.KA = ['make', 'model']
+        window.__case = null
+        window.__out = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt1: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows() },
+                    opt2: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpHeadHide: { id: true, make: true, model: true, price: true } },
+                    opt4: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpHeadHide: { id: true } },
+                    //t6: 各型別之值
+                    opt6: {
+                        keys: ['id', 'v'],
+                        rows: [
+                            { id: 'null', v: null },
+                            { id: 'undef', v: undefined },
+                            { id: 'nan', v: NaN },
+                            { id: 'inf', v: Infinity },
+                            { id: 'bool', v: true },
+                            { id: 'obj', v: { a: 1 } },
+                            { id: 'arr', v: [1, 2] },
+                            { id: 'date', v: new Date(Date.UTC(2026, 0, 2)) },
+                            { id: 'empty', v: '' },
+                            { id: 'zero', v: 0 },
+                        ],
+                    },
+                    //t7: price 固定於左(kpHeadFixLeft), 畫面欄序為 price,id,make,model
+                    opt7: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpHeadFixLeft: { price: true } },
+                    //t8: 供移欄、排序與表頭過濾
+                    opt8: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows() },
+                    //t9: filterall='Ford'
+                    opt9: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows() },
+                    //t10: 置底合計列
+                    opt10: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), genRowsPinnBottom: function(rs) { return [{ id: 'sum', make: '', model: '', price: rs.reduce(function(s, r) { return s + r.price }, 0) }] } },
+                    //t11: 巢狀物件值
+                    opt11: { keys: ['id', 'meta'], rows: [{ id: 'r1', meta: { n: 1 } }, { id: 'r2', meta: { n: 2 } }] },
+                    //t13: price 之格式化依賴同列 make
+                    opt13: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpCellFormat: { price: function(v, k, row) { return row.make + ':' + v } } },
+                    //t14: model 之格式化讀取同列 price, price 本身亦有格式化
+                    opt14: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpCellFormat: { price: function(v) { return Number(v).toFixed(1) }, model: function(v, k, row) { return v + '@' + row.price } } },
+                    //t15: 下載時(params 為 null)格式化函數拋錯
+                    opt15: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpCellFormat: { price: function(v, k, row, params) { if (params === null) { throw new Error('fmt boom') } return v } } },
+                    //t16: 單欄表格(移除唯一一欄); t16e: 無數據列(表頭範本)
+                    opt16: { keys: ['id'], kpHead: { id: '主鍵' }, rows: [{ id: 'r1' }, { id: 'r2' }] },
+                    opt16e: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: [] },
+                    //t17: 掛鉤內隱藏全部欄位
+                    opt17: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows() },
+                    //t18: 無數據列且 price 有格式化(掛鉤補列不再格式化)
+                    opt18: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: [], kpCellFormat: { price: function(v) { return Number(v).toFixed(1) } } },
+                    //t19: 非冪等格式化(重複 key 不得重複套用)
+                    opt19: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpCellFormat: { price: function(v) { return Number(v) + 1 } } },
+                }
+            },
+            methods: {
+                run: function() {
+                    //宿主之按鈕處理函數: 依選定案例呼叫元件方法(可連續呼叫數次), 記錄最後一次之回傳值或拋錯
+                    let c = window.__cases[window.__case]
+                    let out = { threw: false }
+                    try {
+                        let comp = typeof c[0] === 'function' ? c[0]() : this.$refs[c[0]]
+                        let times = c[4] || 1
+                        let r
+                        for (let i = 0; i < times; i++) {
+                            r = comp[c[1]](c[2])
+                        }
+                        out.retType = r === undefined ? 'undefined' : (Array.isArray(r) ? 'array' : typeof r)
+                        //百萬列之回傳值只記列數, 不序列化
+                        out.retLen = Array.isArray(r) ? r.length : null
+                        out.ret = Array.isArray(r) && r.length <= 20000 ? JSON.parse(JSON.stringify(r)) : null
+                        if (c[3]) {
+                            out.post = c[3](r, comp)
+                        }
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = String(e && e.message ? e.message : e)
+                    }
+                    window.__out = out
+                },
+            },
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>object cells</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:20px;">
+    <div id="app">
+        <w-aggrid-vue id="g1" style="width:1800px;" :opt="opt"></w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let circ = { a: 1 }
+        circ.self = circ
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt: {
+                        keys: ['k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8'],
+                        kpHeadFilterType: { k1: 'text', k2: 'text', k3: 'text', k4: 'text', k5: 'text', k6: 'text', k7: 'text', k8: 'text' },
+                        rows: [
+                            { k1: 'str', k2: 12.5, k3: true, k4: null, k5: undefined, k6: { mode: 'diff', origin: 1, new: 2 }, k7: [1, 'a', { b: 2 }], k8: circ },
+                            { k1: '', k2: 0, k3: false, k4: null, k5: undefined, k6: {}, k7: [], k8: circ },
+                        ],
+                    },
+                }
+            },
+        })
+    </script>
+</body>
+</html>

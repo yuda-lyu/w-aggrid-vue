@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>filters</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <button id="btnReloadKeys6" @click="reloadKeys6">t6 重新載入(keys 為新陣列)</button>
+        <button id="btnLoad10" @click="load10">t10 載入數據</button>
+        <div>全表搜尋(t5): <input id="fa5" v-model="fa5"></div>
+        <div>全表搜尋(t6): <input id="fa6" v-model="fa6"></div>
+        <div>t5: id 關閉過濾</div>
+        <w-aggrid-vue id="t5" ref="t5" style="width:900px;" :height="140" :opt="opt5" :filterall="fa5"></w-aggrid-vue>
+        <div>t6: 全部欄位可過濾</div>
+        <w-aggrid-vue id="t6" ref="t6" style="width:900px;" :height="140" :opt="opt6" :filterall="fa6"></w-aggrid-vue>
+        <div>t7: 全部欄位關閉過濾(defHeadFilter false)</div>
+        <w-aggrid-vue id="t7" ref="t7" style="width:900px;" :height="140" :opt="opt7"></w-aggrid-vue>
+        <div>t8: model 隱藏</div>
+        <w-aggrid-vue id="t8" ref="t8" style="width:900px;" :height="140" :opt="opt8"></w-aggrid-vue>
+        <div>t9: 全部欄位可過濾, filterChange 之回呼內取顯示數據</div>
+        <w-aggrid-vue id="t9" ref="t9" style="width:900px;" :height="140" :opt="opt9"></w-aggrid-vue>
+        <div>t10: 建立時無數據列</div>
+        <w-aggrid-vue id="t10" ref="t10" style="width:900px;" :height="140" :opt="opt10"></w-aggrid-vue>
+        <div>t12: id 隱藏且關閉過濾</div>
+        <w-aggrid-vue id="t12" ref="t12" style="width:900px;" :height="140" :opt="opt12"></w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let keys = ['id', 'make', 'model', 'price']
+        let ft = { id: 'text', make: 'text', model: 'text', price: 'num' }
+        let rows = function() {
+            return [
+                { id: 'r1', make: 'Toyota', model: 'Celica', price: 35000 },
+                { id: 'r2', make: 'Ford', model: 'Mondeo', price: 32000 },
+            ]
+        }
+        //filterChange 事件之紀錄(各表一份)
+        window.__fc = { t5: [], t6: [], t9: [], t10: [] }
+        let rec = function(k) {
+            return function(msg) {
+                window.__fc[k].push(JSON.parse(JSON.stringify(msg)))
+            }
+        }
+        //各案例: [表格 ref, 方法, 參數陣列]
+        window.__cases = {
+            FL_getFilters_filterOff: ['t5', 'getFilters', []],
+            FL_getFilters_allOn: ['t6', 'getFilters', []],
+            FL_getFilters_active: ['t6', 'getFilters', []],
+            FL_getFilters_filterOffActive: ['t5', 'getFilters', []],
+            FL_getFilters_allOff: ['t7', 'getFilters', []],
+            FL_getFilters_hiddenActive: ['t8', 'getFilters', []],
+            FL_getFilters_hiddenOff: ['t12', 'getFilters', []],
+            FL_getFilters_compound: ['t6', 'getFilters', []],
+            FL_getFilters_multi: ['t6', 'getFilters', []],
+            FL_clear_filterOff: ['t5', 'clearHeadFilter', ['id']],
+            FL_set_filterOff: ['t5', 'setHeadFilter', ['id', 'r1']],
+            FL_set_unknown: ['t5', 'setHeadFilter', ['zzz', 'r1']],
+            FL_clear_unknown: ['t5', 'clearHeadFilter', ['zzz']],
+            FL_set_emptyTable: ['t10', 'setHeadFilter', ['make', 'Toy']],
+            FC_clearAll_t6: ['t6', 'clearHeadFilterAll', []],
+        }
+        window.__case = null
+        window.__out = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                let vm = this
+                return {
+                    fa5: '',
+                    fa6: '',
+                    opt5: { keys: keys, rows: rows(), kpHeadFilter: { id: false }, kpHeadFilterType: ft, filterChange: rec('t5') },
+                    opt6: { keys: keys, rows: rows(), kpHeadFilterType: ft, filterChange: rec('t6') },
+                    opt7: { keys: keys, rows: rows(), defHeadFilter: false, kpHeadFilterType: ft },
+                    opt8: { keys: keys, rows: rows(), kpHeadHide: { model: true }, kpHeadFilterType: ft },
+                    opt9: {
+                        keys: keys,
+                        rows: rows(),
+                        kpHeadFilterType: ft,
+                        filterChange: function(msg) {
+                            //回呼內取顯示數據之列數(呼叫端常於事件中讀取過濾後之數據)
+                            window.__fc.t9.push({ from: msg.from, nDisp: vm.$refs.t9.getDisplayData().length })
+                        },
+                    },
+                    opt10: { keys: keys, rows: [], kpHeadFilterType: ft, filterChange: rec('t10') },
+                    opt12: { keys: keys, rows: rows(), kpHeadHide: { id: true }, kpHeadFilter: { id: false }, kpHeadFilterType: ft },
+                }
+            },
+            methods: {
+                run: async function() {
+                    //宿主之按鈕處理函數: 呼叫元件方法並等其 Promise 結束, 記錄結果或錯誤
+                    let c = window.__cases[window.__case]
+                    let out = { threw: false }
+                    try {
+                        let comp = this.$refs[c[0]]
+                        let r = await comp[c[1]].apply(comp, c[2])
+                        out.ret = r === undefined ? '__undefined__' : JSON.parse(JSON.stringify(r))
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = String(e && e.message ? e.message : e)
+                    }
+                    window.__out = out
+                },
+                reloadKeys6: function() {
+                    //宿主重新載入設定: keys 內容相同但為新陣列, 數據列不變
+                    this.opt6 = Object.assign({}, this.opt6, { keys: keys.slice() })
+                },
+                load10: function() {
+                    //宿主於表格建立後才取得數據
+                    this.opt10 = Object.assign({}, this.opt10, { rows: rows() })
+                },
+            },
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>focus highlight</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <w-aggrid-vue id="g1" style="width:900px;" :opt="opt">
+            <template v-slot:cell-render="props">
+                <div v-if="props.key==='ctrl'" :tabindex="0" class="inner-ctrl" style="display:inline-block; padding:2px 8px; border:1px solid #999;">{{ props.value }}</div>
+                <button v-else-if="props.key==='btn'" class="inner-btn">{{ props.value }}</button>
+                <span v-else>{{ props.value }}</span>
+            </template>
+        </w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt: {
+                        keys: ['plain', 'ctrl', 'btn', 'keep'],
+                        kpHeadFilterType: { plain: 'text', ctrl: 'text', btn: 'text', keep: 'text' },
+                        //plain: no-border 無子控制項; ctrl: no-border 內含 tabindex div; btn: no-border 內含 button; keep: 預設 true 之對照
+                        kpHeadFocusHighlight: { plain: false, ctrl: false, btn: false },
+                        rows: [
+                            { plain: 'p1', ctrl: 'OR', btn: 'go', keep: 'k1' },
+                            { plain: 'p2', ctrl: 'AND', btn: 'go', keep: 'k2' },
+                        ],
+                    },
+                }
+            },
+        })
+    </script>
+</body>
+</html>

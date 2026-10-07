@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>kpCellFormat</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <div>g1: kpCellFormat, no slot</div>
+        <w-aggrid-vue id="g1" ref="g1" style="width:1000px;" :opt="opt1"></w-aggrid-vue>
+
+        <div>g2: kpCellFormat + cell-tooltip only (fallback path)</div>
+        <w-aggrid-vue id="g2" style="width:1000px;" :opt="opt2">
+            <template v-slot:cell-tooltip="props">
+                <div>tip:{{ props.valueFormatted }}</div>
+            </template>
+        </w-aggrid-vue>
+
+        <div>g3: kpCellFormat + cell-render slot (gets value & valueFormatted)</div>
+        <w-aggrid-vue id="g3" style="width:1000px;" :opt="opt3">
+            <template v-slot:cell-render="props">
+                <span v-if="props.key==='price'">{{ props.value }}|{{ props.valueFormatted }}</span>
+                <span v-else>{{ props.valueFormatted === undefined || props.valueFormatted === null ? props.value : props.valueFormatted }}</span>
+            </template>
+        </w-aggrid-vue>
+
+        <button id="btnDl" @click="dl">download</button>
+        <button id="btnDlRaw" @click="dlRaw">download raw</button>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let mkRows = function() {
+            return [
+                { make: 'Toyota', model: 'Celica', price: 35000.129, note: null },
+                { make: 'Ford', model: 'Mondeo', price: 32000, note: 'x' },
+                { make: 'Porsche', model: 'Boxter', price: 72000.5, note: undefined },
+            ]
+        }
+        let fmt = {
+            make: function(v) { return String(v).toUpperCase() },
+            price: function(v, key, row, params) { return Number(v).toFixed(1) },
+            note: function(v) { return null }, //回傳 null 代表不格式化
+        }
+        let mkOpt = function() {
+            return {
+                keys: ['make', 'model', 'price', 'note'],
+                kpHeadFilterType: { make: 'text', model: 'text', price: 'num', note: 'text' },
+                kpCellFormat: fmt,
+                rows: mkRows(),
+            }
+        }
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return { opt1: mkOpt(), opt2: mkOpt(), opt3: mkOpt() }
+            },
+            methods: {
+                dl: function() {
+                    this.$refs.g1.downloadData({ fileName: 'fmt.xlsx' })
+                },
+                dlRaw: function() {
+                    this.$refs.g1.downloadData({ fileName: 'raw.xlsx', useFormat: false })
+                },
+            },
+        })
+    </script>
+</body>
+</html>

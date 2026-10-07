@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>pasteText</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <div>p1: 一般</div>
+        <w-aggrid-vue id="p1" ref="p1" style="width:600px;" :height="120" :opt="opt1"></w-aggrid-vue>
+        <div>p2: 供排序</div>
+        <w-aggrid-vue id="p2" ref="p2" style="width:600px;" :height="120" :opt="opt2"></w-aggrid-vue>
+        <div>p3: b 隱藏</div>
+        <w-aggrid-vue id="p3" ref="p3" style="width:600px;" :height="120" :opt="opt3"></w-aggrid-vue>
+        <div>p4: b 不可編輯</div>
+        <w-aggrid-vue id="p4" ref="p4" style="width:600px;" :height="120" :opt="opt4"></w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let mk = function(ext) {
+            return Object.assign({
+                keys: ['a', 'b', 'c'],
+                kpHeadFilterType: { a: 'text', b: 'text', c: 'text' },
+                kpCellEditable: { a: true, b: true, c: true },
+                rows: [{ a: 'a0', b: 'b0', c: 'c0' }, { a: 'a1', b: 'b1', c: 'c1' }],
+            }, ext || {})
+        }
+        //各案例: [表格 ref, 貼上之文字, 起始之畫面列索引, 起始欄 key]
+        window.__cases = {
+            PT1_plain: ['p1', '1\t2\n3\t4', 0, 'a'],
+            PT2_sorted: ['p2', '9', 0, 'a'],
+            PT3_hiddenCol: ['p3', '1\t2', 0, 'a'],
+            PT4_readonlyCol: ['p4', '1\t2\t3', 0, 'a'],
+        }
+        window.__case = null
+        window.__out = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt1: mk(),
+                    opt2: mk(),
+                    opt3: mk({ kpHeadHide: { b: true } }),
+                    opt4: mk({ kpCellEditable: { a: true, b: false, c: true } }),
+                }
+            },
+            methods: {
+                run: function() {
+                    //宿主之按鈕處理函數: 以元件方法貼上文字(同使用者於儲存格按 Ctrl+V 時元件之處理), 記錄呼叫後之數據
+                    let c = window.__cases[window.__case]
+                    let out = { threw: false }
+                    try {
+                        let comp = this.$refs[c[0]]
+                        comp.pasteText(c[1], c[2], c[3])
+                        out.now = comp.getNowData()
+                        out.optRows = JSON.parse(JSON.stringify(this['opt' + c[0].slice(1)].rows))
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = String(e && e.message ? e.message : e)
+                    }
+                    window.__out = out
+                },
+            },
+        })
+    </script>
+</body>
+</html>

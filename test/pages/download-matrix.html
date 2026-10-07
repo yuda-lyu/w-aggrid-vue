@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>download matrix</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <w-aggrid-vue id="t1" ref="t1" style="width:900px;" :height="120" :opt="opt1"></w-aggrid-vue>
+        <w-aggrid-vue id="t2" ref="t2" style="width:900px;" :height="120" :opt="opt2"></w-aggrid-vue>
+        <w-aggrid-vue id="t3" ref="t3" style="width:900px;" :height="120" :opt="opt3"></w-aggrid-vue>
+        <w-aggrid-vue id="t4" ref="t4" style="width:900px;" :height="120" :opt="opt4"></w-aggrid-vue>
+        <w-aggrid-vue id="t5" ref="t5" style="width:900px;" :height="120" :opt="opt5"></w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let keys = ['id', 'make', 'model', 'price']
+        let kpHead = { id: '主鍵', make: '製造商', model: '型號', price: '價格' }
+        let ft = { id: 'text', make: 'text', model: 'text', price: 'num' }
+        let rows = function() {
+            return [
+                { id: 'r1', make: 'Toyota', model: 'Celica', price: 35000 },
+                { id: 'r2', make: 'Ford', model: 'Mondeo', price: 32000 },
+            ]
+        }
+        let exclId = function(ks) { return ks.filter(function(k) { return k !== 'id' }) }
+        //各案例: [表格 ref, 方法, 選項]; 由測試端以 window.__case 選定後, 真點擊 #btnRun 執行
+        window.__cases = {
+            D1: ['t1', 'downloadDisplayData', { funGetKeysHook: exclId }],
+            D1b: ['t1', 'downloadDisplayData', { funGetKeysHook: exclId, useHead: true }],
+            D1c: ['t1', 'downloadData', { funGetKeysHook: exclId }],
+            D2: ['t1', 'downloadData', { funGetKeysHook: function() { return [] } }],
+            D2b: ['t1', 'downloadDisplayData', { funGetKeysHook: function() { return [] } }],
+            D3: ['t2', 'downloadDisplayData', {}],
+            D4: ['t1', 'downloadData', { funGetLtdtHook: async function(ltdt) { return ltdt } }],
+            D5: ['t1', 'downloadData', { funGetLtdtHook: function(ltdt) { ltdt.length } }],
+            D6: ['t1', 'downloadData', { funGetMatHook: function(mat) { mat.length } }],
+            D7: ['t3', 'downloadData', { useHead: true }],
+            X1_keysHookNoReturn: ['t1', 'downloadData', { funGetKeysHook: function(ks) { ks.length } }],
+            X2_ltdtHookReturnsArrays: ['t1', 'downloadData', { funGetLtdtHook: function(ltdt) { return ltdt.map(function(r) { return [r.id, r.make] }) } }],
+            X3_displayAllHiddenWithRaw: ['t2', 'downloadData', {}],
+            K_throw: ['t1', 'downloadData', { funGetKeysHook: function() { throw new Error('keys hook boom') } }],
+            K_unknown: ['t1', 'downloadData', { funGetKeysHook: function() { return ['make', 'foo'] } }],
+            K_dup: ['t1', 'downloadData', { funGetKeysHook: function() { return ['make', 'make'] } }],
+            K_displayExcludeHidden: ['t4', 'downloadDisplayData', { funGetKeysHook: exclId }],
+            L_emptyIntent: ['t1', 'downloadData', { funGetLtdtHook: function() { return [] } }],
+            L_emptyObj: ['t1', 'downloadData', { funGetLtdtHook: function(ltdt) { return ltdt.map(function() { return {} }) } }],
+            L_throw: ['t1', 'downloadData', { funGetLtdtHook: function() { throw new Error('ltdt hook boom') } }],
+            L_noRowsHookPass: ['t3', 'downloadData', { useHead: true, funGetLtdtHook: function(ltdt) { return ltdt } }],
+            M_empty: ['t1', 'downloadData', { funGetMatHook: function() { return [] } }],
+            M_throw: ['t1', 'downloadData', { funGetMatHook: function() { throw new Error('mat hook boom') } }],
+            M_promise: ['t1', 'downloadData', { funGetMatHook: async function(mat) { return mat } }],
+            E_displayNoRows: ['t3', 'downloadDisplayData', { useHead: true }],
+            F_formatDisplayExclude: ['t5', 'downloadDisplayData', { funGetKeysHook: exclId }],
+            F_formatOff: ['t5', 'downloadData', { useFormat: false }],
+        }
+        window.__case = null
+        window.__out = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt1: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows() },
+                    //t2: 全部欄位隱藏
+                    opt2: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpHeadHide: { id: true, make: true, model: true, price: true } },
+                    //t3: 無數據列(表頭範本)
+                    opt3: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: [] },
+                    //t4: id 隱藏
+                    opt4: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpHeadHide: { id: true } },
+                    //t5: price 有 kpCellFormat
+                    opt5: { keys: keys, kpHead: kpHead, kpHeadFilterType: ft, rows: rows(), kpCellFormat: { price: function(v) { return Number(v).toFixed(1) } } },
+                }
+            },
+            methods: {
+                run: function() {
+                    //宿主之按鈕處理函數: 依選定案例呼叫元件方法, 記錄回傳值或拋錯
+                    let c = window.__cases[window.__case]
+                    let out = { threw: false }
+                    try {
+                        let r = this.$refs[c[0]][c[1]](c[2])
+                        out.retType = r === undefined ? 'undefined' : (Array.isArray(r) ? 'array' : typeof r)
+                        out.ret = Array.isArray(r) ? JSON.parse(JSON.stringify(r)) : null
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = String(e && e.message ? e.message : e)
+                    }
+                    window.__out = out
+                },
+            },
+        })
+    </script>
+</body>
+</html>

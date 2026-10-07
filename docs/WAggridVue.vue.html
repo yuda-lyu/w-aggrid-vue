@@ -29,7 +29,7 @@
 <nav >
     
     
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-WAggridVue.html">WAggridVue</a><ul class='methods'><li data-type='method'><a href="module-WAggridVue.html#uploadData">uploadData</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#getLangText">getLangText</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-WAggridVue.html">WAggridVue</a><ul class='methods'><li data-type='method'><a href="module-WAggridVue.html#downloadData">downloadData</a></li><li data-type='method'><a href="module-WAggridVue.html#downloadDisplayData">downloadDisplayData</a></li><li data-type='method'><a href="module-WAggridVue.html#uploadData">uploadData</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#getLangText">getLangText</a></li></ul>
     
 </nav>
 
@@ -106,11 +106,13 @@ import values from 'lodash-es/values.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import concat from 'lodash-es/concat.js'
 import difference from 'lodash-es/difference.js'
+import every from 'lodash-es/every.js'
+import some from 'lodash-es/some.js'
+import findIndex from 'lodash-es/findIndex.js'
 import trim from 'lodash-es/trim.js'
 import haskey from 'wsemi/src/haskey.mjs'
 import arrHas from 'wsemi/src/arrHas.mjs'
 import sep from 'wsemi/src/sep.mjs'
-import pmSeries from 'wsemi/src/pmSeries.mjs'
 import iser from 'wsemi/src/iser.mjs'
 import isobj from 'wsemi/src/isobj.mjs'
 import iseobj from 'wsemi/src/iseobj.mjs'
@@ -129,7 +131,6 @@ import cdbl from 'wsemi/src/cdbl.mjs'
 import cstr from 'wsemi/src/cstr.mjs'
 import cint from 'wsemi/src/cint.mjs'
 import binstr from 'wsemi/src/binstr.mjs'
-import ltdtmapping from 'wsemi/src/ltdtmapping.mjs'
 import ltdtkeys2mat from 'wsemi/src/ltdtkeys2mat.mjs'
 import downloadExcelFileFromData from 'wsemi/src/downloadExcelFileFromData.mjs'
 import domShowInputAndGetFilesU8Arrs from 'wsemi/src/domShowInputAndGetFilesU8Arrs.mjs'
@@ -212,6 +213,257 @@ function cvCellTextByParams(params) {
         v = get(params, 'value')
     }
     return cvCellText(v)
+}
+
+
+//方法之opt與其各鍵為額外傳入: 未給予(null、undefined)時使用預設; 有給予但非指定之值或型態時亦使用預設, 並以logUseDefault於console提示
+
+
+//isGiven, 選項是否有給予(非null、undefined)
+function isGiven(v) {
+    return !isnull(v) &amp;&amp; !isundefined(v)
+}
+
+
+//logUseDefault, 選項有給予但非指定之值或型態時, 於console提示改用預設; 無效之值為字串與數值時顯示原值, 其餘顯示型態
+function logUseDefault(name, key, v, def) {
+    let s = (isstr(v) || isnum(v)) ? `${v}` : Object.prototype.toString.call(v)
+    console.log(`[w-aggrid-vue] ${name}: invalid ${key}[${s}], use default ${key} ${def}`)
+}
+
+
+//pickRowsByKeys, 依keys由各列取值(無值為''), 回傳新列物件陣列; keys為空時回傳[]
+//不使用wsemi之ltdtmapping: 其以isearr判斷, 恰1列且為空物件時回傳[], 2列以上才回傳空白列
+function pickRowsByKeys(rows, keys) {
+    if (size(keys) === 0) {
+        return []
+    }
+    return map(rows, (row) => {
+        let r = {}
+        each(keys, (key) => {
+            r[key] = get(row, key, '')
+        })
+        return r
+    })
+}
+
+
+//isGridAvailable, 表格是否可用: 元件銷毀後getApi為null; 呼叫端經getApi銷毀ag-grid後api仍在但isDestroyed為true, 其方法皆已換成只印警告之函數
+function isGridAvailable(api) {
+    return !!api &amp;&amp; !(isfun(api.isDestroyed) &amp;&amp; api.isDestroyed())
+}
+
+
+//getApiOrThrow, 需表格之公開方法取api之單一入口, 表格不可用時拋錯(async方法即reject); 內部延後執行之路徑改以isGridAvailable判斷後靜默略過
+function getApiOrThrow(vo, name) {
+    let api = vo.getApi()
+    if (!isGridAvailable(api)) {
+        throw new Error(`[w-aggrid-vue] ${name}: grid is not available`)
+    }
+    return api
+}
+
+
+//downloadCore, downloadData與downloadDisplayData共用之下載流程, 兩者僅欄位keys與來源列rows不同
+//寫成模組層函數而非methods, 避免經ref外露為對外API; 不呼叫grid API, 使downloadData可於表格就緒前使用
+//同步可偵測之失敗一律拋錯且不產檔; 寫檔為非同步, 其失敗只能以前綴記錄於console, 無法回報呼叫端
+function downloadCore(vo, name, keys, rows, opt) {
+
+    //newError, 訊息加前綴供辨識來源, 呼叫端(如w-table-vue)可能只顯示固定訊息而不顯示錯誤內容
+    let newError = (msg) => {
+        return new Error(`[w-aggrid-vue] ${name}: ${msg}`)
+    }
+
+    //checkSync, 掛鉤僅支援同步回傳, 回傳Promise時先接手其rejection避免出現未處理之rejection, 再拋錯
+    let checkSync = (r, nameHook) => {
+        if (ispm(r)) {
+            r.catch(() => {})
+            throw newError(`${nameHook} must return synchronously, Promise is not supported`)
+        }
+    }
+
+    //opt
+    if (!isobj(opt)) {
+        if (isGiven(opt)) {
+            logUseDefault(name, 'opt', opt, '{}')
+        }
+        opt = {}
+    }
+
+    //spread
+    let {
+        funGetKeysHook,
+        funGetLtdtHook,
+        funGetMatHook,
+        useHead,
+        useFormat,
+        fileName,
+        sheetName,
+    } = opt
+
+    //hooks, 須為函數, 否則視為未給予(其後以isfun判斷是否呼叫)
+    each({ funGetKeysHook, funGetLtdtHook, funGetMatHook }, (fun, key) => {
+        if (!isfun(fun) &amp;&amp; isGiven(fun)) {
+            logUseDefault(name, key, fun, 'null')
+        }
+    })
+
+    //useHead
+    if (!isbol(useHead)) {
+        if (isGiven(useHead)) {
+            logUseDefault(name, 'useHead', useHead, 'false')
+        }
+        useHead = false
+    }
+
+    //useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
+    if (!isbol(useFormat)) {
+        if (isGiven(useFormat)) {
+            logUseDefault(name, 'useFormat', useFormat, 'true')
+        }
+        useFormat = true
+    }
+
+    //fileName, 無副檔名時補.xlsx(同ag-grid匯出), 否則瀏覽器會依無型別之Blob另給副檔名
+    if (!isestr(fileName)) {
+        if (isGiven(fileName)) {
+            logUseDefault(name, 'fileName', fileName, `'data.xlsx'`)
+        }
+        fileName = 'data.xlsx'
+    }
+    if (fileName.indexOf('.') &lt; 0) {
+        fileName += '.xlsx'
+    }
+
+    //sheetName, 須符合Excel分頁名稱規則(同wsemi寫檔器hucre之validateSheetName: 字串原始值, 長度以UTF-16碼元計1至31, 不含[ ] : * ? / \, 首尾非單引號, 非History), 否則寫檔時才失敗且無法回報, 故改用預設'data'
+    //長度不可用lodash size(計Unicode碼位), 表情符號與擴充B區漢字各佔2個碼元; wsemi isestr對new String()亦為true, 故以typeof判斷
+    let bSheetName = typeof sheetName === 'string' &amp;&amp; sheetName.length > 0 &amp;&amp; sheetName.length &lt;= 31 &amp;&amp; !/[[\]:*?/\\]/.test(sheetName) &amp;&amp; !sheetName.startsWith(`'`) &amp;&amp; !sheetName.endsWith(`'`) &amp;&amp; sheetName.toLowerCase() !== 'history'
+    if (!bSheetName) {
+        if (isGiven(sheetName)) {
+            logUseDefault(name, 'sheetName', sheetName, `'data'`)
+        }
+        sheetName = 'data'
+    }
+
+    //useKeys
+    let useKeys = cloneDeep(keys)
+    if (isfun(funGetKeysHook)) {
+        useKeys = funGetKeysHook(useKeys)
+        checkSync(useKeys, 'funGetKeysHook')
+        if (!isarr(useKeys)) {
+            throw newError('funGetKeysHook must return an array of keys')
+        }
+        if (!every(useKeys, (key) => isestr(key) || isnum(key))) {
+            throw newError('funGetKeysHook must return an array of non-empty strings')
+        }
+        useKeys = [...useKeys] //快照, 避免掛鉤保留回傳陣列之參照於後續改寫
+    }
+
+    //check
+    if (size(useKeys) === 0) {
+        throw newError('no downloadable keys')
+    }
+
+    //data, 由來源列依useKeys提取; 格式化函數之row為完整來源列且讀原值, 與畫面valueFormatter之params.data一致; 取出之值cloneDeep, 掛鉤改寫不影響表格數據
+    let data = map(rows, (row) => {
+        let r = {}
+        each(useKeys, (key) => {
+            let v = get(row, key)
+            if (useFormat) {
+                let funCellFormat = vo.kpCellFormat[key]
+                if (isfun(funCellFormat)) {
+                    let vf = funCellFormat(v, key, row, null)
+                    if (!isnull(vf) &amp;&amp; !isundefined(vf)) {
+                        v = vf //回傳值原樣使用, 如何回傳由呼叫端決定
+                    }
+                }
+            }
+            if (isundefined(v)) {
+                v = '' //同pickRowsByKeys對無值之預設
+            }
+            r[key] = cloneDeep(v)
+        })
+        return r
+    })
+
+    //funGetLtdtHook, 收到格式化後之值, 可回傳空陣列(僅輸出表頭)
+    if (isfun(funGetLtdtHook)) {
+        data = funGetLtdtHook(data)
+        checkSync(data, 'funGetLtdtHook')
+        if (!isarr(data)) {
+            throw newError('funGetLtdtHook must return an array')
+        }
+        let ind = findIndex(data, (r) => {
+            return !iseobj(r)
+        })
+        if (ind >= 0) {
+            throw newError(`funGetLtdtHook must return an array of non-empty objects, invalid row[${ind}]`)
+        }
+    }
+
+    //dataOut, null轉空字串與畫面cvCellText一致, 否則ltdtkeys2mat會轉為字串'null'; 另建列物件不改動掛鉤回傳之物件
+    let dataOut = map(data, (r) => {
+        let t = { ...r }
+        each(useKeys, (key) => {
+            if (isnull(t[key])) {
+                t[key] = ''
+            }
+        })
+        return t
+    })
+
+    //ltdtkeys2mat
+    let mat = ltdtkeys2mat(dataOut, useKeys)
+
+    //heads, 一律產生新陣列避免與useKeys同址; useHead時取kpHead, 無對應者退回key(同kpHead預設)
+    let heads = map(useKeys, (key) => {
+        if (useHead &amp;&amp; haskey(vo.kpHead, key)) {
+            return vo.kpHead[key]
+        }
+        return key
+    })
+
+    //concat
+    mat = concat([heads], mat)
+
+    //funGetMatHook, 須回傳二維陣列且至少一列非空
+    if (isfun(funGetMatHook)) {
+        mat = funGetMatHook(mat)
+        checkSync(mat, 'funGetMatHook')
+        if (!isarr(mat) || !every(mat, isarr)) {
+            throw newError('funGetMatHook must return a two-dimensional array')
+        }
+        if (!some(mat, (r) => {
+            return size(r) > 0
+        })) {
+            throw newError('funGetMatHook must return at least one non-empty row')
+        }
+    }
+
+    //check, Excel單一分頁之上限(含表頭列1048576列、每列16384欄), 以最終二維陣列判定(funGetLtdtHook、funGetMatHook可增減列與欄)
+    //hucre寫檔時才拒絕欄數且無法回報, 列數則不拒絕但產出之檔讀不回(含本套件之uploadData), 故事前同步拋錯
+    if (size(mat) > 1048576) {
+        throw newError('too many rows, Excel allows at most 1048576 rows including the header row')
+    }
+    let indWide = findIndex(mat, (r) => {
+        return size(r) > 16384
+    })
+    if (indWide >= 0) {
+        throw newError(`too many columns, Excel allows at most 16384 columns, invalid row[${indWide}]`)
+    }
+
+    //downloadExcelFileFromData, 非同步寫檔, 無法回報呼叫端; 寫檔器拒絕時wsemi以resolve回傳{ error }(例如funGetMatHook回傳寫檔器無法寫出之儲存格物件), 觸發下載時之例外則reject, 皆以前綴記錄於console
+    downloadExcelFileFromData(fileName, sheetName, mat)
+        .then((r) => {
+            if (haskey(r, 'error')) {
+                console.log(`[w-aggrid-vue] ${name}: can not write excel file`, r.error)
+            }
+        })
+        .catch((err) => {
+            console.log(`[w-aggrid-vue] ${name}: can not write excel file`, err)
+        })
+
+    return mat
 }
 
 
@@ -497,8 +749,8 @@ let HeaderSlotRenderer = {
  * @vue-prop {Object} [opt.kpCellAlignH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlignH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
  * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
- * @vue-prop {Object} [opt.kpCellFormat={}] 輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined
- * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}
+ * @vue-prop {Object} [opt.kpCellFormat={}] 輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時row同為該列完整數據、params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined
+ * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時將檔案表頭名稱轉為欄位key之對照物件，例如{ '製造商': 'make' }，於uploadData之beforeUpload之前套用，轉換後與檔案既有表頭同名時依欄序後者覆蓋，預設{}
  * @vue-prop {Function} [opt.rowsChange=()=>{}] 輸入rows change之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.rowClick=()=>{}] 輸入row click之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.rowDbClick=()=>{}] 輸入row double click之觸發事件，預設為()=>{}
@@ -511,7 +763,7 @@ let HeaderSlotRenderer = {
  * @vue-prop {Function} [opt.cellChange=()=>{}] 輸入cell change之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.cellMouseEnter=()=>{}] 輸入cell mouseenter之觸發事件，預設為()=>{}
  * @vue-prop {Function} [opt.cellMouseLeave=()=>{}] 輸入cell mouseleave之觸發事件，預設為()=>{}
- * @vue-prop {Function} [opt.filterChange=()=>{}] 輸入filter change之觸發事件，預設為()=>{}
+ * @vue-prop {Function} [opt.filterChange=()=>{}] 輸入filter change之觸發事件，於掛載與filterall變更時(from為'filterall')、表頭過濾變更時(含setHeadFilter、clearHeadFilter、clearHeadFilterAll，from為'heads')各觸發1次，傳入{ from, filterall, flts, isFilter }，flts為觸發後讀取當下之生效中過濾模型陣列(依opt.keys之順序，含隱藏欄)，元件或ag-grid已銷毀後不觸發，預設為()=>{}
  * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬布林值，預設false
  * @vue-prop {String} [opt.language='en'] 輸入指定語系字串，可選'en'、'zh-tw'、'zh-cn'，預設為'en'
  * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
@@ -1281,10 +1533,13 @@ export default {
 
             let vo = this
 
+            //api, 表格不可用時拋錯
+            let api = getApiOrThrow(vo, 'pasteText')
+
             //mShowRowInds
             let mShowRowInds = []
             let mData = []
-            vo.getApi().forEachNodeAfterFilterAndSort(function(node, k) {
+            api.forEachNodeAfterFilterAndSort(function(node, k) {
                 //console.log('node', node)
                 mShowRowInds.push(node.id)
                 mData.push(node.data)
@@ -1300,7 +1555,7 @@ export default {
 
             //mShowColKeys
             // let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
-            let mShowColKeys = vo.getApi().getAllGridColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            let mShowColKeys = api.getAllGridColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
             mShowColKeys = map(mShowColKeys, (v, k) => {
                 // console.log('v', v, v.getId)
                 return v.getId()
@@ -1315,7 +1570,7 @@ export default {
 
             //cs
             // let cs = vo.gridOptions.columnApi.getColumnState()
-            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            let cs = api.getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
             // console.log('cs', cs)
 
             //kpHide, kpPinned
@@ -1343,7 +1598,7 @@ export default {
 
             //kpEditable
             // let cd = vo.gridOptions.columnDefs
-            let cd = vo.getApi().getColumnDefs() //gridOptions.columnDefs已歸入api, 並須通過ref取得
+            let cd = api.getColumnDefs() //gridOptions.columnDefs已歸入api, 並須通過ref取得
             // console.log('cd', cd)
             let kpEditable = {}
             each(cd, (v) => {
@@ -1469,7 +1724,7 @@ export default {
             }
 
             //applyTransaction, 只變更必要資料加速, 注意記憶體得用原始記憶體, 也就是updateRows得使用原始vo.rows來給予欲變更之rows, 否則applyTransaction會無法找到原始數據物件進行更新
-            vo.getApi().applyTransaction({ update: updateRows })
+            api.applyTransaction({ update: updateRows })
             // console.log('applyTransaction', cloneDeep(updateRows))
 
             //需使用set強制更新外部opt物件的rows並再同步更新至內部rows, 否則外面數據會沒更動
@@ -1488,14 +1743,14 @@ export default {
             //delay
             await delay(1)
 
+            //api, 延後執行期間可能因使用者切換組件而已銷毀, 表格不可用時略過
+            let api = vo.getApi()
+            if (!isGridAvailable(api)) {
+                return
+            }
+
             //redrawRows, 因資料變更不會觸發getRowStyle, 給自行redrawRows
-            //可能因使用者切換組件被destroy, 故需try catch
-            try {
-                vo.getApi().redrawRows()
-            }
-            catch (err) {
-                //console.log(err)
-            }
+            api.redrawRows()
 
         },
 
@@ -1805,8 +2060,11 @@ export default {
 
             let vo = this
 
-            //check
+            //check, 未給予(null、undefined)時不提示; 有給予但非非空物件時提示表格不更新(R01、R03)
             if (!iseobj(vo.opt)) {
+                if (isGiven(vo.opt)) {
+                    console.log('[w-aggrid-vue] opt is invalid, it must be an object with keys and rows, the table is not updated')
+                }
                 return
             }
 
@@ -1829,14 +2087,14 @@ export default {
             //check keys
             let tKeys = get(vo, 'opt.keys')
             if (!isearr(tKeys)) {
-                console.log('invalid opt.keys')
+                console.log('[w-aggrid-vue] opt.keys is invalid, it must be a non-empty array of keys, the table is not updated')
                 return
             }
 
             //check rows
             let tRows = get(vo, 'opt.rows')
             if (!isarr(tRows)) {
-                console.log('invalid opt.rows')
+                console.log('[w-aggrid-vue] opt.rows is invalid, it must be an array, the table is not updated')
                 return
             }
 
@@ -2220,9 +2478,15 @@ export default {
                 let pinnedTopRowData = vo.genRowsPinnTop(rows)
                 // console.log('pinnedTopRowData', pinnedTopRowData)
 
+                //api, 呼叫端之函數(含先前之cellChange等回呼)可能已銷毀表格, 不可用時略過
+                let api = vo.getApi()
+                if (!isGridAvailable(api)) {
+                    return
+                }
+
                 //update
                 // vo.getApi().setPinnedTopRowData(pinnedBottomRowData)
-                vo.getApi().setGridOption('pinnedTopRowData', pinnedTopRowData) //setPinnedTopRowData已統一改為setGridOption('pinnedTopRowData',newValue)
+                api.setGridOption('pinnedTopRowData', pinnedTopRowData) //setPinnedTopRowData已統一改為setGridOption('pinnedTopRowData',newValue)
 
             }
 
@@ -2240,9 +2504,15 @@ export default {
                 let pinnedBottomRowData = vo.genRowsPinnBottom(rows)
                 // console.log('pinnedBottomRowData', pinnedBottomRowData)
 
+                //api, 呼叫端之函數(含先前之cellChange等回呼)可能已銷毀表格, 不可用時略過
+                let api = vo.getApi()
+                if (!isGridAvailable(api)) {
+                    return
+                }
+
                 //update
                 // vo.getApi().setPinnedBottomRowData(pinnedBottomRowData)
-                vo.getApi().setGridOption('pinnedBottomRowData', pinnedBottomRowData) //setPinnedBottomRowData已統一改為setGridOption('pinnedBottomRowData',newValue)
+                api.setGridOption('pinnedBottomRowData', pinnedBottomRowData) //setPinnedBottomRowData已統一改為setGridOption('pinnedBottomRowData',newValue)
 
             }
 
@@ -2253,9 +2523,28 @@ export default {
 
             let vo = this
 
+            //check, keys_new為必要之資料: 須為陣列且元素為非空字串(欄位key), 否則拋錯且不改變欄位狀態; 未知之key由ag-grid略過, 空陣列代表全部隱藏
+            if (!isarr(keys_new) || !every(keys_new, isestr)) {
+                throw new Error('[w-aggrid-vue] showKeys: keys must be an array of non-empty strings')
+            }
+
+            //api, 表格不可用時拋錯
+            let api = getApiOrThrow(vo, 'showKeys')
+
+            //opt
+            if (!isobj(opt)) {
+                if (isGiven(opt)) {
+                    logUseDefault('showKeys', 'opt', opt, '{}')
+                }
+                opt = {}
+            }
+
             //applyOrder, 預設true代表依keys_new之順序調整欄位順序; false代表僅切換顯示與隱藏, 維持目前欄位順序(含使用者拖曳後之順序)
             let applyOrder = get(opt, 'applyOrder', null)
             if (!isbol(applyOrder)) {
+                if (isGiven(applyOrder)) {
+                    logUseDefault('showKeys', 'applyOrder', applyOrder, 'true')
+                }
                 applyOrder = true
             }
 
@@ -2279,7 +2568,7 @@ export default {
 
             //applyColumnState
             //applyOrder為true時依csn調整欄位順序; 被ag-grid固定(pinned)之欄位不論順序為何, 皆固定顯示於左側區
-            vo.getApi().applyColumnState({ //gridOptions.columnApi已歸入api, 並須通過ref取得
+            api.applyColumnState({ //gridOptions.columnApi已歸入api, 並須通過ref取得
                 state: csn,
                 applyOrder,
             })
@@ -2291,41 +2580,22 @@ export default {
 
             let vo = this
 
-            //keys
-            let keys = cloneDeep(vo.keys)
-            // console.log('keys_old', keys_old)
+            //nextTick, 由computed(changeFilterall)於首次render中觸發時子組件ag-grid尚未建立, 須延至本次更新結束後才取api
+            await vo.$nextTick()
 
-            //flts
+            //api, 表格不可用時拋錯(即reject)
+            let api = getApiOrThrow(vo, 'getFilters')
+
+            //fm, 以同步之getFilterModel取各欄生效中之過濾模型(含隱藏欄); 不使用getColumnFilterInstance, 其對未啟用過濾之欄與不存在之key永不resolve
+            let fm = api.getFilterModel()
+
+            //flts, 依vo.keys之順序輸出(getFilterModel之鍵序為過濾器之建立順序), 以fm[key]取值(key含'.'時lodash get會解析為路徑)
             let flts = []
-            await pmSeries(keys, async (key) => {
-
-                //md
-                let md = null
-                try {
-
-                    //ft
-                    // let ft = vo.getApi().getFilterInstance(key)
-                    let ft = await vo.getApi().getColumnFilterInstance(key) //ag-grid 31.1.0準備廢棄getFilterInstance, 改用getColumnFilterInstance, 此回傳為promise
-                    // console.log(key, 'ft', ft)
-
-                    //md
-                    // md = ft.getModel()
-                    md = ft.appliedModel //已改用getColumnFilterInstance, 此時直接用appliedModel為model
-                    // console.log(key, 'md', md)
-
-                }
-                catch (err) {
-                    console.log(err)
-                }
-
-                //check
+            each(vo.keys, (key) => {
+                let md = fm[key]
                 if (iseobj(md)) {
-
-                    //push
                     flts.push(md)
-
                 }
-
             })
 
             return flts
@@ -2336,11 +2606,19 @@ export default {
 
             let vo = this
 
-            //reset all filters
-            vo.getApi().setFilterModel(null)
+            //api, 表格不可用時拋錯(即reject)
+            let api = getApiOrThrow(vo, 'clearHeadFilterAll')
 
-            //fire onFilterChanged
-            vo.getApi().onFilterChanged()
+            //bFiltered, 有生效中之過濾時, setFilterModel於模型改變後會自行觸發onFilterChanged
+            let bFiltered = iseobj(api.getFilterModel())
+
+            //reset all filters
+            api.setFilterModel(null)
+
+            //fire onFilterChanged, 無生效中之過濾時才自行觸發(呼叫後一律發出1次filterChange), 避免與setFilterModel重複觸發而發出2次
+            if (!bFiltered) {
+                api.onFilterChanged()
+            }
 
         },
 
@@ -2349,12 +2627,18 @@ export default {
 
             let vo = this
 
-            //setModel
+            //api, 表格不可用時拋錯(即reject)
+            let api = getApiOrThrow(vo, 'clearHeadFilter')
+
+            //setModel, 表格建立時無數據列者須待首批數據列載入後才完成(ag-grid型別推斷期間排隊)
             // ft.setModel(null)
-            await vo.getApi().setColumnFilterModel(key, null) //setModel改為setColumnFilterModel
+            await api.setColumnFilterModel(key, null) //setModel改為setColumnFilterModel
+
+            //api, 等待期間表格可能已銷毀, 重新取得
+            api = getApiOrThrow(vo, 'clearHeadFilter')
 
             //fire onFilterChanged
-            vo.getApi().onFilterChanged()
+            api.onFilterChanged()
 
         },
 
@@ -2362,6 +2646,9 @@ export default {
             //console.log('methods setHeadFilter', key, value, type)
 
             let vo = this
+
+            //api, 表格不可用時拋錯(即reject)
+            let api = getApiOrThrow(vo, 'setHeadFilter')
 
             // let tpsText = [
             //     'empty',
@@ -2404,12 +2691,15 @@ export default {
                 filter: value, //ag-grid 31.1.0已修復
             }
 
-            //setModel
+            //setModel, 表格建立時無數據列者須待首批數據列載入後才完成(ag-grid型別推斷期間排隊)
             // ft.setModel(m)
-            await vo.getApi().setColumnFilterModel(key, m) //setModel改為setColumnFilterModel
+            await api.setColumnFilterModel(key, m) //setModel改為setColumnFilterModel
+
+            //api, 等待期間表格可能已銷毀, 重新取得
+            api = getApiOrThrow(vo, 'setHeadFilter')
 
             //fire onFilterChanged
-            vo.getApi().onFilterChanged()
+            api.onFilterChanged()
 
         },
 
@@ -2418,37 +2708,18 @@ export default {
 
             let vo = this
 
-            //cs
-            // let cs = vo.gridOptions.columnApi.getColumnState()
-            let cs = vo.getApi().getColumnState() //gridOptions.columnApi已歸入api, 並須通過ref取得
-            // console.log('cs', cs)
+            //api, 表格不可用時拋錯
+            let api = getApiOrThrow(vo, 'getDisplayDataKeys')
+
+            //cols, 顯示中之欄位且依畫面欄序(左固定、中間、右固定), 同ag-grid匯出之預設欄位; getColumnState之順序不反映固定欄(kpHeadFixLeft)之位置故不使用
+            let cols = api.getAllDisplayedColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
 
             //show keys
-            let keys = map(filter(cs, { 'hide': false }), 'colId')
-
-            return keys
-        },
-
-        formatDataByKpCellFormat: function(data, keys) {
-            //console.log('methods formatDataByKpCellFormat')
-
-            let vo = this
-
-            //依kpCellFormat格式化各列指定keys之值, 供下載使用, 使下載與畫面一致; 無格式化函數或函數回傳null/undefined之欄維持原值
-            //直接於data各列寫回不另複製, 呼叫端(downloadData經ltdtmapping、downloadDisplayData經getDisplayData)傳入之各列皆已為新物件, 不會動到vo.rows
-            each(data, (row) => {
-                each(keys, (key) => {
-                    let funCellFormat = vo.kpCellFormat[key]
-                    if (isfun(funCellFormat)) {
-                        let v = funCellFormat(get(row, key), key, row, null)
-                        if (!isnull(v) &amp;&amp; !isundefined(v)) {
-                            row[key] = v //回傳值原樣寫回, 如何回傳由呼叫端決定, 後續ltdtkeys2mat依wsemi慣例處理各型別
-                        }
-                    }
-                })
+            let keys = map(cols, (col) => {
+                return col.getColId()
             })
 
-            return data
+            return keys
         },
 
         getDisplayData: function() {
@@ -2456,17 +2727,20 @@ export default {
 
             let vo = this
 
+            //api, 表格不可用時拋錯
+            let api = getApiOrThrow(vo, 'getDisplayData')
+
             //rs
             let rs = []
-            vo.getApi().forEachNodeAfterFilterAndSort((node) => {
+            api.forEachNodeAfterFilterAndSort((node) => {
                 rs.push(cloneDeep(node.data))
             })
 
             //show keys
             let keys = vo.getDisplayDataKeys()
 
-            //ltdtmapping
-            let data = ltdtmapping(rs, keys)
+            //pickRowsByKeys, 全部欄位隱藏時keys為空而回傳[]
+            let data = pickRowsByKeys(rs, keys)
 
             return data
         },
@@ -2476,14 +2750,17 @@ export default {
 
             let vo = this
 
+            //api, 表格不可用時拋錯
+            let api = getApiOrThrow(vo, 'getNowData')
+
             //rs
             let rs = []
-            vo.getApi().forEachNode((node) => {
+            api.forEachNode((node) => {
                 rs.push(cloneDeep(node.data))
             })
 
-            //ltdtmapping
-            let data = ltdtmapping(rs, vo.keys)
+            //pickRowsByKeys
+            let data = pickRowsByKeys(rs, vo.keys)
 
             return data
         },
@@ -2504,18 +2781,18 @@ export default {
                     // //delay
                     // await delay(30)
 
-                    //api
+                    //api, 去抖動或resize之後才執行, 表格可能已銷毀(例如於高頻初始化與解構時切換分頁), 不可用時略過
                     let api = vo.getApi()
-
-                    //sizeColumnsToFit, 有可能於高頻初始化與解構時, 例如切換分頁, 導致可能取不到sizeColumnsToFit
-                    let funSizeColumnsToFit = get(api, 'sizeColumnsToFit')
-                    if (isfun(funSizeColumnsToFit)) {
-                        api.sizeColumnsToFit()
+                    if (!isGridAvailable(api)) {
+                        return
                     }
+
+                    //sizeColumnsToFit
+                    api.sizeColumnsToFit()
 
                 }
                 catch (err) {
-                    console.log('fitColumns error', err)
+                    console.log('[w-aggrid-vue] fitColumns:', err)
                 }
             }
 
@@ -2548,214 +2825,134 @@ export default {
 
         },
 
+        /**
+         * 下載表格顯示中之數據為Excel檔案，欄位為顯示中之欄位且依畫面欄序(含拖曳後之順序，固定於左右之欄依其畫面位置)，數據為經表頭過濾、filterall與排序後之列，不含置頂置底列；須表格存在，元件或ag-grid銷毀後呼叫會拋錯
+         *
+         * 選項、處理順序、回傳值與拋錯皆同downloadData，訊息前綴改為'[w-aggrid-vue] downloadDisplayData: '，另於表格不存在(元件或ag-grid已銷毀)時拋'grid is not available'；opt.funGetKeysHook加入隱藏欄時亦輸出其值
+         *
+         * @param {Object} [opt={}] 輸入設定物件，各選項同downloadData，預設{}
+         * @returns {Array} 回傳下載內容之二維陣列，同downloadData
+         * @throws {Error} 同downloadData，另於表格不存在時拋錯
+         */
         downloadDisplayData: function(opt = {}) {
             //console.log('methods downloadDisplayData', opt)
 
             let vo = this
 
-            //spread
-            let {
-                funGetKeysHook,
-                funGetLtdtHook,
-                funGetMatHook,
-                useHead,
-                useFormat,
-                fileName,
-                sheetName,
-            } = opt
+            //api, 表格不可用(元件或ag-grid已銷毀)時拋錯
+            let api = getApiOrThrow(vo, 'downloadDisplayData')
 
-            //default useHead
-            if (!isbol(useHead)) {
-                useHead = false
-            }
-
-            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
-            if (!isbol(useFormat)) {
-                useFormat = true
-            }
-
-            //default fileName
-            if (!isestr(fileName)) {
-                fileName = 'data.xlsx'
-            }
-
-            //show keys
+            //keys, 顯示中之欄位且依畫面欄序
             let keys = vo.getDisplayDataKeys()
 
-            //useKeys
-            let useKeys = cloneDeep(keys)
-            if (isfun(funGetKeysHook)) {
-                useKeys = funGetKeysHook(useKeys)
-            }
-            if (!isearr(useKeys)) {
-                useKeys = cloneDeep(keys)
-            }
+            //rows, 經表頭過濾、filterall與排序後之列, 於執行任何掛鉤前取定
+            let rows = []
+            api.forEachNodeAfterFilterAndSort((node) => {
+                rows.push(node.data)
+            })
 
-            //check
-            if (!isearr(useKeys)) {
-                console.log('invalid useKeys')
-                return
-            }
-
-            //data, 僅組件顯示資料
-            let data = vo.getDisplayData()
-
-            //useFormat
-            if (useFormat) {
-                //getDisplayData內已cloneDeep
-                data = vo.formatDataByKpCellFormat(data, useKeys)
-            }
-
-            //funGetLtdtHook
-            if (isfun(funGetLtdtHook)) {
-                data = funGetLtdtHook(data)
-            }
-
-            //ltdtkeys2mat
-            let mat = ltdtkeys2mat(data, useKeys) //依照funGetKeysHook回傳的keys再次提取數據
-
-            //heads
-            let heads = keys
-            if (useHead) {
-                heads = map(keys, (v) => {
-                    return vo.kpHead[v]
-                })
-            }
-
-            //concat
-            mat = concat([heads], mat)
-
-            //funGetMatHook
-            if (isfun(funGetMatHook)) {
-                mat = funGetMatHook(mat)
-            }
-
-            //downloadExcelFileFromData
-            downloadExcelFileFromData(fileName, sheetName, mat)
-                .catch((err) => {
-                    console.log(err)
-                })
-
-            return mat
+            return downloadCore(vo, 'downloadDisplayData', keys, rows, opt)
         },
 
+        /**
+         * 下載表格全部數據為Excel檔案，欄位依opt.keys之順序且含隱藏欄，數據為opt.rows全部列(不受表頭過濾、filterall與排序影響)，不含置頂置底列；不需表格就緒即可呼叫，惟opt變更後須待$nextTick再呼叫，否則取得變更前之數據
+         *
+         * 處理順序：欄位keys → opt.funGetKeysHook → 依keys由各列取值並依opt.kpCellFormat格式化 → opt.funGetLtdtHook → 轉為二維陣列並加上表頭列 → opt.funGetMatHook → 觸發下載；各掛鉤皆須同步回傳，不支援Promise
+         *
+         * @param {Object} [opt={}] 輸入設定物件，未給予或非物件時為{}，各鍵未給予或非指定之值或型態時皆使用預設(掛鉤非函數時視為未給予)，有給予但無效時於console提示，預設{}
+         * @param {Function} [opt.funGetKeysHook=null] 輸入欄位處理函數，輸入為欄位keys陣列之副本，可增刪或調整順序後回傳(可加入隱藏欄，數據列無該key時其值為空字串)，須回傳由非空字串組成之陣列，回傳空陣列代表無可下載欄位而拋錯，預設null
+         * @param {Function} [opt.funGetLtdtHook=null] 輸入數據處理函數，輸入為依keys提取之各列物件陣列(值已依useFormat格式化且為副本，無數據列時為空陣列)，須回傳物件陣列且各列皆為非空物件，回傳空陣列時僅輸出表頭列，本函數新增或修改之值不再格式化，預設null
+         * @param {Function} [opt.funGetMatHook=null] 輸入二維陣列處理函數，輸入之首列為表頭，須回傳二維陣列且至少一列非空，回傳之儲存格值原樣交給寫檔器(字串、數值、布林、Date、null可寫出，物件、陣列、NaN等多為空白格，帶value、formula、style等鍵之物件被寫檔器當成儲存格設定而格式不符時寫檔失敗並僅記錄於console)，預設null
+         * @param {Boolean} [opt.useHead=false] 輸入表頭是否使用opt.kpHead之名稱布林值，false時使用key，opt.kpHead無對應之key仍使用key；下載檔欲上傳回表格時須另設opt.kpConvertKeysWhenUploadData為反向對照，且名稱須非空且不重複，預設false
+         * @param {Boolean} [opt.useFormat=true] 輸入是否依opt.kpCellFormat格式化各欄值布林值，true時與畫面一致(格式化函數之row為該列完整數據、params為null)，false時下載原值；下載檔欲上傳回表格時宜給false，預設true
+         * @param {String} [opt.fileName='data.xlsx'] 輸入檔名字串，非字串或空字串時為'data.xlsx'，無副檔名時自動補'.xlsx'，預設'data.xlsx'
+         * @param {String} [opt.sheetName='data'] 輸入分頁名稱字串，須為字串且符合Excel規則(至多31字且以UTF-16碼元計，表情符號與擴充B區漢字各計2字；不含[ ] : * ? / \、首尾非單引號、非History)，不符或非字串時為'data'，預設'data'
+         * @returns {Array} 回傳下載內容之二維陣列(opt.funGetMatHook處理後)，未經opt.funGetMatHook改寫之儲存格中null為空字串、布林值為'true'或'false'、物件與陣列為JSON字串
+         * @throws {Error} 下列情形同步拋錯且不產生檔案，訊息前綴為'[w-aggrid-vue] downloadData: '：掛鉤回傳Promise('&lt;掛鉤名> must return synchronously, Promise is not supported')、opt.funGetKeysHook未回傳陣列或含非字串之key、無可下載欄位('no downloadable keys')、opt.funGetLtdtHook未回傳陣列或含非物件之列、opt.funGetMatHook未回傳二維陣列或全為空列、最終二維陣列超過Excel單一分頁之上限('too many rows, ...'為含表頭列超過1048576列，'too many columns, ..., invalid row[i]'為任一列超過16384欄)；掛鉤與opt.kpCellFormat之函數自身拋錯時原樣拋出；觸發下載後之寫檔失敗僅以'[w-aggrid-vue] downloadData: can not write excel file'記錄於console，無法回報
+         */
         downloadData: function(opt = {}) {
             //console.log('methods downloadData', opt)
 
             let vo = this
 
-            //spread
-            let {
-                funGetKeysHook,
-                funGetLtdtHook,
-                funGetMatHook,
-                useHead,
-                useFormat,
-                fileName,
-                sheetName,
-            } = opt
-
-            //default useHead
-            if (!isbol(useHead)) {
-                useHead = false
-            }
-
-            //default useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
-            if (!isbol(useFormat)) {
-                useFormat = true
-            }
-
-            //default fileName
-            if (!isestr(fileName)) {
-                fileName = 'data.xlsx'
-            }
-
-            //keys
-            let keys = vo.keys
-
-            //useKeys
-            let useKeys = cloneDeep(keys)
-            if (isfun(funGetKeysHook)) {
-                useKeys = funGetKeysHook(useKeys) //依照funGetKeysHook回傳的keys再次提取數據
-            }
-            if (!isearr(useKeys)) {
-                useKeys = cloneDeep(keys)
-            }
-
-            //check
-            if (!isearr(useKeys)) {
-                console.log('invalid useKeys')
-                return
-            }
-
-            //ltdtmapping
-            let data = ltdtmapping(vo.rows, useKeys)
-
-            //useFormat
-            if (useFormat) {
-                //ltdtmapping提取vo.rows內未有cloneDeep
-                data = vo.formatDataByKpCellFormat(data, useKeys)
-            }
-
-            //funGetLtdtHook
-            if (isfun(funGetLtdtHook)) {
-                data = funGetLtdtHook(data)
-            }
-
-            //ltdtkeys2mat
-            let mat = ltdtkeys2mat(data, useKeys)
-
-            //heads
-            let heads = useKeys
-            if (useHead) {
-                heads = map(useKeys, (v) => {
-                    return vo.kpHead[v]
-                })
-            }
-
-            //concat
-            mat = concat([heads], mat)
-
-            //funGetMatHook
-            if (isfun(funGetMatHook)) {
-                mat = funGetMatHook(mat)
-            }
-
-            //downloadExcelFileFromData
-            downloadExcelFileFromData(fileName, sheetName, mat)
-                .catch((err) => {
-                    console.log(err)
-                })
-
-            return mat
+            //keys為opt.keys之順序且含隱藏欄, rows為全部列
+            return downloadCore(vo, 'downloadData', vo.keys, vo.rows, opt)
         },
 
         /**
          * 開啟上傳視窗讀取Excel檔案，並以其數據取代或附加於表格數據
          *
-         * @param {Object} [opt={}] 輸入設定物件，預設{}
-         * @param {Function} [opt.beforeUpload=null] 輸入寫入表格前之數據處理函數，輸入為讀取Excel所得(已依opt.kpConvertKeysWhenUploadData轉換鍵值)之各列數據陣列，需回傳處理後之數據陣列，亦可回傳Promise，預設null
-         * @param {Number} [opt.parseSheetInd=0] 輸入讀取Excel檔案之第幾個sheet之非負整數，預設0
-         * @param {String} [opt.uploadMode='replace'] 輸入上傳模式字串，可選'replace'(取代表格數據)、'append'(附加於表格數據之後)，預設'replace'
-         * @returns {Promise} 回傳Promise，resolve回傳上傳後之表格數據陣列，reject回傳錯誤物件{ msg, err }：使用者於選檔視窗取消時msg為'no file'、err為'file selection was canceled'，此時未呼叫beforeUpload亦未變動表格數據，呼叫端可依msg判斷為取消而不提示；無法讀取Excel時msg為'can not read excel'；指定之sheet不存在時msg為'can not get data from sheet'
+         * 須於使用者操作(例如點擊)之事件處理函數內呼叫，否則瀏覽器不開啟選檔視窗，回傳之Promise亦不會結束。讀檔規則：讀取.xlsx之指定分頁，首列為表頭，表頭須與opt.keys完全相同(含大小寫與空白)或經表格之opt.kpConvertKeysWhenUploadData轉換，空表頭之欄略過，表頭重複或轉換後同名時後者覆蓋；整列皆無值之列略過，含空字串儲存格之列或只有無表頭欄有值之列讀為空白列；值一律讀為字串，日期儲存格讀為'YYYY-MM-DDTHH:mm:ss.SSS'(即Excel儲存格之年月日時分秒，不含時區，與執行環境時區無關)，日期型之表頭亦同。寫入時只保留opt.keys之欄，缺欄之值為空字串；個別空白列照常寫入，全部列皆空白時拒絕；附加模式會重建既有之列物件。多次呼叫時依完成先後寫入，後完成者覆蓋
+         *
+         * @param {Object} [opt={}] 輸入設定物件，未給予或非物件時為{}，各鍵未給予或非指定之值或型態時皆使用預設，有給予但無效時於console提示，預設{}
+         * @param {Function} [opt.beforeUpload=null] 輸入寫入表格前之數據處理函數，輸入為讀取Excel所得(已依表格之opt.kpConvertKeysWhenUploadData轉換鍵值)之各列物件陣列，無數據列時為空陣列；須回傳處理後之數據陣列，或resolve為該陣列之Promise(含thenable)，各列須為物件(可為空物件)；欲中止上傳時拋錯或回傳rejected Promise，其錯誤原樣reject且保持參照；非函數時視為未給予，預設null
+         * @param {Number|String} [opt.parseSheetInd=0] 輸入讀取Excel檔案之第幾個分頁之非負整數，可為整數字串，依活頁簿分頁順序且含隱藏分頁，未給予或無效時為0，預設0
+         * @param {String} [opt.uploadMode='replace'] 輸入上傳模式字串，可選'replace'(取代表格數據)、'append'(附加於表格數據之後)，未給予或無效時為'replace'，預設'replace'
+         * @returns {Promise} 回傳Promise，resolve回傳上傳後之表格數據陣列，與opt.rows為同一陣列，resolve時表格已更新，opt.rowsChange於其後觸發；reject時本方法不寫入表格數據(beforeUpload自身對外之改動不回復)，亦不觸發opt.rowsChange。reject之值：本方法產生者為錯誤物件{ msg, err }，msg為下列代碼，err為說明(除'no file'、'can not read excel'與'can not read file'外皆以'[w-aggrid-vue] uploadData: '為前綴)：使用者於選檔視窗取消時msg為'no file'、err為'file selection was canceled'，此時未呼叫beforeUpload，呼叫端可依msg判斷為取消而不提示；選檔或讀取檔案失敗(例如檔案過大)時msg為'can not read file'、err為wsemi之錯誤物件；無法讀取Excel時msg為'can not read excel'；指定之分頁不存在時msg為'can not get data from sheet'；beforeUpload回傳值不合約定時msg為'invalid beforeUpload return'；無可寫入之列或全部列於opt.keys之值皆為空時msg為'no data'，呼叫端可視為無作為；無任一列有opt.keys之值時(例如首列非表頭、表頭與opt.keys不符、讀到隱藏分頁)msg為'no matching keys'。beforeUpload自身拋錯或reject時，其錯誤原樣reject且保持參照
          */
         uploadData: async function(opt = {}) {
             //console.log('methods uploadData', opt)
 
             let vo = this
 
-            //params
-            let { beforeUpload = null, parseSheetInd = 0, uploadMode = 'replace' } = opt
+            //newErr, 本方法產生之錯誤物件, err加前綴供辨識來源(呼叫端如w-table-vue可能只記錄錯誤內容), msg維持簡短代碼供呼叫端比對
+            let newErr = (msg, err) => {
+                return {
+                    msg,
+                    err: `[w-aggrid-vue] uploadData: ${err}`,
+                }
+            }
 
-            //parseSheetInd
-            if (!isp0int(parseSheetInd)) {
+            //以下開啟選檔視窗前之處理皆須同步執行, 不可有await, 否則瀏覽器之使用者啟動逾時而不開窗
+
+            //opt
+            if (!isobj(opt)) {
+                if (isGiven(opt)) {
+                    logUseDefault('uploadData', 'opt', opt, '{}')
+                }
+                opt = {}
+            }
+
+            //params
+            let { beforeUpload, parseSheetInd, uploadMode } = opt
+
+            //beforeUpload, 須為函數, 否則視為未給予(不處理數據)
+            if (!isfun(beforeUpload)) {
+                if (isGiven(beforeUpload)) {
+                    logUseDefault('uploadData', 'beforeUpload', beforeUpload, 'null')
+                }
+                beforeUpload = null
+            }
+
+            //uploadMode, 'replace'(取代)或'append'(附加), 否則為'replace'
+            if (uploadMode !== 'replace' &amp;&amp; uploadMode !== 'append') {
+                if (isGiven(uploadMode)) {
+                    logUseDefault('uploadData', 'uploadMode', uploadMode, `'replace'`)
+                }
+                uploadMode = 'replace'
+            }
+
+            //parseSheetInd, 非負整數(含整數字串, 例如select所綁定之'1'), 否則為0; useLimitSafe使Infinity亦視為無效
+            if (!isp0int(parseSheetInd, { useLimitSafe: true })) {
+                if (isGiven(parseSheetInd)) {
+                    logUseDefault('uploadData', 'parseSheetInd', parseSheetInd, '0')
+                }
                 parseSheetInd = 0
             }
             parseSheetInd = cint(parseSheetInd)
             // console.log('parseSheetInd', parseSheetInd)
 
-            //domShowInputAndGetFilesU8Arrs
-            let d = await domShowInputAndGetFilesU8Arrs()
+            //domShowInputAndGetFilesU8Arrs, 檔案過大或讀取失敗時wsemi以其錯誤物件reject, 包成{ msg, err }
+            let d = null
+            try {
+                d = await domShowInputAndGetFilesU8Arrs()
+            }
+            catch (err) {
+                return Promise.reject({
+                    msg: 'can not read file',
+                    err,
+                })
+            }
             // console.log('d', d)
 
             //check, 使用者取消選檔時wsemi以空陣列resolve(不視為錯誤), 若直接取d[0].u8a會拋TypeError, 故於此攔截並以msg='no file'標示, 呼叫端可依msg判斷為取消而不提示; 此時尚未呼叫beforeUpload亦未變動表格數據
@@ -2780,29 +2977,15 @@ export default {
                 })
             }
 
-            //sh
-            let sh = null
-            try {
-                sh = r[parseSheetInd] //取第parseSheetInd個sheet
+            //check, 指定之分頁不存在(parseSheetInd之型別已於開窗前檢查)
+            if (parseSheetInd >= size(r)) {
+                return Promise.reject(newErr('can not get data from sheet', `sheet[${parseSheetInd}] does not exist, the workbook has ${size(r)} sheet(s)`))
             }
-            catch (err) {
-                return Promise.reject({
-                    msg: 'invalid parseSheetInd',
-                    err,
-                })
-            }
-            // console.log('data', sh.data)
 
-            //rows
-            let rows = []
-            try {
-                rows = sh.data
-            }
-            catch (err) {
-                return Promise.reject({
-                    msg: 'can not get data from sheet',
-                    err,
-                })
+            //rows, 取第parseSheetInd個分頁之數據
+            let rows = get(r, `${parseSheetInd}.data`)
+            if (!isarr(rows)) {
+                return Promise.reject(newErr('can not get data from sheet', `sheet[${parseSheetInd}] has no data`))
             }
 
             //kpConvertKeysWhenUploadData
@@ -2821,19 +3004,57 @@ export default {
                 })
             }
 
-            //beforeUpload
+            //beforeUpload, 以await取值使同步陣列、Promise與thenable皆可; 自身拋錯或reject原樣傳出並保持參照(w-table-vue以參照比對其無有效數據之錯誤物件)
             if (isfun(beforeUpload)) {
-                let r = beforeUpload(rows)
-                if (ispm(r)) {
-                    rows = await r
+                let rs = await beforeUpload(rows)
+                if (isundefined(rs)) {
+                    return Promise.reject(newErr('invalid beforeUpload return', 'beforeUpload returned undefined, it must return an array of rows (missing return?)'))
                 }
-                else {
-                    rows = r
+                if (!isarr(rs)) {
+                    return Promise.reject(newErr('invalid beforeUpload return', 'beforeUpload must return an array, or a Promise resolving an array'))
                 }
+                let ind = findIndex(rs, (row) => {
+                    return !isobj(row) //可為空物件, 讀檔器對只有無表頭欄有值之列亦產生空物件
+                })
+                if (ind >= 0) {
+                    return Promise.reject(newErr('invalid beforeUpload return', `beforeUpload must return an array of objects, invalid row[${ind}]`))
+                }
+                rows = rs
             }
 
-            //ltdtmapping
-            rows = ltdtmapping(rows, vo.keys)
+            //以下檢查須在beforeUpload之後(w-table-vue之包裝於無有效數據時先行reject其錯誤物件), 亦須在投影(pickRowsByKeys)之前(投影後各列皆有keys之鍵, 無從判斷原列有無值)
+
+            //keys
+            let keys = vo.keys
+
+            //check, 無可寫入之列
+            if (size(rows) === 0) {
+                return Promise.reject(newErr('no data', 'there is no row to upload'))
+            }
+
+            //check, 無任一列有keys之值(取值同pickRowsByKeys之get), 例如首列非表頭、表頭與keys不符、未設kpConvertKeysWhenUploadData或讀到隱藏分頁
+            let bMatch = some(rows, (row) => {
+                return some(keys, (key) => {
+                    return !isundefined(get(row, key))
+                })
+            })
+            if (!bMatch) {
+                return Promise.reject(newErr('no matching keys', 'no value of opt.keys is found in the uploaded rows, the first row of the sheet must be the header whose names equal opt.keys or are converted by opt.kpConvertKeysWhenUploadData, and parseSheetInd counts hidden sheets'))
+            }
+
+            //check, 全部列於keys之值皆為空(''、null、undefined), 與w-table-vue判定無有效數據之準則相同; 個別空白列照常寫入
+            let bAllEmpty = every(rows, (row) => {
+                return every(keys, (key) => {
+                    let v = get(row, key)
+                    return v === '' || isnull(v) || isundefined(v)
+                })
+            })
+            if (bAllEmpty) {
+                return Promise.reject(newErr('no data', 'all rows are empty in opt.keys'))
+            }
+
+            //pickRowsByKeys
+            rows = pickRowsByKeys(rows, keys)
 
             //uploadMode
             if (uploadMode === 'replace') {
@@ -2883,8 +3104,23 @@ export default {
             //filterall
             let filterall = vo.filterall
 
-            //flts
-            let flts = await vo.getFilters()
+            //flts, 為取得當下(觸發後之下一個更新週期)之過濾狀態
+            let flts = null
+            try {
+                flts = await vo.getFilters()
+            }
+            catch (err) {
+                //表格不可用(元件或ag-grid已銷毀)時不發事件; 其餘錯誤記錄後亦不發事件, 避免以錯誤之過濾狀態通知呼叫端
+                if (isGridAvailable(vo.getApi())) {
+                    console.log('[w-aggrid-vue] triggerFilterChange:', err)
+                }
+                return
+            }
+
+            //check, 取得過濾狀態後至此之間表格可能已銷毀
+            if (!isGridAvailable(vo.getApi())) {
+                return
+            }
 
             //isFilter
             let isFilter = isestr(filterall) || size(flts) > 0
@@ -2943,7 +3179,7 @@ export default {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Oct 02 2026 20:02:02 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Oct 07 2026 08:31:27 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

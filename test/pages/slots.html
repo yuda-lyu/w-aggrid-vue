@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>slots symmetry</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <div>g1: no slot</div>
+        <w-aggrid-vue id="g1" style="width:1200px;" :opt="opt1"></w-aggrid-vue>
+
+        <div>g2: cell-tooltip only</div>
+        <w-aggrid-vue id="g2" style="width:1200px;" :opt="opt2">
+            <template v-slot:cell-tooltip="props">
+                <div>tip:{{ props.key }}</div>
+            </template>
+        </w-aggrid-vue>
+
+        <div>g3: head-render</div>
+        <w-aggrid-vue id="g3" style="width:1200px;" :opt="opt3">
+            <template v-slot:head-render="props">
+                <span>H-{{ props.value }}</span>
+            </template>
+        </w-aggrid-vue>
+
+        <div>g4: removed keys warn <button id="btnReplaceOpt4" @click="replaceOpt4">重新設定 g4</button></div>
+        <w-aggrid-vue id="g4" style="width:1200px;" :opt="opt4"></w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let mkRows = function() {
+            return [
+                { make: 'Toyota', model: 'Celica', price: 35000, obj: { a: 1, b: [1, 2] } },
+                { make: 'Ford', model: 'Mondeo', price: 32000, obj: { a: 2, b: [] } },
+                { make: 'Porsche', model: 'Boxter', price: 72000, obj: null },
+            ]
+        }
+        let mkOpt = function(ext) {
+            return Object.assign({
+                keys: ['make', 'model', 'price', 'obj'],
+                kpHeadFilterType: { make: 'text', model: 'text', price: 'num', obj: 'text' },
+                rows: mkRows(),
+            }, ext || {})
+        }
+        //removedKeys, 2.0.56 已移除之 4 個鍵
+        let removedKeys = function() {
+            let f = function(v) { return v }
+            return { kpCellRender: { make: f }, kpCellTooltip: { make: f }, kpHeadRender: { make: f }, kpHeadTooltip: { make: f } }
+        }
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt1: mkOpt(),
+                    opt2: mkOpt(),
+                    opt3: mkOpt(),
+                    opt4: mkOpt(removedKeys()),
+                }
+            },
+            methods: {
+                replaceOpt4: function() {
+                    //宿主重新設定 g4(仍含已移除之鍵)
+                    this.opt4 = mkOpt(removedKeys())
+                },
+            },
+        })
+    </script>
+</body>
+</html>

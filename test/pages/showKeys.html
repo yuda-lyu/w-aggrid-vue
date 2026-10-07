@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>showKeys</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <div>g1: plain</div>
+        <w-aggrid-vue id="g1" ref="g1" style="width:900px;" :opt="opt1"></w-aggrid-vue>
+        <div>g2: with pinned column p</div>
+        <w-aggrid-vue id="g2" ref="g2" style="width:900px;" :opt="opt2"></w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let mk = function(keys) {
+            let ft = {}
+            let w = {}
+            let r = {}
+            keys.forEach(function(k) { ft[k] = 'text'; w[k] = 120; r[k] = k + '-v' })
+            return { keys: keys, kpHeadFilterType: ft, kpHeadWidth: w, rows: [r] }
+        }
+        let o2 = mk(['a', 'b', 'p', 'c'])
+        o2.kpHeadFixLeft = { p: true }
+        let ALL = ['a', 'b', 'c', 'd', 'e']
+        let NONE = '__none__'
+        //各案例: { grid, steps: [[keys, opt]] }; opt 為 '__none__' 時只傳 keys(不給 opt)
+        window.__cases = {
+            SK1: { grid: 'g1', steps: [[ALL, NONE], [['a', 'c', 'd', 'e'], NONE], [['a', 'c', 'd', 'e', 'b'], NONE]] },
+            SK2: { grid: 'g1', steps: [[['e', 'd', 'c', 'b', 'a'], NONE]] },
+            SK3a: { grid: 'g1', steps: [[ALL, NONE], [['a', 'c', 'd', 'e'], { applyOrder: false }]] },
+            SK3b: { grid: 'g1', steps: [[ALL, NONE], [['a', 'c', 'd', 'e'], { applyOrder: false }], [['a', 'c', 'd', 'e', 'b'], { applyOrder: false }]] },
+            SK4: { grid: 'g1', steps: [[['e', 'd', 'c', 'b', 'a'], { applyOrder: false }]] },
+            SK5: { grid: 'g1', steps: [[['a', 'c', 'd', 'e'], { applyOrder: false }], [['a', 'c', 'd', 'e', 'b'], { applyOrder: false }]] },
+            SK5b: { grid: 'g1', steps: [[ALL, NONE]] },
+            SK6_str: { grid: 'g1', steps: [[['e', 'a', 'b', 'c', 'd'], { applyOrder: 'false' }]] },
+            SK6_zero: { grid: 'g1', steps: [[['e', 'a', 'b', 'c', 'd'], { applyOrder: 0 }]] },
+            SK6_null: { grid: 'g1', steps: [[['e', 'a', 'b', 'c', 'd'], { applyOrder: null }]] },
+            SK6_x: { grid: 'g1', steps: [[['e', 'a', 'b', 'c', 'd'], { applyOrder: 'x' }]] },
+            SK7: { grid: 'g1', steps: [[ALL, undefined]] },
+            SK8: { grid: 'g1', steps: [[['a', 'c', 'd', 'e'], { applyOrder: false }], [['a', 'c', 'd', 'e', 'b'], { applyOrder: false }]] },
+            SK8b: { grid: 'g1', steps: [[['b', 'a', 'c', 'd', 'e'], NONE]] },
+            SK9: { grid: 'g2', steps: [[['a', 'b', 'c', 'p'], NONE]] },
+            SK9b: { grid: 'g2', steps: [[['a', 'b', 'c'], { applyOrder: false }], [['a', 'b', 'c', 'p'], { applyOrder: false }]] },
+            SK10: { grid: 'g1', steps: [[['a', 'unknown', 'c'], NONE]] },
+            SK11: { grid: 'g1', steps: [[['a', 'a', 'b'], NONE]] },
+            SK12_optStr: { grid: 'g1', steps: [[['e', 'a', 'b', 'c', 'd'], 'x']] },
+            SK12_optNull: { grid: 'g1', steps: [[['e', 'a', 'b', 'c', 'd'], null]] },
+            SK13_keysStr: { grid: 'g1', steps: [['a', NONE]] },
+            SK14_keysUndef: { grid: 'g1', steps: [[undefined, NONE]] },
+            SK15_keysEmpty: { grid: 'g1', steps: [[[], NONE]] },
+            SK16_nullElem: { grid: 'g1', steps: [[[null, 'a'], NONE]] },
+            SK17_objElem: { grid: 'g1', steps: [[[{}], NONE]] },
+            SK18_numElem: { grid: 'g1', steps: [[[1, 'a'], NONE]] },
+            SK19_emptyStrElem: { grid: 'g1', steps: [[['', 'a'], NONE]] },
+        }
+        window.__case = null
+        window.__out = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return { opt1: mk(ALL), opt2: o2 }
+            },
+            methods: {
+                run: function() {
+                    //宿主之按鈕處理函數: 依序呼叫 showKeys, 記錄每步後之顯示欄位(grid 之顯示欄)與拋錯
+                    let c = window.__cases[window.__case]
+                    let comp = this.$refs[c.grid]
+                    let out = { threw: false, trace: [] }
+                    try {
+                        c.steps.forEach(function(st) {
+                            if (st[1] === NONE) {
+                                comp.showKeys(st[0])
+                            }
+                            else {
+                                comp.showKeys(st[0], st[1])
+                            }
+                            out.trace.push(comp.getApi().getAllDisplayedColumns().map(function(col) { return col.getColId() }))
+                        })
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = String(e && e.message ? e.message : e)
+                    }
+                    window.__out = out
+                },
+            },
+        })
+    </script>
+</body>
+</html>

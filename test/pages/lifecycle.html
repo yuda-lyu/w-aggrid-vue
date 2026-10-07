@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>lifecycle</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <button id="btnMountEditable" @click="mountEditable">開啟可編輯之功能區</button>
+        <w-aggrid-vue id="t1" ref="t1" style="width:600px;" :height="100" :opt="opt1"></w-aggrid-vue>
+        <w-aggrid-vue id="t2" ref="t2" style="width:600px;" :height="100" :opt="opt2"></w-aggrid-vue>
+        <w-aggrid-vue id="t3" ref="t3" style="width:600px;" :height="100" :opt="opt3"></w-aggrid-vue>
+        <w-aggrid-vue id="t4" ref="t4" style="width:600px;" :height="100" :opt="opt4"></w-aggrid-vue>
+        <w-aggrid-vue id="t5" ref="t5" style="width:600px;" :height="100" :opt="opt5"></w-aggrid-vue>
+        <w-aggrid-vue id="t6" ref="t6" style="width:600px;" :height="100" :opt="opt6"></w-aggrid-vue>
+        <w-aggrid-vue id="t7" ref="t7" style="width:600px;" :height="100" :opt="opt7"></w-aggrid-vue>
+        <w-aggrid-vue id="t8" ref="t8" style="width:600px;" :height="100" :opt="opt8"></w-aggrid-vue>
+        <div id="dyn"></div>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let rowsAB = function() {
+            return [{ a: 1, b: 2 }]
+        }
+        //mountDyn, 動態掛載一個元件(宿主之功能區切換時建立表格)
+        function mountDyn(opt) {
+            let el = document.createElement('div')
+            document.getElementById('dyn').appendChild(el)
+            let vm = new Vue({ render: function(h) { return h('w-aggrid-vue', { ref: 'x', props: { opt: opt }, style: 'width:500px;' }) } }).$mount(el)
+            return vm.$refs.x
+        }
+        //destroyed, 掛載後隨即銷毀元件(宿主之功能區切換時移除表格), 回傳已銷毀之元件
+        function destroyed() {
+            let c = mountDyn({ keys: ['a', 'b'], rows: rowsAB() })
+            c.$parent.$destroy()
+            return c
+        }
+        //gridDestroyed, 掛載後只銷毀 ag-grid(呼叫端經 getApi 呼叫 destroy), 元件仍在
+        function gridDestroyed() {
+            let c = mountDyn({ keys: ['a', 'b'], rows: rowsAB() })
+            c.getApi().destroy()
+            return c
+        }
+        //destroyedWithOpt, 同 destroyed, 並保留呼叫端之 opt 供呼叫後檢查
+        function destroyedWithOpt() {
+            window.__optU = { keys: ['a', 'b'], rows: rowsAB() }
+            let c = mountDyn(window.__optU)
+            c.$parent.$destroy()
+            return c
+        }
+        let destroyNow = function(comp) {
+            comp.$parent.$destroy()
+        }
+        //各案例: [目標(ref 名或函數), 方法, 參數陣列, 呼叫後同步執行之函數(於 await 之前), 結束後之附註函數]
+        window.__cases = {
+            C1_getDisplayData_singleEmpty: ['t1', 'getDisplayData', []],
+            C2_getNowData_singleEmpty: ['t1', 'getNowData', []],
+            C3_getDisplayData_twoEmpty: ['t2', 'getDisplayData', []],
+            C4_getNowData_twoEmpty: ['t2', 'getNowData', []],
+            C5_getDisplayData_singleBlank: ['t3', 'getDisplayData', []],
+            C6_getDisplayData_noRows: ['t4', 'getDisplayData', []],
+            C7_downloadDisplayData_singleEmpty: ['t1', 'downloadDisplayData', [{}]],
+            C8_downloadData_singleEmpty: ['t1', 'downloadData', [{}]],
+            C9_getDisplayData_allHidden: ['t5', 'getDisplayData', []],
+            C10_getDisplayData_filteredSingleEmpty: ['t6', 'getDisplayData', []],
+            C11_getNowData_allHiddenSingleEmpty: ['t7', 'getNowData', []],
+            O1_invalidOptKeys: [function() { return mountDyn({ keys: 'x', rows: [] }) }, 'getGridOptions', []],
+            O2_invalidOptRows: [function() { return mountDyn({ keys: ['a'], rows: 'x' }) }, 'getGridOptions', []],
+            O3_invalidOptStr: [function() { return mountDyn('x') }, 'getGridOptions', []],
+            O4_invalidOptEmpty: [function() { return mountDyn({}) }, 'getGridOptions', []],
+            O5_optNull: [function() { return mountDyn(null) }, 'getGridOptions', []],
+            E01_showKeys: [destroyed, 'showKeys', [['a']]],
+            E02_setHeadFilter: [destroyed, 'setHeadFilter', ['a', 1]],
+            E03_clearHeadFilter: [destroyed, 'clearHeadFilter', ['a']],
+            E04_clearHeadFilterAll: [destroyed, 'clearHeadFilterAll', []],
+            E05_getFilters: [destroyed, 'getFilters', []],
+            E06_getDisplayDataKeys: [destroyed, 'getDisplayDataKeys', []],
+            E07_getDisplayData: [destroyed, 'getDisplayData', []],
+            E08_getNowData: [destroyed, 'getNowData', []],
+            E09_pasteText: [destroyed, 'pasteText', ['1\t2']],
+            E10_fitColumns_noDebounce: [destroyed, 'fitColumns', [false]],
+            E11_fitColumns_debounce: [destroyed, 'fitColumns', [true]],
+            E12_getApi: [destroyed, 'getApi', []],
+            E13_getGridOptions: [destroyed, 'getGridOptions', []],
+            E14_downloadDisplayData: [destroyed, 'downloadDisplayData', [{}]],
+            E15_downloadData: [destroyed, 'downloadData', [{}]],
+            E16_refresh: [destroyed, 'refresh', []],
+            E17_uploadData: [destroyedWithOpt, 'uploadData', [{}], null, function() { return 'post: opt.rows=' + JSON.stringify(window.__optU.rows) }],
+            X01_showKeys: [gridDestroyed, 'showKeys', [['a']]],
+            X02_setHeadFilter: [gridDestroyed, 'setHeadFilter', ['a', 1]],
+            X03_clearHeadFilter: [gridDestroyed, 'clearHeadFilter', ['a']],
+            X04_clearHeadFilterAll: [gridDestroyed, 'clearHeadFilterAll', []],
+            X05_getFilters: [gridDestroyed, 'getFilters', []],
+            X06_getDisplayDataKeys: [gridDestroyed, 'getDisplayDataKeys', []],
+            X07_getDisplayData: [gridDestroyed, 'getDisplayData', []],
+            X08_getNowData: [gridDestroyed, 'getNowData', []],
+            X09_pasteText: [gridDestroyed, 'pasteText', ['1\t2']],
+            X10_fitColumns_noDebounce: [gridDestroyed, 'fitColumns', [false]],
+            X11_refresh: [gridDestroyed, 'refresh', []],
+            X12_getApi: [gridDestroyed, 'getApi', []],
+            X13_downloadDisplayData: [gridDestroyed, 'downloadDisplayData', [{}]],
+            X14_downloadData: [gridDestroyed, 'downloadData', [{}]],
+            W1_setHeadFilter_destroyDuring: [function() { return mountDyn({ keys: ['a', 'b'], rows: rowsAB() }) }, 'setHeadFilter', ['a', 1], destroyNow],
+            W2_clearHeadFilter_destroyDuring: [function() { return mountDyn({ keys: ['a', 'b'], rows: rowsAB() }) }, 'clearHeadFilter', ['a'], destroyNow],
+        }
+        let errStr = function(e) {
+            if (e && e.message) {
+                return (e.name || 'Error') + ': ' + e.message
+            }
+            return String(e)
+        }
+        //rowDragEnd 之紀錄(t8)
+        window.__drag = []
+        window.__case = null
+        window.__out = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt1: { keys: ['a', 'b'], rows: [{}] },
+                    opt2: { keys: ['a', 'b'], rows: [{}, {}] },
+                    opt3: { keys: ['a', 'b'], rows: [{ a: '', b: '' }] },
+                    opt4: { keys: ['a', 'b'], rows: [] },
+                    opt5: { keys: ['a', 'b'], rows: [{ a: 1, b: 2 }], kpHeadHide: { a: true, b: true } },
+                    //t6: 過濾 a 為空白後恰剩 1 列 {}
+                    opt6: { keys: ['a', 'b'], rows: [{ a: 'x', b: '1' }, {}], kpHeadFilterType: { a: 'text', b: 'text' } },
+                    //t7: 全部欄位隱藏且恰 1 列 {}
+                    opt7: { keys: ['a', 'b'], rows: [{}], kpHeadHide: { a: true, b: true } },
+                    //t8: 恰 1 列 {} 且 a 欄可拖曳排序
+                    opt8: { keys: ['a', 'b'], rows: [{}], kpRowDrag: { a: true }, rowDragEnd: function(indFrom, indTo, row, rows) { window.__drag.push(JSON.parse(JSON.stringify({ indFrom: indFrom, indTo: indTo, rows: rows }))) } },
+                }
+            },
+            methods: {
+                mountEditable: function() {
+                    //宿主之功能區: 可編輯且有置底合計列之表格, 使用者編輯後宿主於 cellChange 回呼內離開功能區(移除表格)
+                    let comp = mountDyn({
+                        keys: ['a', 'b'],
+                        rows: [{ a: '1', b: '2' }],
+                        kpCellEditable: { a: true, b: true },
+                        genRowsPinnBottom: function(rows) { return [{ a: 'n=' + rows.length, b: '' }] },
+                        cellChange: function() {
+                            comp.$parent.$destroy()
+                            window.__pbDestroyed = true
+                        },
+                    })
+                },
+                run: async function() {
+                    //宿主之按鈕處理函數: 呼叫元件方法; 回傳 Promise 者等其結束, 分別記錄同步拋錯與 reject
+                    let c = window.__cases[window.__case]
+                    let out = { threw: false, rejected: false }
+                    try {
+                        let comp = typeof c[0] === 'function' ? c[0]() : this.$refs[c[0]]
+                        let r = comp[c[1]].apply(comp, c[2])
+                        if (c[3]) {
+                            c[3](comp)
+                        }
+                        if (r && typeof r.then === 'function') {
+                            try {
+                                r = await r
+                            }
+                            catch (e) {
+                                out.rejected = true
+                                out.err = errStr(e)
+                            }
+                        }
+                        out.retType = r === undefined ? 'undefined' : (r === null ? 'null' : (Array.isArray(r) ? 'array' : typeof r))
+                        out.ret = Array.isArray(r) ? JSON.parse(JSON.stringify(r)) : null
+                        if (c[4]) {
+                            out.post = c[4](r, comp)
+                        }
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = errStr(e)
+                    }
+                    //等掛載時排定之非同步工作執行完畢(銷毀後之 triggerFilterChange 等), 其 console 訊息才會被收集
+                    await new Promise(function(res) { setTimeout(res, 300) })
+                    window.__out = out
+                },
+            },
+        })
+    </script>
+</body>
+</html>

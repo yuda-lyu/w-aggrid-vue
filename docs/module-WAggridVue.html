@@ -29,7 +29,7 @@
 <nav >
     
     
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-WAggridVue.html">WAggridVue</a><ul class='methods'><li data-type='method'><a href="module-WAggridVue.html#uploadData">uploadData</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#getLangText">getLangText</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-WAggridVue.html">WAggridVue</a><ul class='methods'><li data-type='method'><a href="module-WAggridVue.html#downloadData">downloadData</a></li><li data-type='method'><a href="module-WAggridVue.html#downloadDisplayData">downloadDisplayData</a></li><li data-type='method'><a href="module-WAggridVue.html#uploadData">uploadData</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#getLangText">getLangText</a></li></ul>
     
 </nav>
 
@@ -275,13 +275,13 @@
         <td>Object</td>
         <td><code>{}</code></td>
         <td>No</td>
-        <td>輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined</td>
+        <td>輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時row同為該列完整數據、params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined</td>
     </tr><tr>
         <td><code>opt.kpConvertKeysWhenUploadData</code></td>
         <td>Object</td>
         <td><code>{}</code></td>
         <td>No</td>
-        <td>輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}</td>
+        <td>輸入上傳Excel檔案時將檔案表頭名稱轉為欄位key之對照物件，例如{ '製造商': 'make' }，於uploadData之beforeUpload之前套用，轉換後與檔案既有表頭同名時依欄序後者覆蓋，預設{}</td>
     </tr><tr>
         <td><code>opt.rowsChange</code></td>
         <td>function</td>
@@ -359,7 +359,7 @@
         <td>function</td>
         <td><code>()=>{}</code></td>
         <td>No</td>
-        <td>輸入filter change之觸發事件，預設為()=>{}</td>
+        <td>輸入filter change之觸發事件，於掛載與filterall變更時(from為'filterall')、表頭過濾變更時(含setHeadFilter、clearHeadFilter、clearHeadFilterAll，from為'heads')各觸發1次，傳入{ from, filterall, flts, isFilter }，flts為觸發後讀取當下之生效中過濾模型陣列(依opt.keys之順序，含隱藏欄)，元件或ag-grid已銷毀後不觸發，預設為()=>{}</td>
     </tr><tr>
         <td><code>opt.autoFitColumn</code></td>
         <td>Boolean</td>
@@ -625,13 +625,13 @@
         <td>Object</td>
         <td><code>{}</code></td>
         <td>No</td>
-        <td>輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined</td>
+        <td>輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時row同為該列完整數據、params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined</td>
     </tr><tr>
         <td><code>opt.kpConvertKeysWhenUploadData</code></td>
         <td>Object</td>
         <td><code>{}</code></td>
         <td>No</td>
-        <td>輸入上傳Excel檔案時，當key轉會成對應新key值物件，預設{}</td>
+        <td>輸入上傳Excel檔案時將檔案表頭名稱轉為欄位key之對照物件，例如{ '製造商': 'make' }，於uploadData之beforeUpload之前套用，轉換後與檔案既有表頭同名時依欄序後者覆蓋，預設{}</td>
     </tr><tr>
         <td><code>opt.rowsChange</code></td>
         <td>function</td>
@@ -709,7 +709,7 @@
         <td>function</td>
         <td><code>()=>{}</code></td>
         <td>No</td>
-        <td>輸入filter change之觸發事件，預設為()=>{}</td>
+        <td>輸入filter change之觸發事件，於掛載與filterall變更時(from為'filterall')、表頭過濾變更時(含setHeadFilter、clearHeadFilter、clearHeadFilterAll，from為'heads')各觸發1次，傳入{ from, filterall, flts, isFilter }，flts為觸發後讀取當下之生效中過濾模型陣列(依opt.keys之順序，含隱藏欄)，元件或ag-grid已銷毀後不觸發，預設為()=>{}</td>
     </tr><tr>
         <td><code>opt.autoFitColumn</code></td>
         <td>Boolean</td>
@@ -838,7 +838,7 @@
 
     
 
-    <h4 class="name" id="uploadData"><span class="type-signature"></span>uploadData<span class="signature">(opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id="downloadData"><span class="type-signature"></span>downloadData<span class="signature">(opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -848,13 +848,14 @@
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>開啟上傳視窗讀取Excel檔案，並以其數據取代或附加於表格數據</p></li></ul></dd>
+    <dd class="tag-description"><ul class="dummy"><li><p>下載表格全部數據為Excel檔案，欄位依opt.keys之順序且含隱藏欄，數據為opt.rows全部列(不受表頭過濾、filterall與排序影響)，不含置頂置底列；不需表格就緒即可呼叫，惟opt變更後須待$nextTick再呼叫，否則取得變更前之數據</p>
+<p>處理順序：欄位keys → opt.funGetKeysHook → 依keys由各列取值並依opt.kpCellFormat格式化 → opt.funGetLtdtHook → 轉為二維陣列並加上表頭列 → opt.funGetMatHook → 觸發下載；各掛鉤皆須同步回傳，不支援Promise</p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="WAggridVue.vue.html">WAggridVue.vue</a>, <a href="WAggridVue.vue.html#line2695">line 2695</a>
+        <a href="WAggridVue.vue.html">WAggridVue.vue</a>, <a href="WAggridVue.vue.html#line2826">line 2826</a>
     </li></ul></dd>
     
 
@@ -963,7 +964,735 @@
                 </td>
             
 
-            <td class="description last"><p>輸入設定物件，預設{}</p>
+            <td class="description last"><p>輸入設定物件，未給予或非物件時為{}，各鍵未給予或非指定之值或型態時皆使用預設(掛鉤非函數時視為未給予)，有給予但無效時於console提示，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>funGetKeysHook</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入欄位處理函數，輸入為欄位keys陣列之副本，可增刪或調整順序後回傳(可加入隱藏欄，數據列無該key時其值為空字串)，須回傳由非空字串組成之陣列，回傳空陣列代表無可下載欄位而拋錯，預設null</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>funGetLtdtHook</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入數據處理函數，輸入為依keys提取之各列物件陣列(值已依useFormat格式化且為副本，無數據列時為空陣列)，須回傳物件陣列且各列皆為非空物件，回傳空陣列時僅輸出表頭列，本函數新增或修改之值不再格式化，預設null</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>funGetMatHook</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入二維陣列處理函數，輸入之首列為表頭，須回傳二維陣列且至少一列非空，回傳之儲存格值原樣交給寫檔器(字串、數值、布林、Date、null可寫出，物件、陣列、NaN等多為空白格，帶value、formula、style等鍵之物件被寫檔器當成儲存格設定而格式不符時寫檔失敗並僅記錄於console)，預設null</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>useHead</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入表頭是否使用opt.kpHead之名稱布林值，false時使用key，opt.kpHead無對應之key仍使用key；下載檔欲上傳回表格時須另設opt.kpConvertKeysWhenUploadData為反向對照，且名稱須非空且不重複，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>useFormat</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>true</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否依opt.kpCellFormat格式化各欄值布林值，true時與畫面一致(格式化函數之row為該列完整數據、params為null)，false時下載原值；下載檔欲上傳回表格時宜給false，預設true</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>fileName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'data.xlsx'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入檔名字串，非字串或空字串時為'data.xlsx'，無副檔名時自動補'.xlsx'，預設'data.xlsx'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sheetName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'data'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入分頁名稱字串，須為字串且符合Excel規則(至多31字且以UTF-16碼元計，表情符號與擴充B區漢字各計2字；不含[ ] : * ? / \、首尾非單引號、非History)，不符或非字串時為'data'，預設'data'</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>下列情形同步拋錯且不產生檔案，訊息前綴為'[w-aggrid-vue] downloadData: '：掛鉤回傳Promise('&lt;掛鉤名&gt; must return synchronously, Promise is not supported')、opt.funGetKeysHook未回傳陣列或含非字串之key、無可下載欄位('no downloadable keys')、opt.funGetLtdtHook未回傳陣列或含非物件之列、opt.funGetMatHook未回傳二維陣列或全為空列、最終二維陣列超過Excel單一分頁之上限('too many rows, ...'為含表頭列超過1048576列，'too many columns, ..., invalid row[i]'為任一列超過16384欄)；掛鉤與opt.kpCellFormat之函數自身拋錯時原樣拋出；觸發下載後之寫檔失敗僅以'[w-aggrid-vue] downloadData: can not write excel file'記錄於console，無法回報</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳下載內容之二維陣列(opt.funGetMatHook處理後)，未經opt.funGetMatHook改寫之儲存格中null為空字串、布林值為'true'或'false'、物件與陣列為JSON字串</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="downloadDisplayData"><span class="type-signature"></span>downloadDisplayData<span class="signature">(opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>下載表格顯示中之數據為Excel檔案，欄位為顯示中之欄位且依畫面欄序(含拖曳後之順序，固定於左右之欄依其畫面位置)，數據為經表頭過濾、filterall與排序後之列，不含置頂置底列；須表格存在，元件或ag-grid銷毀後呼叫會拋錯</p>
+<p>選項、處理順序、回傳值與拋錯皆同downloadData，訊息前綴改為'[w-aggrid-vue] downloadDisplayData: '，另於表格不存在(元件或ag-grid已銷毀)時拋'grid is not available'；opt.funGetKeysHook加入隱藏欄時亦輸出其值</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="WAggridVue.vue.html">WAggridVue.vue</a>, <a href="WAggridVue.vue.html#line2790">line 2790</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，各選項同downloadData，預設{}</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>同downloadData，另於表格不存在時拋錯</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳下載內容之二維陣列，同downloadData</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="uploadData"><span class="type-signature"></span>uploadData<span class="signature">(opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>開啟上傳視窗讀取Excel檔案，並以其數據取代或附加於表格數據</p>
+<p>須於使用者操作(例如點擊)之事件處理函數內呼叫，否則瀏覽器不開啟選檔視窗，回傳之Promise亦不會結束。讀檔規則：讀取.xlsx之指定分頁，首列為表頭，表頭須與opt.keys完全相同(含大小寫與空白)或經表格之opt.kpConvertKeysWhenUploadData轉換，空表頭之欄略過，表頭重複或轉換後同名時後者覆蓋；整列皆無值之列略過，含空字串儲存格之列或只有無表頭欄有值之列讀為空白列；值一律讀為字串，日期儲存格讀為'YYYY-MM-DDTHH:mm:ss.SSS'(即Excel儲存格之年月日時分秒，不含時區，與執行環境時區無關)，日期型之表頭亦同。寫入時只保留opt.keys之欄，缺欄之值為空字串；個別空白列照常寫入，全部列皆空白時拒絕；附加模式會重建既有之列物件。多次呼叫時依完成先後寫入，後完成者覆蓋</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="WAggridVue.vue.html">WAggridVue.vue</a>, <a href="WAggridVue.vue.html#line2846">line 2846</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，未給予或非物件時為{}，各鍵未給予或非指定之值或型態時皆使用預設，有給予但無效時於console提示，預設{}</p>
                 <h6>Properties</h6>
                 
 
@@ -1026,7 +1755,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入寫入表格前之數據處理函數，輸入為讀取Excel所得(已依opt.kpConvertKeysWhenUploadData轉換鍵值)之各列數據陣列，需回傳處理後之數據陣列，亦可回傳Promise，預設null</p></td>
+            <td class="description last"><p>輸入寫入表格前之數據處理函數，輸入為讀取Excel所得(已依表格之opt.kpConvertKeysWhenUploadData轉換鍵值)之各列物件陣列，無數據列時為空陣列；須回傳處理後之數據陣列，或resolve為該陣列之Promise(含thenable)，各列須為物件(可為空物件)；欲中止上傳時拋錯或回傳rejected Promise，其錯誤原樣reject且保持參照；非函數時視為未給予，預設null</p></td>
         </tr>
 
     
@@ -1040,6 +1769,9 @@
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -1066,7 +1798,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入讀取Excel檔案之第幾個sheet之非負整數，預設0</p></td>
+            <td class="description last"><p>輸入讀取Excel檔案之第幾個分頁之非負整數，可為整數字串，依活頁簿分頁順序且含隱藏分頁，未給予或無效時為0，預設0</p></td>
         </tr>
 
     
@@ -1106,7 +1838,7 @@
                 </td>
             
 
-            <td class="description last"><p>輸入上傳模式字串，可選'replace'(取代表格數據)、'append'(附加於表格數據之後)，預設'replace'</p></td>
+            <td class="description last"><p>輸入上傳模式字串，可選'replace'(取代表格數據)、'append'(附加於表格數據之後)，未給予或無效時為'replace'，預設'replace'</p></td>
         </tr>
 
     
@@ -1139,7 +1871,7 @@
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳上傳後之表格數據陣列，reject回傳錯誤物件{ msg, err }：使用者於選檔視窗取消時msg為'no file'、err為'file selection was canceled'，此時未呼叫beforeUpload亦未變動表格數據，呼叫端可依msg判斷為取消而不提示；無法讀取Excel時msg為'can not read excel'；指定之sheet不存在時msg為'can not get data from sheet'</p>
+    <p>回傳Promise，resolve回傳上傳後之表格數據陣列，與opt.rows為同一陣列，resolve時表格已更新，opt.rowsChange於其後觸發；reject時本方法不寫入表格數據(beforeUpload自身對外之改動不回復)，亦不觸發opt.rowsChange。reject之值：本方法產生者為錯誤物件{ msg, err }，msg為下列代碼，err為說明(除'no file'、'can not read excel'與'can not read file'外皆以'[w-aggrid-vue] uploadData: '為前綴)：使用者於選檔視窗取消時msg為'no file'、err為'file selection was canceled'，此時未呼叫beforeUpload，呼叫端可依msg判斷為取消而不提示；選檔或讀取檔案失敗(例如檔案過大)時msg為'can not read file'、err為wsemi之錯誤物件；無法讀取Excel時msg為'can not read excel'；指定之分頁不存在時msg為'can not get data from sheet'；beforeUpload回傳值不合約定時msg為'invalid beforeUpload return'；無可寫入之列或全部列於opt.keys之值皆為空時msg為'no data'，呼叫端可視為無作為；無任一列有opt.keys之值時(例如首列非表頭、表頭與opt.keys不符、讀到隱藏分頁)msg為'no matching keys'。beforeUpload自身拋錯或reject時，其錯誤原樣reject且保持參照</p>
 </div>
 
 
@@ -1181,7 +1913,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Oct 02 2026 20:02:02 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Oct 07 2026 08:31:27 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
