@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>header scroll</title>
+    <script>
+        //hvScroll, 記錄 .ag-header-viewport 上 scroll 監聽之註冊與移除(元件銷毀時須成對移除, 規則帳本 R21)
+        window.__hvScroll = { added: 0, removed: 0, fns: [] };
+        (function() {
+            var add = EventTarget.prototype.addEventListener
+            var rem = EventTarget.prototype.removeEventListener
+            var isHv = function(t) {
+                return !!(t && t.classList && t.classList.contains('ag-header-viewport'))
+            }
+            EventTarget.prototype.addEventListener = function(type, fn) {
+                if (type === 'scroll' && isHv(this)) {
+                    window.__hvScroll.added++
+                    window.__hvScroll.fns.push(fn)
+                }
+                return add.apply(this, arguments)
+            }
+            EventTarget.prototype.removeEventListener = function(type, fn) {
+                if (type === 'scroll' && isHv(this) && window.__hvScroll.fns.indexOf(fn) >= 0) {
+                    window.__hvScroll.removed++
+                }
+                return rem.apply(this, arguments)
+            }
+        })()
+    </script>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <!-- 查詢字串: head=default|slot|focusable(標頭範本), pin=1(c0 釘選左側), pinrows=1(置頂置底各一列), w=表格寬度px, cw=欄寬px, n=欄數, rows=列數 -->
+    <div id="app">
+        <button id="btnBefore">before</button>
+        <div style="margin:10px 0;" v-if="show">
+            <w-aggrid-vue v-if="head==='default'" id="g1" :style="{ width: w + 'px' }" :opt="opt"></w-aggrid-vue>
+            <w-aggrid-vue v-else-if="head==='slot'" id="g1" :style="{ width: w + 'px' }" :opt="opt">
+                <template v-slot:head-render="props">
+                    <span>H-{{ props.value }}</span>
+                </template>
+            </w-aggrid-vue>
+            <w-aggrid-vue v-else id="g1" :style="{ width: w + 'px' }" :opt="opt">
+                <template v-slot:head-render="props">
+                    <a href="#" class="hr-a" @click.prevent>H-{{ props.value }}</a>
+                </template>
+            </w-aggrid-vue>
+        </div>
+        <button id="btnAfter">after</button>
+        <button id="btnToggle" @click="show = !show">toggle</button>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        var q = new URLSearchParams(location.search)
+        var head = q.get('head') || 'default'
+        var pin = q.get('pin') === '1'
+        var w = Number(q.get('w') || 1000)
+        var cw = Number(q.get('cw') || 150)
+        var n = Number(q.get('n') || 12)
+        var nRows = Number(q.get('rows') || 5)
+        var keys = []
+        var kpHeadWidth = {}
+        for (var k = 0; k < n; k++) {
+            keys.push('c' + k)
+            kpHeadWidth['c' + k] = cw
+        }
+        //各欄之值為 v000 起之字串, 各欄恆為 0..nRows-1 之排列(7 與列數互質時), 排序前後第 0 列之值不同
+        var rows = []
+        for (var i = 0; i < nRows; i++) {
+            var o = {}
+            for (var k = 0; k < n; k++) {
+                o['c' + k] = 'v' + String((i * 7 + k) % nRows).padStart(3, '0')
+            }
+            rows.push(o)
+        }
+        var opt = { keys: keys, rows: rows, kpHeadWidth: kpHeadWidth }
+        if (pin) {
+            opt.kpHeadFixLeft = { c0: true }
+        }
+        //pinrows=1: 置頂與置底各一列(ag-grid 以 translateX 隨資料區位置同步)
+        if (q.get('pinrows') === '1') {
+            opt.genRowsPinnTop = function() {
+                var o = {}
+                keys.forEach(function(k) { o[k] = 'TOP-' + k })
+                return [o]
+            }
+            opt.genRowsPinnBottom = function() {
+                var o = {}
+                keys.forEach(function(k) { o[k] = 'BOT-' + k })
+                return [o]
+            }
+        }
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return { head: head, w: w, opt: opt, show: true }
+            },
+        })
+    </script>
+</body>
+</html>
