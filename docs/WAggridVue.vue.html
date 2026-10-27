@@ -264,6 +264,28 @@ function getApiOrThrow(vo, name) {
 }
 
 
+//isCellEditable, 元件自寫之寫入路徑(不經ag-grid編輯器直接寫入資料列者, 目前為pasteText)判斷儲存格可否編輯之單一入口
+//委由ag-grid之column.isCellEditable(node)求值, 語意同opt.kpCellEditable指給colDef.editable後ag-grid自身編輯入口(雙擊、F2、鍵入)之判斷:
+//布林值直接採用; 函數以該儲存格之EditableCallbackParams(node、data、column、colDef、api、context)逐儲存格求值, 回傳值依真假; 其餘型態視為不可編輯
+//函數拋錯時視為不可編輯並回傳false, 不使整批寫入失敗, 拋出之錯誤交onError通報(由呼叫端決定如何提示), 通報本身再拋錯亦不外傳
+function isCellEditable(column, node, onError) {
+    try {
+        return !!column.isCellEditable(node)
+    }
+    catch (err) {
+        try {
+            if (isfun(onError)) {
+                onError(err)
+            }
+        }
+        catch (errOnError) {
+            //通報失敗不影響判斷結果
+        }
+        return false
+    }
+}
+
+
 //downloadCore, downloadData與downloadDisplayData共用之下載流程, 兩者僅欄位keys與來源列rows不同
 //寫成模組層函數而非methods, 避免經ref外露為對外API; 不呼叫grid API, 使downloadData可於表格就緒前使用
 //同步可偵測之失敗一律拋錯且不產檔; 寫檔為非同步, 其失敗只能以前綴記錄於console, 無法回報呼叫端
@@ -748,7 +770,7 @@ let HeaderSlotRenderer = {
  * @vue-prop {String} [opt.defCellAlignH='center'] 輸入cell預設之左右對齊字串，預設為'center'
  * @vue-prop {Object} [opt.kpCellAlignH={}] 輸入key對應cell之左右對齊字串物件，預設各key值為defCellAlignH
  * @vue-prop {Boolean} [opt.defCellEditable=false] 輸入cell預設之是否可編輯布林值，預設為false
- * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，預設各key值為defCellEditable
+ * @vue-prop {Object} [opt.kpCellEditable={}] 輸入key對應cell之是否可編輯物件，各key值可為布林值或函數，預設各key值為defCellEditable；值原樣指給ag-grid之colDef.editable，故語意同ag-grid：布林值代表整欄是否可編輯，函數簽名為(params)=>boolean，params同ag-grid之EditableCallbackParams(含node、data、column、colDef、api、context)，對每個儲存格逐列求值，回傳true代表該儲存格可編輯(可據以做到逐列唯讀)，其他型態(非布林值非函數)視為不可編輯；ag-grid之雙擊、F2、鍵入編輯與元件之貼上(Ctrl+V、pasteText)皆依同一判斷，貼上時唯讀之儲存格略過不寫入(其餘儲存格照寫，欄位索引照常遞增)，各儲存格之判斷皆於元件寫入前完成(同一次貼上先寫入之儲存格不影響後面儲存格之判斷)，函數須無副作用；貼上時函數若拋錯，該儲存格視為不可編輯並略過(不使整批貼上失敗)，同一次貼上同一欄於console以`[w-aggrid-vue] pasteText: kpCellEditable[key] threw, ...`說明一次；以鍵盤Ctrl+V自編輯器開啟中之儲存格貼上時，編輯器會先提交瀏覽器原生貼入之文字，函數看到的是提交後之資料
  * @vue-prop {Object} [opt.kpCellFormat={}] 輸入key對應cell之值格式化函數物件，函數簽名為(value, key, row, params)，回傳顯示字串，回傳值不經套件轉換直接使用，回傳null或undefined代表不格式化維持原值；所有原值(含null、undefined、空字串)皆原樣傳入，空值之呈現由呼叫端於函數內自行決定；作用於顯示與下載(下載時row同為該列完整數據、params為null)，排序與過濾仍依原值；與cell-render slot可並用，slot props之value為原值、valueFormatted為格式化值，預設各key值為undefined
  * @vue-prop {Object} [opt.kpConvertKeysWhenUploadData={}] 輸入上傳Excel檔案時將檔案表頭名稱轉為欄位key之對照物件，例如{ '製造商': 'make' }，於uploadData之beforeUpload之前套用，轉換後與檔案既有表頭同名時依欄序後者覆蓋，預設{}
  * @vue-prop {Function} [opt.rowsChange=()=>{}] 輸入rows change之觸發事件，預設為()=>{}
@@ -1627,12 +1649,14 @@ export default {
             //api, 表格不可用時拋錯
             let api = getApiOrThrow(vo, 'pasteText')
 
-            //mShowRowInds
+            //mShowRowInds, mShowNodes
             let mShowRowInds = []
+            let mShowNodes = []
             let mData = []
             api.forEachNodeAfterFilterAndSort(function(node, k) {
                 //console.log('node', node)
                 mShowRowInds.push(node.id)
+                mShowNodes.push(node)
                 mData.push(node.data)
             })
             // console.log('mShowRowInds', mShowRowInds)
@@ -1646,8 +1670,8 @@ export default {
 
             //mShowColKeys
             // let mShowColKeys = vo.gridOptions.columnApi.getAllGridColumns()
-            let mShowColKeys = api.getAllGridColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
-            mShowColKeys = map(mShowColKeys, (v, k) => {
+            let mShowCols = api.getAllGridColumns() //gridOptions.columnApi已歸入api, 並須通過ref取得
+            let mShowColKeys = map(mShowCols, (v, k) => {
                 // console.log('v', v, v.getId)
                 return v.getId()
             })
@@ -1687,15 +1711,34 @@ export default {
             }
             //console.log('pasteOnPinned', pasteOnPinned)
 
-            //kpEditable
-            // let cd = vo.gridOptions.columnDefs
-            let cd = api.getColumnDefs() //gridOptions.columnDefs已歸入api, 並須通過ref取得
-            // console.log('cd', cd)
-            let kpEditable = {}
-            each(cd, (v) => {
-                kpEditable[v.field] = v.editable
+            //kpColumn, 各欄之ag-grid Column物件, 供isCellEditable逐儲存格判斷; 寫入以colId為資料鍵, 故只收colId與field相同者
+            //opt.keys重複時ag-grid以&lt;key>_1為第二欄之colId, 其讀取之field仍為&lt;key>, 寫入colId會新增另一屬性或覆蓋他欄, 故該欄不貼上(同修前)
+            let kpColumn = {}
+            each(mShowCols, (v) => {
+                if (get(v.getColDef(), 'field') === v.getId()) {
+                    kpColumn[v.getId()] = v
+                }
             })
-            //console.log('kpEditable', kpEditable)
+            //console.log('kpColumn', kpColumn)
+
+            //onEditableError, editable函數拋錯時視為不可編輯, 同一次貼上同一欄只於console說明一次, 避免大量列時洗版
+            let kpEditableError = {}
+            let onEditableError = (colKey) => {
+                return (err) => {
+                    if (!kpEditableError[colKey]) {
+                        kpEditableError[colKey] = true
+                        //msg, 拋出之值可能無法轉字串(無原型物件等), 退為物件型態字串
+                        let msg = ''
+                        try {
+                            msg = String(get(err, 'message', err))
+                        }
+                        catch (errMsg) {
+                            msg = Object.prototype.toString.call(err)
+                        }
+                        console.log(`[w-aggrid-vue] pasteText: kpCellEditable[${colKey}] threw, the cell is treated as not editable: ${msg}`)
+                    }
+                }
+            }
 
             //dataPaste
             let dataPaste = parseText(text)
@@ -1732,6 +1775,7 @@ export default {
             // let rowsTemp = cloneDeep(vo.rows)
             let rows = vo.rows //記憶體得用原始記憶體, 否則applyTransaction會無法找到原始數據物件進行更新
             let updateRows = []
+            let writes = []
             for (let ii = 0; ii &lt; size(mShowColKeys); ii++) {
                 let v = mShowColKeys[ii]
                 //console.log('v', v)
@@ -1782,30 +1826,34 @@ export default {
                     let trueColKey = v
                     // console.log('pasteColInd', pasteColInd, 'trueColKey', trueColKey)
 
-                    //check
-                    if (!kpEditable[trueColKey]) {
-                        continue //禁止編輯欄位故跳過, i的增加還是得照常處理, 也就是只有不能編輯欄位的數據不變更
+                    //column, onError
+                    let column = kpColumn[trueColKey]
+                    if (!column) {
+                        continue //colId與field不同之欄(opt.keys重複)不貼上, i的增加還是得照常處理
                     }
+                    let onError = onEditableError(trueColKey)
 
                     for (let j = 0; j &lt; pasteRowMax; j++) {
                         let pasteRowInd = j
                         if (showRowIndNow + j &lt; size(mShowRowInds)) {
-                            let trueRowInd = mShowRowInds[showRowIndNow + j]
-                            // console.log('pasteRowInd', pasteRowInd, 'trueRowInd', trueRowInd)
+                            let node = mShowNodes[showRowIndNow + j]
+                            // console.log('pasteRowInd', pasteRowInd, 'node.id', node.id)
+
+                            //check, 逐儲存格判斷可否編輯(editable為函數時依該列求值), 禁止編輯之儲存格故跳過, i的增加還是得照常處理, 也就是只有不能編輯儲存格的數據不變更
+                            if (!isCellEditable(column, node, onError)) {
+                                continue
+                            }
 
                             // //pasteValue
                             // let pasteValue = dataPaste[pasteRowInd][pasteColInd]
                             // console.log('pasteValue', pasteValue)
 
                             // //trueValue
-                            // let trueValue = rowsTemp[trueRowInd][trueColKey]
+                            // let trueValue = rowsTemp[node.id][trueColKey]
                             // console.log('trueValue', trueValue)
 
-                            //save
-                            rows[trueRowInd][trueColKey] = dataPaste[pasteRowInd][pasteColInd]
-
-                            //push, 只紀錄需變更的rows
-                            updateRows.push(rows[trueRowInd])
+                            //push, 先紀錄待寫入之儲存格, 全部儲存格判斷完才寫入, 使同一次貼上先寫入之儲存格不影響後面儲存格之可編輯判斷
+                            writes.push([node, trueColKey, dataPaste[pasteRowInd][pasteColInd]])
 
                         }
 
@@ -1813,6 +1861,12 @@ export default {
                 }
 
             }
+
+            //save, 並只紀錄需變更的rows; 寫入判斷可否編輯所依之那一列(node.data), 不以node.id索引vo.rows: filterall生效時rowData為過濾後之子集, node.id為子集索引, 與vo.rows索引不同; node.data與vo.rows之列為同一物件(applyTransaction亦依此比對)
+            each(writes, ([node, trueColKey, pasteValue]) => {
+                node.data[trueColKey] = pasteValue
+                updateRows.push(node.data)
+            })
 
             //applyTransaction, 只變更必要資料加速, 注意記憶體得用原始記憶體, 也就是updateRows得使用原始vo.rows來給予欲變更之rows, 否則applyTransaction會無法找到原始數據物件進行更新
             api.applyTransaction({ update: updateRows })
@@ -2973,7 +3027,7 @@ export default {
         /**
          * 開啟上傳視窗讀取Excel檔案，並以其數據取代或附加於表格數據
          *
-         * 須於使用者操作(例如點擊)之事件處理函數內呼叫，否則瀏覽器不開啟選檔視窗，回傳之Promise亦不會結束。讀檔規則：讀取.xlsx之指定分頁，首列為表頭，表頭須與opt.keys完全相同(含大小寫與空白)或經表格之opt.kpConvertKeysWhenUploadData轉換，空表頭之欄略過，表頭重複或轉換後同名時後者覆蓋；整列皆無值之列略過，含空字串儲存格之列或只有無表頭欄有值之列讀為空白列；值一律讀為字串，日期儲存格讀為'YYYY-MM-DDTHH:mm:ss.SSS'(即Excel儲存格之年月日時分秒，不含時區，與執行環境時區無關)，日期型之表頭亦同。寫入時只保留opt.keys之欄，缺欄之值為空字串；個別空白列照常寫入，全部列皆空白時拒絕；附加模式會重建既有之列物件。多次呼叫時依完成先後寫入，後完成者覆蓋
+         * 須於使用者操作(例如點擊)之事件處理函數內呼叫，否則瀏覽器不開啟選檔視窗，回傳之Promise亦不會結束。讀檔規則：讀取.xlsx之指定分頁，首列為表頭，表頭須與opt.keys完全相同(含大小寫與空白)或經表格之opt.kpConvertKeysWhenUploadData轉換，空表頭之欄略過，表頭重複或轉換後同名時後者覆蓋；整列皆無值之列略過，含空字串儲存格之列或只有無表頭欄有值之列讀為空白列；值一律讀為字串，日期儲存格讀為'YYYY-MM-DDTHH:mm:ss.SSS'(即Excel儲存格之年月日時分秒，不含時區，與執行環境時區無關)，日期型之表頭亦同。寫入時只保留opt.keys之欄，缺欄之值為空字串；個別空白列照常寫入，全部列皆空白時拒絕；附加模式會重建既有之列物件。多次呼叫時依完成先後寫入，後完成者覆蓋。上傳屬程式化之整表資料取代或附加，不受opt.kpCellEditable約束(kpCellEditable只約束使用者之互動編輯，如雙擊、F2、鍵入與貼上)，不可編輯之欄與列同樣會被寫入
          *
          * @param {Object} [opt={}] 輸入設定物件，未給予或非物件時為{}，各鍵未給予或非指定之值或型態時皆使用預設，有給予但無效時於console提示，預設{}
          * @param {Function} [opt.beforeUpload=null] 輸入寫入表格前之數據處理函數，輸入為讀取Excel所得(已依表格之opt.kpConvertKeysWhenUploadData轉換鍵值)之各列物件陣列，無數據列時為空陣列；須回傳處理後之數據陣列，或resolve為該陣列之Promise(含thenable)，各列須為物件(可為空物件)；欲中止上傳時拋錯或回傳rejected Promise，其錯誤原樣reject且保持參照；非函數時視為未給予，預設null
@@ -3270,7 +3324,7 @@ export default {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Oct 28 2026 02:15:45 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Oct 28 2026 04:16:29 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
