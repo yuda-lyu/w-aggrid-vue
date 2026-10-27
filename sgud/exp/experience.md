@@ -64,6 +64,12 @@
 - **記錄 editable 函數呼叫之旗標在 Ctrl+V 前才開**:鍵盤版實測記錄窗內恰 3 次(b 欄 3 格各 1 次,貼上後 1.5 秒內 ag-grid 無額外求值);旗標要在單擊起點格之後、`keyboard.press` 之前開,單擊與渲染時 ag-grid 自身之呼叫才不混入.
 - **新增測試檔也要過專案 eslint**(`node_modules/.bin/eslint --no-fix test/<檔>`;既有測試檔皆 0 錯):物件屬性需逐行(`object-property-newline`、`object-curly-newline`)、`brace-style`;案例表寫成多行物件,必要時 `eslint --fix` 只對自己的新檔.
 - 掛有主控守門 hooks 的環境:PowerShell 字串內含 `>`(如 `'<null>'`)會被 `ps-redirect` 誤判為重導向寫檔,改寫不含 `>` 之字樣.
+- **真滑鼠拖列(agv-run03,e2e-rowDrag)**:把手為 `.ag-row-drag`(列高 27px、把手 16×27);按住後先移開 8px 才算開始拖曳,再分段(steps 12)移到目標列把手中心 ±10px(越過其中線)才會換位;往下拖放開前續移到表格下方空白區(寫在宿主頁底部加 200px 空白區)才觸發 `rowDragLeave`(此時只有 leave、無 end 回呼);往上拖要離開表格須移到頁面頂端 y=4(表格上方為標題文字,從列往下續移會把列又拖回下方).完成訊號用 `rowDragChange` 回呼已記錄(與寫回 `opt.rows` 同一時點).
+- **ag-grid 表頭排序狀態在 `aria-sort`(`ascending`/`descending`/`none`)**,不是 `.ag-header-cell` 的 class(`ag-header-cell-sorted-asc` 在內層 `.ag-cell-label-container`);選擇器用 `.ag-header-row-column .ag-header-cell[col-id=...]` 以免與浮動過濾列之格相混.升冪時列序與原序相同,等排序生效須用 `aria-sort` 而非列文字.
+- **拖曳寫回的 `opt.rows` 要看新列序與欄位兩件事**:列序用畫面 `columnTexts` 驗、欄位用 `window.__vm.opt.<id>.rows` 的完整物件驗(`deepStrictEqual` 對 `{ro,note}` 這類不在 keys 內之欄位);只驗畫面或 `getNowData()`(依 keys 提取)會對「欄位消失」這個缺陷視而不見.
+- **filterall 生效時拖曳會讓 `opt.rows` 只剩顯示子集**(rowData 為過濾後之子集,寫回的就是子集;與欄位保留無涉、修前修後相同),規則帳本第 6 節 #21.
+- **變異驗證腳本化**(agv-run03,腳本 `mutate.mjs` 用完已自 repo 刪除,留存於 `dnow/20261028054319/agent-out/agv-run03-evidence/scripts/`):讀變異清單 json(`find` 須在 src 恰出現 1 次)→ 備份 src 與 dist 的雜湊 → 逐一套用、`node toolg/gDistRollupComps.mjs`、經 `quiet-run --lock` 跑指定測試檔 → `finally` 以備份位元組還原並比對雜湊.變異清單用單行字串(避免 CRLF 與縮排差異),例:令 Ctrl+V 條件失效 `param.event.code === 'KeyV'` → `'KeyW'`,令隱藏欄不略過 `continue //數據貼到隱藏欄位故跳過` → 註解.這樣可同時證明 e2e(真鍵盤)與 api(程式呼叫)兩層各自偵測不同缺陷.
+- **e2e 共用 helper 放 `test/tools/e2e-setup.mjs`**:`cell`、`waitCellFocused`、`focusCell`、`pasteByKeyboard`、`hostRows`、`nowRows`、`waitRows`;宿主頁須提供 `window.__vm.opt[表格 id]` 與 `window.__vm.$refs[表格 id]`(表格 id 即選擇器 `#<id>` 去掉 `#`).
 
 ## 3. 相依套件之非顯而易見行為
 

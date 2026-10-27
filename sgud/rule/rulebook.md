@@ -36,6 +36,7 @@
 | R20 | 過濾狀態以同步之 getFilterModel 取得;filterChange 每次變更恰 1 次、表格不存在不發 | 無 |
 | R21 | 標頭容器被程式單獨捲動時,資料區須捲到相同位置 | 無 |
 | R22 | 元件自寫之資料寫入路徑一律經 isCellEditable 判斷,語意同 ag-grid 之 colDef.editable | 無(uploadData 整表載入刻意不套,主控 2026-10-28 裁示維持) |
+| R23 | 元件寫回 opt.rows 時保留列之全部欄位(列拖曳、貼上);只有整表載入(uploadData)依 opt.keys 提取 | 無(filterall 時列拖曳寫回僅顯示子集,待裁示,第 6 節 #21) |
 
 ## 1. 共通規則
 
@@ -304,20 +305,20 @@
   4. pasteText 之處置:逐儲存格判斷(`column` 為 `getAllGridColumns()` 之 Column、`node` 為 `forEachNodeAfterFilterAndSort` 之畫面列節點,故排序、表頭過濾後仍依畫面列);唯讀者略過,**欄位索引照常遞增**(起點格唯讀亦然);**判斷於寫入前全部完成**(先收集 `writes`,迴圈結束後才寫,同次貼上先寫入之儲存格不影響後面儲存格之判斷,與欄/列迴圈順序無關);**寫入落在被判斷之 `node.data`**,不以 `node.id` 索引 `vo.rows`(filterall 生效時 rowData 為過濾後之子集,`node.id` 為子集索引,與 `vo.rows` 索引不同——修前 `rows[node.id]` 會寫到畫面以外之列,使逐列唯讀亦可被繞過);函數拋錯時同一次貼上同一欄於 console 說明一次:`[w-aggrid-vue] pasteText: kpCellEditable[<key>] threw, the cell is treated as not editable: <錯誤訊息>`(R03 前綴).
   5. 布林值行為不變:`true` 全欄寫入、`false`/未給(`undefined`)整欄略過.
   6. **colId 與 field 不同之欄不貼上**(`opt.keys` 重複時 ag-grid 以 `<key>_1` 為第二欄之 colId,其讀取之 field 仍為 `<key>`;寫入以 colId 為資料鍵,會新增 `<key>_1` 屬性或覆蓋他欄):`kpColumn` 只收 `colDef.field === colId` 者,其餘 `continue`(欄位索引照常遞增).同修前之實際行為(修前以 field 建表,colId 查不到而略過);首版修正曾誤改為依該欄判斷並寫入 `<key>_1`(外審 terra 指出,PT17).
-- **單一擁有者**:F 模組層 `isCellEditable`(224)(pasteText 內另有 `onEditableError` 負責通報、`kpColumn` 負責 colId 與 field 一致之篩選,皆屬 pasteText 區域變數,不另作判斷).
+- **單一擁有者**:F 模組層 `isCellEditable`(234)(pasteText 內另有 `onEditableError` 負責通報、`kpColumn` 負責 colId 與 field 一致之篩選,皆屬 pasteText 區域變數,不另作判斷).
 - **盤點**:
-  - 寫入站點:`git grep -nE "applyTransaction\(|setDataValue\(|\.setData\(|setRowData\(|setGridOption\('rowData'|set\(vo, .opt\.rows.|\.data\[[^]]+\] *=|rows\[[^]]+\]\[[^]]+\] *=" -- src/components/WAggridVue.vue`(5 筆:1070 triggerRowDragChange、1820 pasteText 寫入、1825 pasteText applyTransaction、1829 pasteText set、3189 uploadData;出現表外之命中,或 `setDataValue`、`setData(`、`rows[..][..] =` 命中,須先補列站點並給狀態)
-  - 判斷站點:`git grep -nE "isCellEditable\(|o\.editable|kpEditable\b" -- src/components/WAggridVue.vue`(命中 5 行:註解 221、定義 224、定義內 `column.isCellEditable` 226、pasteText 呼叫 1796、`o.editable` 1966;`kpEditable\b` 須為 0,即不得再有自存之 editable 表)
+  - 寫入站點:`git grep -nE "applyTransaction\(|setDataValue\(|\.setData\(|setRowData\(|setGridOption\('rowData'|set\(vo, .opt\.rows.|\.data\[[^]]+\] *=|rows\[[^]]+\]\[[^]]+\] *=" -- src/components/WAggridVue.vue`(5 筆:1081 triggerRowDragChange、1837 pasteText 寫入、1842 pasteText applyTransaction、1846 pasteText set、3206 uploadData;2026-10-28 agv-run03 工作樹;出現表外之命中,或 `setDataValue`、`setData(`、`rows[..][..] =` 命中,須先補列站點並給狀態)
+  - 判斷站點:`git grep -nE "isCellEditable\(|o\.editable|kpEditable\b" -- src/components/WAggridVue.vue`(命中 5 行:註解 231、定義 234、定義內 `column.isCellEditable` 236、pasteText 呼叫 1813、`o.editable` 1983;`kpEditable\b` 須為 0,即不得再有自存之 editable 表)
 - **站點全集**(2026-10-28 盤點,F 行號依工作樹):
 
 | 行 | 位置 | 是否寫入儲存格值 | 是否遵守 editable | 狀態 |
 |---|---|---|---|---|
-| 1966 | keys2columns 之 `o.editable = vo.kpCellEditable[key]` | 否(宣告來源) | — | 來源(ag-grid 原生入口與 isCellEditable 皆讀此) |
-| 1244 | agCellChange(`cellValueChanged` 回呼) | 否(ag-grid 編輯器已寫入後之通知) | ag-grid 以 `column.isCellEditable` 擋在編輯器入口(PT14) | 範圍外(通知,非寫入) |
-| 1570→1597 | agCellKeyDown(Ctrl+V)→ pasteText;宿主亦可直接呼叫 pasteText | 是 | 已套(2026-10-28):逐儲存格 `isCellEditable` | **已套**(e2e-pasteEditable PT5–PT18 全走真滑鼠單擊起點格 + 真鍵盤 Ctrl+V;宿主按鈕呼叫 pasteText 之路徑由 e2e-pasteText PT1–PT4 驗) |
-| 1819 | pasteText 之 `each(writes ...)` 寫入 | 是(`node.data[col] = value`) | 同上,僅寫入已通過判斷者 | 已套 |
-| 1070 | triggerRowDragChange `set(vo, 'opt.rows', rows)` | 否(只改列序,值不變;但寫回只含 keys 欄位,見第 6 節 #18) | — | 範圍外(列序非儲存格值;ag-grid 之 rowDrag 亦不受 editable 約束) |
-| 3189 | uploadData `set(vo, 'opt.rows', rows)` | 是(整表載入:replace 取代、append 附加) | 否 | 刻意不套(主控 2026-10-28 裁示維持):整表載入屬程式化資料替換,非使用者編輯路徑,語意同呼叫端設定 `opt.rows`(ag-grid 之 `rowData` 載入亦不受 editable 約束);`kpCellEditable` 只管使用者互動編輯.JSDoc(`uploadData` 說明)已載此語意 |
+| 1983 | keys2columns 之 `o.editable = vo.kpCellEditable[key]` | 否(宣告來源) | — | 來源(ag-grid 原生入口與 isCellEditable 皆讀此) |
+| 1261 | agCellChange(`cellValueChanged` 回呼) | 否(ag-grid 編輯器已寫入後之通知) | ag-grid 以 `column.isCellEditable` 擋在編輯器入口(PT14) | 範圍外(通知,非寫入) |
+| 1587→1614 | agCellKeyDown(Ctrl+V)→ pasteText;宿主亦可直接呼叫 pasteText | 是 | 已套(2026-10-28):逐儲存格 `isCellEditable` | **已套**(e2e-pasteEditable PT5–PT18 與 e2e-pasteText PT1–PT4 全走真滑鼠單擊起點格 + 真鍵盤 Ctrl+V;宿主按鈕呼叫 pasteText 之路徑由 api-pasteText PA1–PA4 驗) |
+| 1837 | pasteText 之 `each(writes ...)` 寫入 | 是(`node.data[col] = value`) | 同上,僅寫入已通過判斷者 | 已套 |
+| 1081 | triggerRowDragChange `set(vo, 'opt.rows', rowsFull)` | 否(只改列序,值不變;寫回保留各列全部欄位,見 R23) | — | 範圍外(列序非儲存格值;ag-grid 之 rowDrag 亦不受 editable 約束) |
+| 3206 | uploadData `set(vo, 'opt.rows', rows)` | 是(整表載入:replace 取代、append 附加) | 否 | 刻意不套(主控 2026-10-28 裁示維持):整表載入屬程式化資料替換,非使用者編輯路徑,語意同呼叫端設定 `opt.rows`(ag-grid 之 `rowData` 載入亦不受 editable 約束);`kpCellEditable` 只管使用者互動編輯.JSDoc(`uploadData` 說明)已載此語意 |
 | — | setRowsPinnTop / setRowsPinnBottom(`genRowsPinn*` 回傳之置頂置底列) | 否(衍生列,不回寫 `opt.rows`) | — | 範圍外 |
 | — | ag-grid Enterprise 之剪貼簿貼上、填滿把手、範圍選取、Delete 清除 | — | — | 範圍外:僅裝 ag-grid-community,未載入 enterprise 模組(`_enableRangeSelection` 等為底線佔位 prop,未啟用);元件亦未啟用 `undoRedoCellEditing` |
 | — | 呼叫端經 `getApi()` 呼叫 `setDataValue`、`applyTransaction` 等 | 是 | 否(ag-grid api 層本身不檢查 editable) | 範圍外:呼叫端責任 |
@@ -330,6 +331,34 @@
   - **穩定性**:同一檔連跑 5 次,每次 14 passing(共 70 格次 0 失敗);全套 `--parallel` 下亦綠.
   - **契約符合**(agv-run02 逐項比對 role-coder-for-test-e2e):無標準圖(本套件未產製,待裁示,見 7.4/9);選擇器沿用共用層 `columnTexts` 同形之 ag-grid 屬性 `col-id`/`row-index`(結構 selector,既有慣例,未新增降級型態);未使用 `test/_tmp`、`./tmp`;無 server、無 port(file://);每格新瀏覽器.
 - **來源**:2026-10-28 Gitea issue #13(建議檔 `建議w-aggrid-vue修正.md`);站點盤點與 filterall 寫入落點為本輪新增(filterall 時 `rows[node.id]` 寫錯列,以 `tmp` 探測實測確認:filterall 'xx' 顯示 r1、r2,貼 `P1\nP2` 卻寫入 r0、r1).
+
+### R23 元件寫回 opt.rows 時保留列之全部欄位(列拖曳、貼上);只有整表載入(uploadData)依 opt.keys 提取
+
+- **成因(2026-10-28 agv-run03;agv-run02 報告遺留,實測於第 6 節原 #18)**:列拖曳排序(kpRowDrag)後 `triggerRowDragChange` 以 `set(vo, 'opt.rows', rows)` 寫回,`rows` 為 `getNowData()` 之結果(`pickRowsByKeys` 依 `opt.keys` 提取),故不在 keys 內之欄位(如供 `kpCellEditable` 函數判斷唯讀之旗標 `ro`)寫回後消失,其後 editable 判斷改變——被拖曳過之表格,唯讀列變成可編輯(資料遺失).
+- **判定:缺陷,非設計**.證據:①JSDoc(`opt.rows`、`opt.kpRowDrag`)與 README 皆未宣告只留 keys,`opt.rows` 之定義為「各列為物件,內含各欄位 keys 之值」(未禁止多餘欄位);②ag-grid 原生列拖曳(`rowDragManaged`)只重排節點,資料物件不重建,應用端之列物件完整保留;③元件另一寫回 opt.rows 之路徑(pasteText)保留全欄(R22:寫入落在 `node.data`,`set(vo, 'opt.rows', vo.rows)`);④該提取為重用 `getNowData`(供回呼之 `rows` 引數)之副作用,註解(原 F:1069)之意圖只是「讓外面數據同步新列序」;⑤回呼 `rowDragEnd/Leave/Change` 之 `row` 引數為 `node.data`(完整列),`rows` 引數卻只含 keys,同一回呼內不一致.
+- **規則**:
+  1. 元件寫回 `opt.rows` 之路徑,除整表載入(uploadData:取代或附加,「寫入時只保留 opt.keys 之欄」已載於 JSDoc)外,一律寫回原列物件(`node.data`),不得依 `opt.keys` 提取、不得複製成新物件.
+  2. 列拖曳:`getNodeRows(api)`(F 模組層,`forEachNode` 之 `node.data`,順序同 `getNowData`)取得 `rowsFull`,於 `agRowDragEnd`/`agRowDragLeave` **呼叫端回呼之前**取得(回呼可能已銷毀表格),傳給 `triggerRowDragChange` 之第 5 參數,`set(vo, 'opt.rows', rowsFull)`.
+  3. 回呼(`rowDragEnd`、`rowDragLeave`、`rowDragChange`)之 `rows` 引數維持 `getNowData()`(依 keys 提取之副本),`row` 為被拖曳之整列;行為不變,JSDoc(`opt.kpRowDrag`)已載.
+  4. `indFrom === indTo`(原位放開)不寫回、不觸發 `rowDragChange`(既有行為,RD7 守護).
+- **單一擁有者**:F 模組層 `getNodeRows`(220);列拖曳之寫回只在 `triggerRowDragChange`(1081).
+- **盤點**:
+  - 寫回站點:同 R22 之「寫入站點」指令(5 筆:1081 列拖曳〔已套,保留全欄〕、1846 pasteText〔已套,原列〕、3206 uploadData〔刻意依 keys 提取〕)
+  - 提取站點:`git grep -nE "pickRowsByKeys\(" -- src/components/WAggridVue.vue`(定義 1 + 回呼與公開方法用 getDisplayData、getNowData、uploadData;**不得**有任何 `set(vo, .opt\.rows., <提取結果>)` 之列拖曳或貼上路徑)
+  - 列拖曳取列:`git grep -nE "getNodeRows|rowsFull" -- src/components/WAggridVue.vue`(命中 11 行:定義 2、triggerRowDragChange 3、agRowDragEnd 3、agRowDragLeave 3)
+- **站點**:列拖曳之 End 路徑(放開時游標在表格內)與 Leave 路徑(放開前已移出表格,只觸發 rowDragLeave)共用 `triggerRowDragChange`,皆已套.
+- **測試**:`test/e2e-rowDrag.test.mjs`(宿主頁 `test/pages/rowDrag.html`)RD1–RD9 共 9 格,act 全為真滑鼠(按住 a 欄把手、分段移動、放開;RD5 另以真滑鼠單擊 b 欄):
+  - 修(修前 HEAD 之 dist 紅,6 格):RD1(往下、表格內放開)、RD2(往下、移出表格放開)、RD3(往上、表格內)、RD4(往上、移出表格)——四格皆驗畫面列序、`opt.rows` 依新序且保留 `ro`、`note`、各列為原列物件(身分 `===`)、`getNowData` 只含 keys、回呼次數與引數;RD5(拖曳後 ro 列單擊 b 欄不開編輯器、非 ro 列開,並對照 ag-grid 之 `isCellEditable`);RD9(宿主於 `rowDragEnd` 內銷毀 ag-grid,`opt.rows` 仍依新序、保留全欄與原列物件)
+  - 保留(修前後皆綠,3 格):RD6(列只含 keys 時行為不變)、RD7(原位放開不觸發 rowDragChange、`rowDragEnd` 之 indFrom=indTo=0、`opt.rows` 不變)、RD8(同一次拖曳拖到別列後拖回原位再放開,同原位放開)
+  - **修前紅**(2026-10-28):以 HEAD 之 dist 跑 RD1–RD5(首版 7 格:5 紅 2 綠);擴充為 9 格後以變異 D1(寫回改回提取後之 `rows`,等同修前)重驗:RD1–RD5、RD9 紅,RD6–RD8 綠.
+  - **穩定性**:擴充為 9 格後,本檔連跑 6 次(單檔 3 次、與他檔同跑 1 次、全套 `--parallel` 1 次、首次)皆 9 passing,0 失敗;擴充前 7 格版與 e2e-pasteText、api-pasteText 合跑 5 次皆 15 passing.
+  - **變異**(重建 dist 跑本檔,還原後與變異前逐位元相同):D1 全部寫回改用提取後 `rows`;D2 僅 End 路徑用 `rows`;D3 僅 Leave 路徑用 `rows`;D4 回呼之後才取 `rowsFull`;D5 `getNodeRows` 改複製列(`cloneDeep`);D6 原位放開也寫回(取消 `indFrom !== indTo`).各變異被偵測之格見該輪報告.
+  - 方向(下/上)× 終止路徑(End/Leave)四格全列;RD2、RD4 斷言 leave 回呼恰 1 次、end 回呼 0 次(確走 Leave 路徑),RD1、RD3 反之
+- **未涵蓋**:filterall 生效時之列拖曳(第 6 節 #21,待裁示);列拖曳後置頂/置底列不重算(#23)與回呼內同步 pasteText(#22);表頭過濾(非 filterall)生效時之列拖曳(`forEachNode` 含被過濾掉之節點,資料不會缺,未實測);同一次拖曳中移出表格後又移回再放開(Leave 後 End,兩者共用 `iRowDragEnter`,未實測);缺欄之列(修前被提取補成 `''`,修後保持缺欄,見第 8 節);多於 3 列之表.
+  - **有排序時**:ag-grid 於排序生效時隱藏拖曳把手(實測 `.ag-row-drag` 帶 `ag-hidden`,探測腳本 `probeEdge.mjs` s1;腳本留存於主控任務資料夾 `dnow/20261028054319/agent-out/agv-run03-evidence/scripts/`,repo 內不留),使用者無法拖曳,故不測;`forEachNode` 之順序與 `getNowData` 同(R04),拖曳可達之情況下(無排序)等於畫面列序.
+  - **回呼內銷毀表格**:`rowsFull` 於呼叫端回呼之前取得,RD9 驗(宿主於 `rowDragEnd` 內 `getApi().destroy()` 後,`opt.rows` 仍依新序且保留全欄與原列物件;銷毀後 ag-grid 對已銷毀 api 印 warning 為既有限制 #16);變異 D4(回呼後才取列)令 RD9 紅.
+  - **回呼引數可變性**:`rowDragEnd`、`rowDragLeave`、`rowDragChange` 收到之 `rows` 為副本(`getNowData()`),修改它**不再**影響寫回之 `opt.rows`(修前同一陣列物件隨後被寫入 `opt.rows`,宿主若曾在 `rowDragEnd` 內就地改動 `rows` 以改變最終列序,現已無效;屬未載於文件之偶然管道,JSDoc 現明載為副本);`row` 為 `node.data`(原列物件),修改它會改到 `opt.rows` 內之同一物件(修前 `opt.rows` 為提取後之新物件,改 `row` 不影響之).
+- **來源**:2026-10-28 agv-run02 報告遺留項(主控排程第 155 項),agv-run03.
 
 ## 3. 下載
 
@@ -359,9 +388,9 @@
 | 2803 | downloadDisplayData | 已套 |
 | 2711 | getNowData(forEachNode,鍵為 vo.keys) | 範圍外:取全部列,非畫面欄序 |
 | 592 | HeaderSlotRenderer 數排序欄數 | 範圍外:只計數,與欄序無關 |
-| 1597 起 | pasteText(列序 forEachNodeAfterFilterAndSort;欄序 getAllGridColumns,略過隱藏欄與不可編輯儲存格〔逐儲存格 isCellEditable,見 R22〕;固定欄另分區、只貼固定欄) | 已驗:一般、排序後、隱藏欄、不可編輯欄(PT1–PT4,宿主呼叫方法)、函數型 editable 與真鍵盤 Ctrl+V(e2e-pasteEditable PT5–PT16);**未驗**:固定欄之貼上規則 |
+| 1597 起 | pasteText(列序 forEachNodeAfterFilterAndSort;欄序 getAllGridColumns,略過隱藏欄與不可編輯儲存格〔逐儲存格 isCellEditable,見 R22〕;固定欄另分區、只貼固定欄) | 已驗:一般、排序後、隱藏欄、不可編輯欄(e2e-pasteText PT1–PT4 真滑鼠單擊 + 真鍵盤 Ctrl+V;api-pasteText PA1–PA4 宿主呼叫公開方法之契約)、函數型 editable 與真鍵盤 Ctrl+V(e2e-pasteEditable PT5–PT18);**未驗**:固定欄之貼上規則 |
 
-- **測試**:P_pinnedLeft_disp、P_pinnedLeft_raw、P_moved_disp、Q_sort_disp、Q_sort_raw、Q_filterall_disp、Q_filterall_raw、Q_pinnedRows_disp、Q_pinnedRows_raw、Q_filteredToZero_disp、H_addHidden、H_hiddenOnly、H_allHiddenAdd、D_hideViaHook、G_getDisplayData_pinned、G_getDisplayData_plain、G_keys_pinned、N_preReady_disp、N_preReady_raw、N_destroyed_raw、X3、K_displayExcludeHidden;pasteText PT1–PT4.
+- **測試**:P_pinnedLeft_disp、P_pinnedLeft_raw、P_moved_disp、Q_sort_disp、Q_sort_raw、Q_filterall_disp、Q_filterall_raw、Q_pinnedRows_disp、Q_pinnedRows_raw、Q_filteredToZero_disp、H_addHidden、H_hiddenOnly、H_allHiddenAdd、D_hideViaHook、G_getDisplayData_pinned、G_getDisplayData_plain、G_keys_pinned、N_preReady_disp、N_preReady_raw、N_destroyed_raw、X3、K_displayExcludeHidden;pasteText PT1–PT4(e2e-pasteText)、PA1–PA4(api-pasteText).
 - **來源**:2026-10-06 下載複審 R1、R9、R14、R24.
 
 ### R14 下載之值:提取、格式化與正規化
@@ -467,9 +496,12 @@
 | 15 | kpHeadFilterType 之 'set' 須 enterprise 版;community 版由 ag-grid 印警告後退回依資料型別之預設過濾器 | ag-grid;2026-10-07 複審實測 | ag-grid |
 | 16 | getApi 為存取器:元件銷毀後回 null;呼叫端經 getApi 銷毀 ag-grid 後回傳已銷毀之 api(isDestroyed 為 true,其方法只印警告) | R19;X12 | 呼叫端 |
 | 17 | 元件或 ag-grid 銷毀後,uploadData 仍開窗並寫入呼叫端之 opt.rows;downloadData 仍產檔 | R17 第 8 步;E15、E17、X14 | 刻意(不需表格) |
-| 18 | 列拖曳排序(kpRowDrag)後 `opt.rows` 只保留 `opt.keys` 之欄位(triggerRowDragChange 以 getNowData 之 pickRowsByKeys 投影寫回):不在 keys 內之欄位(如供 editable 函數判斷之旗標 `ro`)隨之消失,其後 `p.data.ro !== true` 之判斷改變 | 2026-10-28 實測(`tmp` 探測:拖曳寫回前 `{…ro:true}`、後僅 `{a,b,c,d}`);R04 | 呼叫端:editable 函數所依之欄位宜列入 `opt.keys`(可隱藏);既有行為,本輪不改 |
+| 18 | (已修正,2026-10-28 agv-run03,見 R23;原載:列拖曳排序後 `opt.rows` 只保留 `opt.keys` 之欄位,不在 keys 內之欄位如供 editable 函數判斷之旗標 `ro` 隨之消失)——判定為缺陷(資料遺失),改為寫回保留全欄之原列物件 | 修前實測(探測:拖曳後 `{a,b,c,ro,note}` 變 `{a,b,c}`);e2e-rowDrag RD1–RD5 修前紅、修後綠 | 已解除,不再歸呼叫端 |
 | 19 | 貼上時自編輯器開啟中之儲存格按 Ctrl+V:ag-grid 編輯器先提交瀏覽器原生貼入之文字,再由 pasteText 判斷與覆寫,故 editable 函數看到的是提交後之資料(實測:e9 之 b 於 a0 唯讀,單擊 a0 後 Ctrl+V `X\t2` 得 `X|2|c0`;Escape 離開編輯器後再貼得 `X|b0|c0`) | 2026-10-28 實測(PT13 驗編輯器未開之路徑,PT15 為編輯器開啟之路徑) | ag-grid 編輯器 + 元件鍵盤路徑;JSDoc 已載;主控 2026-10-28 裁示維持現行 |
 | 20 | 貼上之既有邊界(外審 terra 2026-10-28 讀碼指出,本輪未實測、未改):①自置頂/置底列之儲存格按 Ctrl+V,keydown 之 `rowIndex` 為釘選列索引,pasteText 以之當主列畫面索引,貼入同索引之普通列;②左右固定欄同時存在時,固定欄分區以單一旗標處理,從某固定欄貼多欄可能跳到另一側固定欄;③未傳起點欄且畫面首欄為隱藏或固定欄時,預設起點在隱藏/固定判斷之後才指定,整批不貼;④field 含點(巢狀路徑)時 ag-grid 讀巢狀值而貼上寫入字面鍵;⑤貼上資料不等長時,短列缺欄寫成 undefined,首列較短時後續列多餘欄被截;⑥`rows` 內多列為同一物件時 transaction 重複命中第一個節點;⑦kpColSpan 逐列跨欄時,被跨度蓋住之欄(畫面無該列之儲存格)仍會被寫入(未實測) | 外審 terra;①②③⑤為讀碼確認 | 既有行為,與 editable 無涉(①之判斷對象與寫入對象同為普通列,無回歸) |
+| 21 | filterall 生效時列拖曳,`opt.rows` 被寫成顯示中之子集(被 filterall 隱藏之列從 `opt.rows` 消失):`rowData` 為過濾後之子集,`triggerRowDragChange` 寫回的是子集之新列序(修前修後相同,與欄位保留無涉) | 2026-10-28 agv-run03 實測(探測腳本 `probeDrag2.mjs`/`probeFilterall.html`,留存於 `dnow/20261028054319/agent-out/agv-run03-evidence/scripts/`:4 列、filterall 顯示 2 列,拖曳後 `opt.rows` 剩 2 列);R23 | **待裁示**(範圍外未修):修法須定隱藏列之放置規則(例如維持在原相對位置),屬行為決定 |
+| 22 | 在 `rowDragChange` 回呼內**同步**呼叫 `pasteText`:`opt.rows` 已寫成新列序,但 `vo.rows` 要待 Vue 下一次更新才同步(`changeOpt` 之 `vo.rows = vo.opt.rows`),pasteText 取到舊 `vo.rows` 並以之 `set(vo, 'opt.rows', rows)`,把拖曳後之列序覆寫回舊序(畫面為新序,宿主 `opt.rows` 為舊序;貼入之值仍落在畫面被判斷之列) | 2026-10-28 agv-run03 實測(探測腳本 `probeEdge.mjs` s2,留存處同 #21:拖曳後 `getNowData` 為 a1、a2、a0,宿主 `opt.rows` 為 a0、a1、a2);外審 terra 讀碼提出;修前修後相同 | 呼叫端:回呼內改於下一個 tick(`$nextTick`)再呼叫 pasteText;範圍外未修 |
+| 23 | 置頂/置底列(`genRowsPinnTop`、`genRowsPinnBottom`)只於表格就緒(`agReady`:F:1318、1321)與儲存格值變更(`agCellChange`:置底,F:1283)時重算,列拖曳後不重算;產生器若依列序取值(如取第一列),拖曳後置頂/置底列過時(依總和等與列序無關者不受影響) | 讀碼確認(外審 terra 提出;未實測);修前修後相同 | 呼叫端或待裁示;範圍外未修 |
 
 ## 7. 測試帳本
 
@@ -496,13 +528,15 @@
 | e2e-showKeys | e2e | 27 | showKeys.html | R01、R02、R11 |
 | e2e-filters | e2e | 26 | filters.html | R19、R20 |
 | e2e-lifecycle | e2e | 51 | lifecycle.html | R03、R04、R17、R19 |
-| e2e-pasteText | e2e | 4 | pasteText.html | R13 |
+| e2e-pasteText | e2e | 4 | pasteText.html(真滑鼠單擊 + 真鍵盤 Ctrl+V,頁內無貼上按鈕) | R13 |
+| api-pasteText | api | 4 | pasteTextApi.html(宿主按鈕呼叫公開方法 pasteText) | R13 |
 | e2e-pasteEditable | e2e | 14 | pasteEditable.html | R22 |
+| e2e-rowDrag | e2e | 9 | rowDrag.html(真滑鼠拖曳列) | R23 |
 | e2e-examples-display | e2e | 21 | docs/examples 之 slot、showKeys、對齊、filterChange 範例與 app.html | R06–R08、R11、R18、R20 |
 | e2e-examples-download | e2e | 3 | docs/examples 之 ex-downloadData、ex-downloadDisplayData、ex-getDisplayData | R12、R13、R18 |
 | e2e-examples-upload | e2e | 8 | docs/examples 之 ex-uploadData、ex-uploadDataWithConvertKeys | R17、R18 |
 
-合計 431 格.格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
+合計 444 格(2026-10-28 agv-run03 全套實測 444 passing).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
 
 ### 7.3 舊 tmp 驗收腳本之遷移(2026-10-06~07)
 
@@ -524,7 +558,7 @@
 ### 7.4 未測、靜態審查與已知缺口
 
 - **靜態審查(以盤點指令核對,無動態測試)**:R05(JSDoc 單一擁有者)、R06 與 R12 之單一擁有者、R08 之監聽成對移除、R19 與 R20 之站點全集.
-- **未驗**:R13 pasteText 之固定欄貼上規則(鍵盤 Ctrl+V 路徑已由 e2e-pasteEditable 驗,2026-10-28);R20 第 3 項「取得過濾狀態後、發事件前之銷毀」(時序無法由 UI 決定,以程式碼核對);R03 之 fitColumns、triggerFilterChange 兩個 catch(表格可用時不拋錯,無法以操作觸發);1048576 列之檔讀回(只驗產檔,讀回需數十秒).
+- **未驗**:R13 pasteText 之固定欄貼上規則(鍵盤 Ctrl+V 路徑已由 e2e-pasteText、e2e-pasteEditable 驗,2026-10-28);R23 之 filterall 時列拖曳(#21)、置頂置底列、回呼內銷毀表格;R20 第 3 項「取得過濾狀態後、發事件前之銷毀」(時序無法由 UI 決定,以程式碼核對);R03 之 fitColumns、triggerFilterChange 兩個 catch(表格可用時不拋錯,無法以操作觸發);1048576 列之檔讀回(只驗產檔,讀回需數十秒).
 - **標準圖(pixel 補強層)**:本套件未產製,渲染類之格(OC1、S 系列、FO 系列、AL-*)以 computed style 與幾何斷言;是否加標準圖待使用者裁示(第 9 節).
 
 ### 7.5 e2e 落地映射(對應全域技能 role-coder-for-test-e2e §3 契約)
@@ -555,7 +589,7 @@
 
 #### 專案特有機制
 
-- **宿主頁協定**:`window.__cases`(案例 → 目標、方法、參數)、`window.__case`(setup 選定案例)、`#btnRun`(真點擊,其處理函數呼叫元件方法,同官方範例「按鈕呼叫元件方法」之用法)、`window.__out`(結果);共用層 `runHostCase(ctx, name, opt)`.其他宿主按鈕:`#btnUpload`(上傳)、`#btnReloadKeys6`、`#btnLoad10`、`#btnReplaceOpt4`(宿主重新設定或載入數據).
+- **宿主頁協定**:`window.__cases`(案例 → 目標、方法、參數)、`window.__case`(setup 選定案例)、`#btnRun`(真點擊,其處理函數呼叫元件方法,同官方範例「按鈕呼叫元件方法」之用法)、`window.__out`(結果);共用層 `runHostCase(ctx, name, opt)`.此協定驗的是公開方法之程式契約,屬 `api-` 層(api-pasteText 與下載、上傳、lifecycle 各檔之方法呼叫案例);**驗使用者操作行為之 e2e 檔不得以此協定代替使用者動作**(pasteText 即因此拆為 e2e-pasteText 與 api-pasteText,2026-10-28 agv-run03).其他宿主按鈕:`#btnUpload`(上傳)、`#btnReloadKeys6`、`#btnLoad10`、`#btnReplaceOpt4`(宿主重新設定或載入數據).
 - **範例頁之外部資源**:`openPage(..., { routeExternalResources: true })` 攔截全部 http(s):vue、w-jsonview-tree → node_modules;w-aggrid-vue → 本地 dist;w-demores 之 dataEasy、dataLikeNumber → `test/fixtures/w-demores/`(取自 w-demores 1.0.34);dataEduagency → 空陣列;@babel/polyfill(nomodule、非宣告之相依)→ 空腳本;其餘中止並記錄,測試端斷言未對照者為 0.
 - **app.html** 載入 gDistApp 之產物 app.umd.js(內含建置當時之元件),APP- 之格只驗範例建置產物之選單與標題;要驗本次修改須依 script.txt 重產(gDistApp 會清空 docs/examples).
 - **中介檔**:上傳用 xlsx 以 wsemi 產於 `test/_tmp/<檔名>/`、下載檔存檔讀回即刪;該檔 after 刪除目錄(`useTmpDir`).不得用 `./tmp/`.
@@ -564,8 +598,10 @@
 #### 偏離與 setup 例外
 
 - **取消選檔**(C_cancel):Playwright 無法操作作業系統選檔視窗之取消鈕,改對 input 派發瀏覽器於取消時所派發之 `cancel` 事件(L5).
-- **前置狀態以 grid API 建立(setup 例外,模擬使用者先前之操作)**:download-extended 之移欄、排序、表頭過濾;showKeys 之拖曳、調寬、排序;filters 之隱藏欄過濾(FL6)、複合過濾(FL12)、先後過濾兩欄(FL13);lifecycle 之過濾為空白(C10);pasteText 之排序(PT2);e2e-pasteEditable 全檔之系統剪貼簿(headless 瀏覽器之剪貼簿與作業系統隔離,授權 clipboard-read/write 後以頁面剪貼簿 API 寫入;實測不改動作業系統剪貼簿;排序與過濾已改為真滑鼠點表頭、真鍵盤於過濾列輸入,不再用 grid API);lifecycle 之元件或 ag-grid 銷毀(宿主切換功能區、呼叫端經 getApi 銷毀).
-- **pasteText**:e2e-pasteText(PT1–PT4,既有)以宿主按鈕呼叫元件方法(同使用者按 Ctrl+V 時元件之處理),屬宿主頁協定之偏離(act 為 L3 點宿主按鈕、其處理函數呼叫公開方法,非使用者貼上動作本身;改為真鍵盤或正名 `api-` 待裁示);e2e-pasteEditable(2026-10-28)全部走真鍵盤 Ctrl+V(L1;單擊起點格取得焦點後 `keyboard.press('Control+V')`,實測第一次 Ctrl+V 即貼上,未見「keydown 先於 paste 事件而取到舊文字」之現象).
+- **前置狀態以 grid API 建立(setup 例外,模擬使用者先前之操作)**:download-extended 之移欄、排序、表頭過濾;showKeys 之拖曳、調寬、排序;filters 之隱藏欄過濾(FL6)、複合過濾(FL12)、先後過濾兩欄(FL13);lifecycle 之過濾為空白(C10);api-pasteText 之排序(PA2,程式契約層,以 grid API 排序屬 setup);e2e-pasteEditable 與 e2e-pasteText 全檔之系統剪貼簿(headless 瀏覽器之剪貼簿與作業系統隔離,授權 clipboard-read/write 後以頁面剪貼簿 API 寫入;實測不改動作業系統剪貼簿;排序與過濾已改為真滑鼠點表頭、真鍵盤於過濾列輸入,不再用 grid API);lifecycle 之元件或 ag-grid 銷毀(宿主切換功能區、呼叫端經 getApi 銷毀).
+- **pasteText**(2026-10-28 agv-run03 解除原偏離):使用者貼上行為 e2e-pasteText(PT1–PT4)與 e2e-pasteEditable 全部走真滑鼠單擊起點格 + 真鍵盤 Ctrl+V(L1;單擊起點格取得焦點後 `keyboard.press('Control+V')`,實測第一次 Ctrl+V 即貼上,未見「keydown 先於 paste 事件而取到舊文字」之現象);公開方法 pasteText 之程式契約(位置參數:畫面列索引、欄 key)正名為 api-pasteText(PA1–PA4),以宿主按鈕呼叫元件方法(L3 點宿主按鈕,同官方範例 ex-pasteText 之用法),不掛 `e2e-` 前綴.鍵盤路徑與程式契約的偵測分工已以變異驗證:令 Ctrl+V 觸發條件失效 → PT1–PT4 紅而 PA1–PA4 綠;令隱藏欄不略過、唯讀欄照寫、忽略畫面排序 → 各令對應之 PT 與 PA 皆紅.貼上相關共用 helper(`cell`、`waitCellFocused`、`focusCell`、`pasteByKeyboard`、`hostRows`、`nowRows`、`waitRows`)在 `test/tools/e2e-setup.mjs`,e2e-pasteEditable、e2e-pasteText、e2e-rowDrag 共用,宿主頁須提供 `window.__vm.opt[表格 id]` 與 `window.__vm.$refs[表格 id]`.
+- **api- 層之落地**:本套件為元件庫,ag-grid 需真瀏覽器之 DOM,故 `api-` 測試仍於 Playwright 頁面內執行(不經使用者動作、以程式呼叫公開方法);launch 等契約同 e2e 檔.
+- **e2e-rowDrag**(2026-10-28):列拖曳全為真滑鼠(L2:`mouse.move/down/up`,按住 a 欄把手 `.ag-row-drag`、先移開 8px 才算開始拖曳、分段移到目標列、需要時續移出表格);頁內標記沿用 `window.__rd`(宿主回呼記錄)、`window.__vm.opt`;拖曳完成之訊號為 `rowDragChange` 回呼已觸發(寫回 `opt.rows` 之同一時點),再等表格靜止;「原位放開」(RD7)以 `rowDragEnd` 觸發後 500ms 觀察窗確認未多發 `rowDragChange`(負向斷言).
 - **headerscroll**(R21):宿主頁以查詢字串切換標頭範本、釘選、寬度、欄數、列數(`head=default|slot|focusable&pin=1&w=&cw=&n=&rows=`);頁首以 `EventTarget.prototype.addEventListener/removeEventListener` 包裝記錄 `.ag-header-viewport` 上 scroll 監聽之註冊與移除(HS17 驗成對).HS9(`focus()`)、HS10、HS18(`scrollIntoView()`)之 act 為呼叫端程式觸發(L5),因其模擬的是呼叫端程式或瀏覽器自身之捲入可見,不是使用者操作;其餘 act 為 L2 真滑鼠(`mouse.click`、`mouse.wheel`)、L1 真鍵盤、L3 `locator.click`(HS1–HS8、HS11 之主觸發,即 issue #9 之重現路徑).`locator.click` 會先把目標捲入可見,故「真滑鼠點擊」格(HS12)改以座標點擊露出之部分,對照組(HS13)先以滾輪捲到完整可見.一致性判準 `alignedProblem`:標頭與資料區 scrollLeft 差 <1px、已渲染各欄標頭格與第 0 列儲存格左緣差 ≤0.5px(至少 3 欄含目標欄);補償於下一個畫面幀後才生效,以偵測等待(`pollUntil`,上限 3 秒)判定;「不得捲動」之負向斷言以 400ms 觀察窗.
 
 #### 已知缺口
@@ -600,10 +636,12 @@ npm 最新為 2.1.5(2026-10-06 查).版本欄為該提交時 package.json 之值
 | 工作樹(未提交,2026-10-07) | 元件 prop opt:有給予而非非空物件時提示表格不更新(原靜默);opt.keys、opt.rows 無效之訊息改為 `[w-aggrid-vue] opt.keys is invalid, ...`(原 'invalid opt.keys') | 可見行為 | R01、R03 |
 | 工作樹(未提交,2026-10-20) | 標頭容器被程式或瀏覽器單獨捲動(Playwright locator.click 點只露出一部分之欄名、呼叫端對標頭內元素 scrollIntoView 或 focus())後,資料區跟上標頭之位置,欄名不再對到相鄰欄之資料(原標頭單獨位移直到使用者再捲動);真滑鼠點擊、鍵盤導覽、滾輪捲動之行為不變 | 修正 | R21 |
 | 工作樹(未提交,2026-10-28) | 貼上(Ctrl+V、pasteText)對 `opt.kpCellEditable` 之函數型值逐儲存格求值(原以真值判斷,函數恆為真,唯讀列仍被寫入);非布林非函數之真值(如 `1`)原會寫入,改為同 ag-grid 視為不可編輯;函數拋錯時該儲存格略過並於 console 說明一次(原無此情形);判斷於寫入前全部完成;filterall 生效時貼上寫入畫面上被判斷之那一列(原寫入 `vo.rows[node.id]`,即畫面以外之列).布林值行為不變 | 修正、可見行為 | R22 |
+| 工作樹(未提交,2026-10-28 agv-run03) | 列拖曳排序(kpRowDrag)後寫回 `opt.rows` 保留各列全部欄位(原只留 `opt.keys` 之欄位,不在 keys 內之欄位如供 editable 函數判斷之旗標隨之消失,使唯讀列變可編輯);`opt.rows` 內之列物件為 ag-grid 之原列物件(依新列序),不再是提取後之新物件(缺少某 key 之列不再被補成 `''`,物件身分與原列相同);回呼 `rowDragEnd/Leave/Change` 之 `rows` 引數仍為依 keys 提取者(不變,但為副本:在回呼內就地修改 `rows` 不再影響寫回之 `opt.rows`;修改 `row` 現會改到 `opt.rows` 內之同一列物件) | 修正、可見行為(資料遺失) | R23 |
 
 ## 9. 候選規則與待裁示(未裁示,僅記錄)
 
-- **e2e-pasteText(PT1–PT4)之 act 為宿主按鈕呼叫公開方法**(2026-10-28 agv-run02 比對 role-coder-for-test-e2e 時列出):不符 L1–L3 之「貼上動作本身走使用者操作」,改為真鍵盤 Ctrl+V(同 e2e-pasteEditable 之作法)或正名 `api-` 皆可;因其為既有檔且規則帳本 7.5 已登錄為宿主頁協定之偏離,本輪不動,待主控裁示.
+- (已定案移出:e2e-pasteText(PT1–PT4)之 act 為宿主按鈕呼叫公開方法 → 2026-10-28 agv-run03 兩者皆做:PT1–PT4 改真滑鼠單擊 + 真鍵盤 Ctrl+V,程式契約正名 api-pasteText PA1–PA4,7.5 之偏離已解除.)
+- **filterall 時列拖曳之 `opt.rows` 僅剩顯示子集**(第 6 節 #21,2026-10-28 agv-run03 實測發現,範圍外未修):修法須決定被 filterall 隱藏之列在新列序中的位置(例如維持原相對位置、附在其前一個顯示列之後),屬行為決定,待主控裁示.
 - **evPaste 取 `event.clipboardData` 而非參數 `e`**(既有,2026-10-28 提出):mounted 內 `vo.evPaste = (e) => { let clipboardData = event.clipboardData || ... }` 讀的是全域 `event`(window.event),瀏覽器皆可用,但寫法易誤讀;不影響行為,本輪不改.
 - **位置參數是否比照 R01**:setHeadFilter 之 type 誤植(如 'containz')時 ag-grid 靜默改用預設並套用;setHeadFilter、clearHeadFilter 之 key 為物件或 null 時靜默結束;皆不拋原生錯誤.type 之有效值依該欄過濾器類型(文字、數值、日期)而異,若比照須逐類型列出有效值.(2026-10-07 複審提出,本次維持現況)
 - **標準圖**:渲染類之格是否加 pixel 補強層(第 7.4 節),須使用者逐張審圖.

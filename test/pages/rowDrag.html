@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>rowDrag</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <!-- 宿主頁只負責擺放各表與記錄回呼; 列拖曳由測試以真滑鼠(按住 a 欄把手、移動、放開)觸發(e2e-rowDrag.test.mjs) -->
+    <div id="app">
+        <div>r1: 列含不在 keys 內之欄位(ro 旗標供 b 欄 editable 函數判斷、note 為備註), a 欄可拖曳排序</div>
+        <w-aggrid-vue id="r1" ref="r1" style="width:600px;" :height="180" :opt="opt.r1"></w-aggrid-vue>
+        <div>r2: 列只含 keys 內之欄位, a 欄可拖曳排序</div>
+        <w-aggrid-vue id="r2" ref="r2" style="width:600px;" :height="180" :opt="opt.r2"></w-aggrid-vue>
+        <div>r3: 同 r1,但 rowDragEnd 回呼內銷毀表格(ag-grid)</div>
+        <w-aggrid-vue id="r3" ref="r3" style="width:600px;" :height="180" :opt="opt.r3"></w-aggrid-vue>
+        <div style="height:200px;">下方空白區(供拖曳時游標離開表格)</div>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+
+        //rows: ro 為 true 之列於 b 為函數時唯讀; ro、note 皆不在 keys 內
+        let mkRows = function() {
+            return [
+                { a: 'a0', b: 'b0', c: 'c0', ro: false, note: 'n0' },
+                { a: 'a1', b: 'b1', c: 'c1', ro: true, note: 'n1' },
+                { a: 'a2', b: 'b2', c: 'c2', ro: false, note: 'n2' },
+            ]
+        }
+        let notRo = function(p) {
+            return p.data.ro !== true
+        }
+
+        //宿主記錄拖曳相關回呼之收到值(深複製)
+        window.__rd = { end: [], leave: [], change: [] }
+        let rec = function(name) {
+            return function(indFrom, indTo, row, rows) {
+                window.__rd[name].push(JSON.parse(JSON.stringify({ indFrom: indFrom, indTo: indTo, row: row, rows: rows })))
+            }
+        }
+        let mk = function(ext) {
+            return Object.assign({
+                keys: ['a', 'b', 'c'],
+                kpRowDrag: { a: true },
+                kpCellEditable: { a: false, b: notRo, c: false },
+                rowDragEnd: rec('end'),
+                rowDragLeave: rec('leave'),
+                rowDragChange: rec('change'),
+            }, ext || {})
+        }
+        //r3: 宿主於 rowDragEnd 回呼內銷毀 ag-grid(先記錄再銷毀)
+        let endAndDestroy = function() {
+            rec('end').apply(null, arguments)
+            window.__vm.$refs.r3.getApi().destroy()
+        }
+        //原列物件(供測試核對寫回後 opt.rows 內是否仍為同一批物件)
+        let rows1 = mkRows()
+        let rows3 = mkRows()
+        window.__orig = { r1: rows1.slice(), r3: rows3.slice() }
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt: {
+                        r1: mk({ rows: rows1 }),
+                        r2: mk({ rows: mkRows().map(function(r) { return { a: r.a, b: r.b, c: r.c } }) }),
+                        r3: mk({ rows: rows3, rowDragEnd: endAndDestroy }),
+                    },
+                }
+            },
+        })
+    </script>
+</body>
+</html>

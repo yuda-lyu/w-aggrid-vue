@@ -5,10 +5,10 @@
 //  ④剪貼簿為 Tab/換行分隔之文字(headless 瀏覽器之剪貼簿與作業系統隔離, 授權後以頁面剪貼簿 API 寫入, 屬 setup) ⑤真鍵盤 Ctrl+V
 //  ⑥觀察: 畫面各欄儲存格文字(主)、宿主 opt.rows(同步更新)、元件數據(getNowData)、console 提示與 pageerror
 //觸發貼上之入口: 只有 agCellKeyDown(Ctrl+KeyV); 元件不處理 Cmd+V(Mac)、Shift+Insert、瀏覽器選單之貼上(它們只更新暫存之文字而不執行貼上), 亦無貼上按鈕, 故無其他入口可測
-//宿主按鈕呼叫元件方法 pasteText 之路徑(未走鍵盤)由 e2e-pasteText 之 PT1–PT4 驗, 本檔一律走真鍵盤
+//宿主按鈕呼叫元件方法 pasteText 之路徑(未走鍵盤)屬程式契約, 由 api-pasteText 之 PA1–PA4 驗; 布林型 kpCellEditable 之使用者貼上由 e2e-pasteText 之 PT1–PT4 驗; 本檔一律走真鍵盤
 //標準圖: 本套件未產製標準圖(規則帳本 7.4/9, 待使用者裁示), 本檔不新增; 視覺面以畫面儲存格文字之語意斷言代替
 import assert from 'assert'
-import { openPage, pageUrl, columnTexts, waitColumnTexts, typeIntoFloatingFilter, assertNoErrors } from './tools/e2e-setup.mjs'
+import { openPage, pageUrl, columnTexts, waitColumnTexts, typeIntoFloatingFilter, assertNoErrors, focusCell, pasteByKeyboard, hostRows, nowRows, waitRows } from './tools/e2e-setup.mjs'
 import { waitGridIdle, waitUntilExist } from './tools/e2eLib.mjs'
 
 //row, 宿主頁 mkRows 產生之列: ro(唯讀旗標)、boom(拋錯旗標)不在 keys 內, 只供 editable 函數判斷, 故 opt.rows 含之
@@ -16,61 +16,11 @@ let row = (i, o = {}) => Object.assign({ a: 'a' + i, b: 'b' + i, c: 'c' + i, d: 
 //now, getNowData 之列(只含 keys; 宿主列沒有之欄位不列入)
 let now = (rows) => rows.map((r) => Object.fromEntries(['a', 'b', 'c', 'd'].filter((k) => k in r).map((k) => [k, r[k]])))
 
-//cell, 儲存格選擇器(ag-grid 之 row-index 為畫面列序、col-id 為欄 id)
-let cell = (sel, ri, col) => `${sel} .ag-center-cols-container .ag-row[row-index="${ri}"] .ag-cell[col-id="${col}"]`
-let hostRows = (page, key) => page.evaluate((k) => JSON.parse(JSON.stringify(window.__vm.opt[k].rows)), key)
-let nowRows = (page, key) => page.evaluate((k) => JSON.parse(JSON.stringify(window.__vm.$refs[k].getNowData())), key)
 //agEditable, ag-grid 自身對某儲存格之可編輯判斷(column.isCellEditable), 供對照
 let agEditable = (page, key, colId, nodeId) => page.evaluate(({ k, c, n }) => {
     let api = window.__vm.$refs[k].getApi()
     return api.getColumn(c).isCellEditable(api.getRowNode(n))
 }, { k: key, c: colId, n: nodeId })
-
-//waitRows, 偵測宿主 opt.rows 達預期之終態(貼上完成之訊號; 預期含被貼入之格, 故唯讀格被誤寫時永不相等); 逾時以 deepStrictEqual 呈現實際與預期之差異
-async function waitRows(page, key, expected) {
-    try {
-        await waitUntilExist(page, `${key} 之 opt.rows 達預期`, ({ k, e }) => JSON.stringify(window.__vm.opt[k].rows) === JSON.stringify(e), { timeout: 8000, arg: { k: key, e: expected } })
-    }
-    catch (err) {
-        assert.deepStrictEqual(await hostRows(page, key), expected, `宿主之 opt.rows(等待逾時): ${err.message}`)
-        throw err
-    }
-}
-
-//waitCellFocused, 等儲存格取得焦點: ag-grid 之焦點框在該格且 document.activeElement 在該格內(真鍵盤事件之目標即 activeElement)
-let waitCellFocused = (page, sel, ri, col) => waitUntilExist(page, `${sel} 第 ${ri} 列 ${col} 取得焦點`, (s) => {
-    let el = document.querySelector(s)
-    return !!el && el.classList.contains('ag-cell-focus') && el.contains(document.activeElement)
-}, { timeout: 10000, arg: cell(sel, ri, col) })
-
-//focusCell, 真滑鼠單擊儲存格並等其取得焦點(點擊已被 ag-grid 處理之正向訊號)
-async function focusCell(page, sel, ri, col) {
-    await page.locator(cell(sel, ri, col)).click()
-    await waitCellFocused(page, sel, ri, col)
-}
-
-//pasteByKeyboard, 貼上之 act: 寫入剪貼簿(setup) → 真滑鼠單擊起點格 → (leaveEditor 時)Escape 離開編輯器 → [beforeKey] → 真鍵盤 Ctrl+V
-async function pasteByKeyboard(page, sel, text, ri, col, { leaveEditor = true, beforeKey = null } = {}) {
-    await page.evaluate((t) => navigator.clipboard.writeText(t), text)
-    await focusCell(page, sel, ri, col)
-    //元件設 singleClickEdit: 單擊可編輯格會開編輯器; 是否可編輯以 ag-grid 自身之判斷為準, 可編輯者等編輯器出現(不依時序猜), 唯讀者不會開
-    let editable = await page.evaluate(({ k, r, c }) => {
-        let api = window.__vm.$refs[k].getApi()
-        return api.getColumn(c).isCellEditable(api.getDisplayedRowAtIndex(r))
-    }, { k: sel.slice(1), r: ri, c: col })
-    if (editable) {
-        await waitUntilExist(page, `${sel} 編輯器已開`, (s) => !!document.querySelector(`${s} .ag-cell-inline-editing`), { timeout: 10000, arg: sel })
-        if (leaveEditor) {
-            await page.keyboard.press('Escape')
-            await waitUntilExist(page, `${sel} 離開編輯器`, (s) => !document.querySelector(`${s} .ag-cell-inline-editing`), { timeout: 10000, arg: sel })
-            await waitCellFocused(page, sel, ri, col)
-        }
-    }
-    if (beforeKey) {
-        await beforeKey(page)
-    }
-    await page.keyboard.press('Control+V')
-}
 
 //pre: 貼上前使用者先做的畫面操作(真滑鼠與真鍵盤)
 let pre = {
