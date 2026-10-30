@@ -1,0 +1,218 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>example for localeText</title>
+
+    <!-- @babel/polyfill -->
+    <script
+        nomodule
+        src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"
+    ></script>
+
+    <!-- vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
+
+    <!-- extractHtml已自動添加@babel/polyfill與vue -->
+
+    <!-- w-aggrid-vue -->
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.1.14/dist/w-aggrid-vue.umd.js"></script>
+
+    <!-- data -->
+    <script src="https://cdn.jsdelivr.net/npm/w-demores/res/data/dataEasy.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-demores/res/data/dataEduagency.js"
+    ></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-demores/res/data/dataLikeNumber.js"
+    ></script>
+
+    <!-- w-jsonview-tree -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@latest/dist/w-jsonview-tree.umd.js"
+    ></script>
+    <script>
+  let jv = window["w-jsonview-tree"];
+    </script>
+
+    <style>
+  .item-link {
+    display: inline-block;
+    margin: 10px 10px 0px 0px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    color: #fff;
+    background-color: #443a65;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .bkh {
+    /* 寬 */
+    padding: 20px;
+  }
+  @media screen and (max-width: 800px) {
+    /* 中 */
+    .bkh {
+      padding: 10px;
+    }
+  }
+  @media screen and (max-width: 400px) {
+    /* 窄 */
+    .bkh {
+      padding: 5px;
+    }
+  }
+  .bkp {
+    /* 寬 */
+    padding: 0px 20px;
+  }
+  @media screen and (max-width: 800px) {
+    /* 中 */
+    .bkp {
+      padding: 0px 10px;
+    }
+  }
+  @media screen and (max-width: 400px) {
+    /* 窄 */
+    .bkp {
+      padding: 0px 5px;
+    }
+  }
+    </style>
+</head>
+<body
+    style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px; margin:0px;"
+>
+    <div id="app" class="bkh" style>
+        <div class="bkh">
+            <div style="font-size:1.5rem;">localeText</div>
+            <a
+                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-localeText.html"
+                target="_blank"
+                class="item-link"
+            >example</a>
+            <a
+                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-localeText.html"
+                target="_blank"
+                class="item-link"
+            >code</a>
+        </div>
+
+        <div class="bkp">
+            <div
+                id="ckdesc"
+                style="max-width:1240px; padding-bottom:20px; font-size:10pt; line-height:1.6;"
+            >
+                <div>opt.localeText 以 ag-grid 之 locale 鍵覆寫表格文字，值為字串(可為空字串)。查找順序為先查 opt.localeText，查無再用 opt.language 之內建字典，故未給予時行為不變。</div>
+                <div>本範例(language 為 zh-tw)覆寫兩個提示文字：</div>
+                <ul style="margin:5px 0px;">
+                    <li>noRowsToShow：數據為空(opt.rows 為空陣列)時顯示，內建文字為「無資料可顯示」，本範例覆寫為「無數據」。</li>
+                    <li>noRowsToShowFiltered：本套件新增之鍵，數據不為空而過濾使顯示列數為 0 時顯示，內建文字為「無符合過濾條件之資料」，本範例覆寫為「無查詢結果，請更換關鍵字或查詢條件。」。</li>
+                </ul>
+                <div>時序：1 秒時表頭過濾使顯示列數為 0，2 秒時清除過濾，3 秒時 opt.rows 改為空陣列。</div>
+                <div
+                    style="padding-top:10px; color:#f26;"
+                >破壞性變更：過濾使顯示列數為 0 之提示覆蓋層預設開啟(opt.showOverlayWhenFilteredEmpty 預設為 true)。以往表頭過濾使顯示列數為 0 時，表格只剩表頭與空白而無提示；filterall 使數據為空時，顯示的是 noRowsToShow(與數據本身為空無法區分)。現在兩者皆改為顯示 noRowsToShowFiltered。欲恢復舊行為請設 opt.showOverlayWhenFilteredEmpty = false(見 showOverlayWhenFilteredEmpty 範例)。</div>
+            </div>
+
+            <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
+                <div style="position:relative;">
+                    <w-aggrid-vue style="width:620px;" ref="rftable" :opt="opt"></w-aggrid-vue>
+
+                    <pre id="ckmsg"></pre>
+                </div>
+
+                <div style="padding:0px 20px;">
+                    <div
+                        :style="`border:1px solid #ddd; width:600px; min-width:600px; height:300px; overflow-y:auto;`"
+                    >
+                        <div style="padding-left:5px;">
+                            <div id="optjson" style="font-size:10pt;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+  //install
+  Vue.component("w-aggrid-vue", window["w-aggrid-vue"]);
+
+  //initialize
+  new Vue({
+    el: "#app",
+
+    data: function() {
+      return {
+        opt: {
+          keys: ["make", "model", "price"],
+          kpHeadFilterType: {
+            //default: num (num,text,time,set)
+            make: "text",
+            model: "text",
+            price: "num"
+          },
+          language: "zh-tw",
+          localeText: {
+            noRowsToShow: "無數據",
+            noRowsToShowFiltered: "無查詢結果，請更換關鍵字或查詢條件。"
+          },
+          rows: JSON.parse(JSON.stringify(window.dataEasy))
+        },
+        action: []
+      };
+    },
+    mounted: function() {
+      let vo = this;
+      jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+
+      //msg
+      let msg = function(s) {
+        document.querySelector("#ckmsg").innerText = s;
+      };
+      msg("0s: rows has data, no overlay");
+
+      //setHeadFilter, displayed rows is 0, show localeText.noRowsToShowFiltered
+      setTimeout(function() {
+        try {
+          msg(
+            "1s: setHeadFilter make=zzz, displayed rows is 0, overlay shows localeText.noRowsToShowFiltered"
+          );
+          vo.$refs.rftable.setHeadFilter("make", "zzz").catch(() => {});
+        } catch (err) {
+          console.log(err);
+        }
+      }, 1000);
+
+      //clearHeadFilter, overlay hidden
+      setTimeout(function() {
+        try {
+          msg("2s: clearHeadFilter make, overlay hidden");
+          vo.$refs.rftable.clearHeadFilter("make").catch(() => {});
+        } catch (err) {
+          console.log(err);
+        }
+      }, 2000);
+
+      //clear data, show localeText.noRowsToShow
+      setTimeout(function() {
+        try {
+          msg("3s: opt.rows is [], overlay shows localeText.noRowsToShow");
+          vo.opt.rows = [];
+        } catch (err) {
+          console.log(err);
+        }
+      }, 3000);
+    },
+    computed: {},
+    methods: {}
+  });
+    </script>
+</body>
+</html>
