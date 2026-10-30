@@ -102,6 +102,10 @@
 
             <AppFilterAllData v-if="cmpPick==='filterAllData'"></AppFilterAllData>
 
+            <AppLocaleText v-if="cmpPick==='localeText'"></AppLocaleText>
+
+            <AppShowOverlayWhenFilteredEmpty v-if="cmpPick==='showOverlayWhenFilteredEmpty'"></AppShowOverlayWhenFilteredEmpty>
+
             <AppGetDisplayData v-if="cmpPick==='getDisplayData'"></AppGetDisplayData>
 
             <AppDownloadData v-if="cmpPick==='downloadData'"></AppDownloadData>
@@ -266,6 +270,8 @@ import AppDefHeadFilterType from './AppDefHeadFilterType.vue'
 import AppDefHeadSort from './AppDefHeadSort.vue'
 import AppDefHeadSortMethod from './AppDefHeadSortMethod.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
+import AppLocaleText from './AppLocaleText.vue'
+import AppShowOverlayWhenFilteredEmpty from './AppShowOverlayWhenFilteredEmpty.vue'
 import AppGetDisplayData from './AppGetDisplayData.vue'
 import AppDownloadData from './AppDownloadData.vue'
 import AppDownloadDisplayData from './AppDownloadDisplayData.vue'
@@ -348,6 +354,8 @@ export default {
         AppDefHeadSort,
         AppDefHeadSortMethod,
         AppFilterAllData,
+        AppLocaleText,
+        AppShowOverlayWhenFilteredEmpty,
         AppGetDisplayData,
         AppDownloadData,
         AppDownloadDisplayData,
@@ -551,6 +559,13 @@ export default {
                     { name: 'setHeadFilter' },
                     { name: 'filterChange' },
                     { name: 'highlight' },
+                ],
+            },
+            {
+                name: 'text',
+                cmps: [
+                    { name: 'localeText' },
+                    { name: 'showOverlayWhenFilteredEmpty' },
                 ],
             },
             {

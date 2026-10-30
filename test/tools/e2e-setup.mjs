@@ -96,8 +96,9 @@ async function routeExternal(page, hits) {
 //openPage, 每案例一個新瀏覽器與新頁面(launchBrowser 六旗標), 收集 console 與 pageerror, 開頁後等表格靜止
 //idle 為 false 時只等首批儲存格出現(頁面自帶計時器而須觀察其中間狀態者, 等靜止會錯過中間狀態)
 //downloadsPath 為下載之暫存目錄(該測試檔之 test/_tmp/<名稱>/), 未給時由 Playwright 置於系統暫存區; 暫存之下載檔於瀏覽器關閉時刪除
+//initScript 為頁面載入前注入之腳本(函數或字串, Playwright addInitScript), 供記錄頁面自帶計時器所產生之中間狀態(不受負載下計時器延遲影響)
 export async function openPage(url, opt = {}) {
-    let { viewport = VIEWPORT, routeExternalResources = false, minCells = 1, idle = true, downloadsPath = null } = opt
+    let { viewport = VIEWPORT, routeExternalResources = false, minCells = 1, idle = true, downloadsPath = null, initScript = null } = opt
     let browser = await launchBrowser(downloadsPath ? { downloadsPath } : {})
     let ctx = {
         browser,
@@ -119,6 +120,9 @@ export async function openPage(url, opt = {}) {
         page.on('download', (d) => ctx.downloads.push(d))
         if (routeExternalResources) {
             await routeExternal(page, ctx.external)
+        }
+        if (initScript) {
+            await page.addInitScript(initScript)
         }
         await page.goto(url)
         if (idle) {
@@ -204,6 +208,16 @@ export function normMat(mat) {
         return mat
     }
     return mat.map((r) => (Array.isArray(r) ? r.map((v) => (v === undefined || v === null ? '' : String(v))) : r))
+}
+
+
+//assertExamplePage, 範例頁之標題與兩個連結皆指向自身(R18 命名一致)
+export async function assertExamplePage(page, name, h1) {
+    let head = await page.locator('.bkh').first().innerText()
+    assert.strictEqual(head.split('\n')[0].trim(), h1)
+    let links = await page.locator('a.item-link').evaluateAll((as) => as.map((a) => a.getAttribute('href')))
+    assert.strictEqual(links.length, 2)
+    assert.ok(links.every((l) => l.endsWith(`ex-${name}.html`)), JSON.stringify(links))
 }
 
 

@@ -3,22 +3,13 @@
 //③看到 slot 之渲染、提示、欄序、對齊、選單與過濾事件 ④過濾值以真鍵盤輸入 ⑤比對顏色、文字、欄序、幾何量測 ⑥無副作用
 //app.html 載入的是 gDistApp 之產物 app.umd.js(內含建置當時之元件), 不經本地 dist: APP- 開頭之格驗範例建置產物之選單與標題(R18), 不驗本次 dist 之修改
 import assert from 'assert'
-import { openPage, exampleUrl, headerOrder, typeIntoFloatingFilter, assertNoErrors } from './tools/e2e-setup.mjs'
+import { openPage, exampleUrl, headerOrder, typeIntoFloatingFilter, assertNoErrors, assertExamplePage } from './tools/e2e-setup.mjs'
 import { waitUntilExist } from './tools/e2eLib.mjs'
 
 let VIEW = { width: 1400, height: 700 }
 
 function openExample(name, query = '', opt = {}) {
     return openPage(exampleUrl(name, query), { routeExternalResources: true, viewport: VIEW, ...opt })
-}
-
-//assertExamplePage, 範例頁之標題與兩個連結皆指向自身(R18 命名一致)
-async function assertExamplePage(page, name, h1) {
-    let head = await page.locator('.bkh').first().innerText()
-    assert.strictEqual(head.split('\n')[0].trim(), h1)
-    let links = await page.locator('a.item-link').evaluateAll((as) => as.map((a) => a.getAttribute('href')))
-    assert.strictEqual(links.length, 2)
-    assert.ok(links.every((l) => l.endsWith(`ex-${name}.html`)), JSON.stringify(links))
 }
 
 //waitHeaderOrder, 等畫面欄序(依表頭螢幕座標)等於預期

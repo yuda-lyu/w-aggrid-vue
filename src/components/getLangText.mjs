@@ -114,6 +114,7 @@ let en = {
     loadingOoo: 'Loading...',
     loadingError: 'ERR',
     noRowsToShow: 'No Rows To Show',
+    noRowsToShowFiltered: 'No Rows Match The Filter', //非ag-grid內建鍵, 本套件新增: 數據列數大於0而過濾使顯示列數為0
     enabled: 'Enabled',
 
     // Menu
@@ -513,6 +514,7 @@ let zhTW = {
     loadingOoo: '載入中...',
     loadingError: '錯誤',
     noRowsToShow: '無資料可顯示',
+    noRowsToShowFiltered: '無符合過濾條件之資料',
     enabled: '啟用',
 
     // 選單
@@ -759,6 +761,7 @@ let zhCn = {
     loadingOoo: '载入中...',
     loadingError: '错误',
     noRowsToShow: '无数据可显示',
+    noRowsToShowFiltered: '无符合过滤条件的数据',
     enabled: '启用',
 
     // 选单

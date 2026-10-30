@@ -37,6 +37,8 @@
 | R21 | 標頭容器被程式單獨捲動時,資料區須捲到相同位置 | 無 |
 | R22 | 元件自寫之資料寫入路徑一律經 isCellEditable 判斷,語意同 ag-grid 之 colDef.editable | 無(uploadData 整表載入刻意不套,主控 2026-10-28 裁示維持) |
 | R23 | 元件寫回 opt.rows 時保留列之全部欄位(列拖曳、貼上);只有整表載入(uploadData)依 opt.keys 提取 | 無(filterall 時列拖曳寫回僅顯示子集,待裁示,第 6 節 #21) |
+| R24 | opt.localeText:覆寫表格文字之字典,先查覆寫字典、查無再走內建字典 | 無 |
+| R25 | 數據列數大於 0 而顯示列數為 0(過濾使然)時顯示覆蓋層,預設開啟;與 ag-grid 原生覆蓋層互不干擾 | 無(宿主 hideOverlay 後不自動重現,第 6 節 #24) |
 
 ## 1. 共通規則
 
@@ -360,6 +362,51 @@
   - **回呼引數可變性**:`rowDragEnd`、`rowDragLeave`、`rowDragChange` 收到之 `rows` 為副本(`getNowData()`),修改它**不再**影響寫回之 `opt.rows`(修前同一陣列物件隨後被寫入 `opt.rows`,宿主若曾在 `rowDragEnd` 內就地改動 `rows` 以改變最終列序,現已無效;屬未載於文件之偶然管道,JSDoc 現明載為副本);`row` 為 `node.data`(原列物件),修改它會改到 `opt.rows` 內之同一物件(修前 `opt.rows` 為提取後之新物件,改 `row` 不影響之).
 - **來源**:2026-10-28 agv-run02 報告遺留項(主控排程第 155 項),agv-run03.
 
+### R24 opt.localeText:覆寫表格文字之字典,先查覆寫字典、查無再走內建字典
+
+- **成因(2026-10-30,Gitea issue #26,rddmanager 提出)**:`getLocaleText: vo.agGetLocaleText` 一律取 `getLangText.mjs` 之內建字典,`opt` 只能選語系(`opt.language`),呼叫端無法讓表格之空表文字與全站其他清單一致(修前實測:`localeText={noRowsToShow:'無數據'}` 被忽略,文字掛鉤仍回「無資料可顯示」,tmp/run01/probe-head.json `o7_head`).
+- **規則**:
+  1. `opt.localeText` 為物件,鍵同 ag-grid 之 locale 鍵(另有本套件新增之 `noRowsToShowFiltered`,見 R25),值為字串(**空字串有效**).`agGetLocaleText` 先以自有屬性判斷查覆寫字典(`Object.prototype.hasOwnProperty.call`,不取原型鏈),查無再走 `getLangText(opt.language, 鍵, ag-grid 給的預設)`;**未給時對所有鍵之回傳與修前逐字相同**(AL1:三語系 8 個鍵,期望值為修前 dist 實測之 golden).
+  2. 覆寫字串原樣回傳,不代入 ag-grid 之 `${variable}` 佔位(與內建字典一致;內建字典亦不代入).
+  3. 型別檢核(R01 風格,prop 無方法名,前綴 `[w-aggrid-vue] opt.<鍵>`,R03):未給(null、undefined)不提示;`localeText` 非物件(含陣列、字串)→ `[w-aggrid-vue] opt.localeText is invalid[<值或型態>], use default {}` 並視為未給;值非字串之鍵 → `[w-aggrid-vue] opt.localeText[<鍵>] is invalid[<值或型態>], use default text`,該鍵略過(用內建),其餘鍵照用.每次 `changeOpt` 重新檢核(opt 換新時再提示).
+  4. 執行中變更 `opt.localeText` 或 `opt.language`:文字掛鉤隨之更新(`vo.localeText` 為 `changeOpt` 每次重算,非掛載時快照);已顯示中之空表/過濾 0 筆覆蓋層文字於 `$nextTick` 後同步更新(`syncOverlay(true)`,OV20、OV22).
+- **單一擁有者**:F `agGetLocaleText`(1059);型別檢核在 `changeOpt`(2743 起),提示函數 `logUseDefaultOpt`(195).內建字典:`getLangText.mjs`.
+- **盤點**:`git grep -nE "getLocaleText|agGetLocaleText|localeText" -- src/components/WAggridVue.vue`(`getLocaleText: vo.agGetLocaleText` 1 處為唯一接入 ag-grid 之點;不得另設 `localeText` gridOption 與之並存,否則 ag-grid 不會走覆寫字典);`git grep -n "noRowsToShow" -- src/components`(getLangText.mjs 三語系各 1 個 noRowsToShow 與 1 個 noRowsToShowFiltered)
+- **測試**:unit-getLangText UG1–UG3;api-localeText AL1–AL4、AL6、AL7;e2e-overlay OV1–OV5(空表文字、未給不變、en/zh-cn、資料為空時搜尋不換文字、其他鍵〔loadingOoo〕覆寫)、OV12–OV13(Filtered 覆寫)、OV20、OV22、OV26–OV28、OV30(執行中變更 localeText/language 即時更新,含空字串為有效覆寫)、OV23–OV24(無效值)、OV25(仿 WTableEdit 組 opt).
+- **對 w-table-vue**:`WTableEdit.vue` 之 `useOpt = { ...vo.opt, language: vo.language, rows, keys, ... }`,其後對 `cloneDeep(vo.opt)` 之鍵逐一覆蓋(排除 keys、rows、kpHead、editable、rowChecked、filterChange),整份 `useOpt` 以 `:opt="useOpt"` 原樣給 WAggridVue(`WTableEdit.vue:967–1050、228–232`);故 `localeText` 與 `showOverlayWhenFilteredEmpty` 原樣到達,唯 `language` 由 WTableEdit 自己的 `language` prop 決定(`opt.language` 被複寫).仿照所測之 OV25 非在 w-table-vue 內執行.
+- **來源**:2026-10-30 Gitea issue #26 第 1 點;主控 2026-10-30 裁定(新增 `opt.localeText`,選項型別檢核依本套件慣例).
+
+### R25 數據列數大於 0 而顯示列數為 0(過濾使然)時顯示覆蓋層,預設開啟;與 ag-grid 原生覆蓋層互不干擾
+
+- **成因(2026-10-30,Gitea issue #26 第 2 點)**:ag-grid 31.3.4 之 `OverlayService.showOrHideOverlay` 只由 `rowDataUpdated` 觸發,以 `paginationProxy.isEmpty()` 判斷;clientSide 模型之 `isEmpty()` 為 `rootNode.allLeafChildren` 為空(**未過濾之全部列**)或欄位未就緒(`ag-grid-community.js` 約 49829–49837、760–763).故表頭過濾使顯示列為 0 時不觸發,表格只剩表頭與空白(修前實測:tmp/run01/probe-head.json `o5_filtered`,rows=0、`.ag-overlay` 為 `ag-hidden`);filterall 使給 ag-grid 之 rowData 為空時,ag-grid 自行顯示 noRows 覆蓋層,文字為 `noRowsToShow`(「無資料」,與真的無資料無從區分).
+- **規則**:
+  1. 狀態分類(`getEmptyKind`):顯示列數 `api.getDisplayedRowCount()` > 0 → `''`;否則 `size(vo.rows)===0` → `data`(數據本身為空,維持 `noRowsToShow`);否則 ag-grid 實際採用之 `api.getGridOption('rowData')` 為空 → `filterall`(ag-grid 自行顯示 noRows 覆蓋層);否則 → `header`(表頭過濾使然,ag-grid 不顯示覆蓋層,由本元件補).
+  2. 文字:ag-grid 取 `noRowsToShow`(其 NoRowsOverlay 於 `setTimeout` 內才取文字,故以取文字當下之狀態判定)時,若 `opt.showOverlayWhenFilteredEmpty` 為 true 且狀態為 `filterall` 或 `header`,改取 `noRowsToShowFiltered`(內建:zh-tw「無符合過濾條件之資料」、en `No Rows Match The Filter`、zh-cn「无符合过滤条件的数据」;可經 R24 覆寫);其餘取 `noRowsToShow`.
+  3. 顯示與隱藏(`syncOverlay`,由 ag-grid 的 `modelUpdated` 事件〔表頭過濾、filterall、數據更新、排序皆會觸發〕與 `changeOpt` 後的 `$nextTick` 觸發):狀態為 `header` 且選項為 true → `api.showNoRowsOverlay()`(已是 noRows 覆蓋層則不重複顯示);顯示列數回到 > 0(或選項改為 false)→ **只隱藏本元件顯示者**(`bOwnOverlay`)的 noRows 覆蓋層.
+  4. **不蓋掉載入中**:呼叫端經 `getApi().showLoadingOverlay()` 顯示之載入中覆蓋層(`.ag-overlay-loading-wrapper`),狀態為 `header` 時不被換成過濾 0 筆文字(OV16);本元件顯示過濾 0 筆後呼叫端改顯示載入中,其後清空過濾時載入中**不被本元件隱藏**(OV17,只隱藏 noRows 種類).
+  5. **不殘留**:顯示列回到 > 0 即隱藏(OV6–OV10);數據換成空陣列 → 文字換成 `noRowsToShow`、換成仍被過濾為 0 之另一批 → 換回過濾 0 筆文字、換成有符合者 → 隱藏(OV18、OV19);執行中把選項改為 false 即隱藏、改回 true 即再顯示(OV21).
+  6. `opt.showOverlayWhenFilteredEmpty`(Boolean,預設 true):false → 完全回到修前行為(表頭過濾 0 筆不提示;filterall 使數據為空時 ag-grid 顯示 `noRowsToShow`;OV14、OV15);非布林值 → `[w-aggrid-vue] opt.showOverlayWhenFilteredEmpty is invalid[<值>], use default true` 並用預設 true(R01).
+  7. 呼叫端經 `getApi().hideOverlay()` 隱藏後,過濾狀態未改變前不會自動重現(下一次 `modelUpdated` 才重新判斷),見第 6 節 #24.
+  8. **覆蓋層之辨識限定為本表自己者**(`getOverlayState`:取本表 `.ag-root-wrapper` 內「其最近之 `.ag-root-wrapper` 祖先即本表」之 `.ag-overlay`,不取文件順序第一個):儲存格或表頭 slot 內若放有巢狀表格,其 `.ag-overlay` 在文件順序上早於本表者(本表之覆蓋層為 `.ag-root` 最後一個子節點);取錯會把顯示中判成隱藏而不隱藏、或反之(外審 sonnet 讀碼指出,OV29 守護).
+  9. **文字更新不以「DOM 文字為空」略過**(`syncOverlay` 之 `bRefresh` 兩處):`localeText` 之空字串為有效覆寫,若把空字串視為「文字尚未由 setTimeout 寫入」而略過,空字串換成非空字串時覆蓋層維持空白(外審指出,OV28 守護);代價僅為極少數情形(opt 變更與覆蓋層建立落在同一 macrotask)多重建一次.
+  10. **破壞性變更之對外說明**(預設開啟使過濾成 0 筆之表畫面改變;filterall 使數據為空之文字由 `noRowsToShow` 改為 `noRowsToShowFiltered`):寫在範例頁之說明文字(`src/AppLocaleText.vue`、`src/AppShowOverlayWhenFilteredEmpty.vue` 之 `#ckdesc`,兩頁皆載明並指出以 `opt.showOverlayWhenFilteredEmpty = false` 恢復舊行為)與 `WAggridVue.vue` 之 `opt.showOverlayWhenFilteredEmpty` JSDoc(`【破壞性變更】`);**README 不改**(R18;2026-10-30 agv-run01 曾依派工新增、經主控裁定撤回).`docs/examples` 於發布時依 script.txt 重產,不手動產生.範例頁測試 EXO1–EXO4、AX1–AX5、BLD1(R18).
+- **單一擁有者**:F `getEmptyKind`(1085)、`isNoRowsFiltered`(1116)、`getOverlayState`(1130)、`syncOverlay`(1156)、`agModelUpdated`(1446);樣板接線 `@modelUpdated="agModelUpdated"`(38).
+- **盤點**:`git grep -nE "showNoRowsOverlay|hideOverlay|showLoadingOverlay|bOwnOverlay" -- src/components/WAggridVue.vue`(顯示/隱藏覆蓋層之站點只能在 `syncOverlay`,2 個呼叫 + `bOwnOverlay` 讀寫;出現表外之命中須先補列);`git grep -n "syncOverlay(" -- src/components/WAggridVue.vue`(呼叫站點:agModelUpdated、changeOpt 之 `$nextTick`)
+- **站點**(狀態 × 行為):
+
+| 狀態 | 來源 | 覆蓋層由誰顯示 | 文字 | 隱藏 | 狀態 |
+|---|---|---|---|---|---|
+| data(opt.rows 為空) | ag-grid 於 rowDataUpdated | ag-grid | noRowsToShow | ag-grid 於 rowDataUpdated(有數據時) | 已套(不變;OV1–OV4) |
+| filterall(給 ag-grid 之 rowData 為空) | ag-grid 於 rowDataUpdated | ag-grid | noRowsToShowFiltered(選項 true)/noRowsToShow(false) | ag-grid | 已套(OV9、OV15) |
+| header(表頭過濾使然) | 本元件 | `syncOverlay` | noRowsToShowFiltered | `syncOverlay`(只隱藏自己顯示者) | 已套(OV6–OV8、OV10–OV13) |
+| 宿主之 loading 覆蓋層 | 呼叫端 | 呼叫端 | — | 呼叫端 | 範圍外(不動;OV16、OV17) |
+
+- **測試**:e2e-overlay OV6–OV22、OV26–OV31(OV31:資料為空 × 表頭過濾仍為 noRowsToShow;真鍵盤於表頭浮動過濾列與宿主搜尋框輸入;宿主按鈕更換 opt、顯示/隱藏載入中、`setHeadFilter`/`clearHeadFilter`);api-localeText AL3、AL5(取 noRowsToShow 時依表格狀態得到過濾 0 筆文字,關閉選項恆為 noRowsToShow);範例(R18)e2e-examples-overlay EXO2(ex-localeText:有數據 → 過濾 0 筆顯示覆寫之 noRowsToShowFiltered → 清除後隱藏 → 數據清空顯示覆寫之 noRowsToShow,內建文字從未出現)、EXO4(ex-showOverlayWhenFilteredEmpty:左表預設顯示內建過濾 0 筆文字後隱藏;右表 false 始終無覆蓋層).
+- **修前紅**(2026-10-30 agv-run01):以 HEAD 之 dist 位元組覆蓋 dist 跑 e2e-overlay + api-localeText 共 38 格:31 紅、7 綠;綠者為「保留」之格(OV1 空表未給 localeText、OV3 en/zh-cn 空表、OV4 與 OV31 資料為空時搜尋/表頭過濾、OV14 與 OV15 關閉選項之舊行為、AL1 未給時三語系 8 鍵之回傳與修前相同——期望值本身即取自 HEAD 之 dist).unit-getLangText 以 HEAD 之 getLangText.mjs 副本(`git archive`)取 `noRowsToShowFiltered` 得 `'DEF'`(缺鍵),UG1 紅.
+- **變異**(腳本逐一單點變異 src → 重建 dist → 跑 e2e-overlay 與 api-localeText → 以雜湊還原 src 與 dist):19 個單點變異全被至少 1 格偵測(M1–M18 於 36 格集〔OV1–OV29、AL1–AL7〕上跑,括號為紅格數;OV30 其後新增,M17a 以含 OV30 之集重跑)——M1 覆寫字典不查(13)、M2 查找順序顛倒(13)、M3 過濾 0 筆文字不切換(21)、M4 modelUpdated 不同步(18)、M5 不隱藏本元件之覆蓋層(8)、M6 不檢查載入中(OV16)、M7a 顯示條件忽略關閉選項(OV14、OV21)、M7b 文字切換忽略關閉選項(OV15、AL5)、M8 資料為空視為過濾 0 筆(8;加 OV31 後 9)、M9 opt 變更不同步(5)、M10 清空時連載入中一併隱藏(OV17)、M11 值不檢查型別(OV24、AL4)、M12 選項非布林值不提示(OV23、AL6)、M13 filterall 與資料為空不分(OV9、OV10、OV12、OV27)、M14 localeText 非物件不提示(OV23、AL6)、M16 opt 變更後不更新 ag-grid 自顯之空表文字(OV26、OV27、OV28)、M17a/M17b 文字更新守衛把空字串視為尚未寫入(OV30;OV28)、M18 覆蓋層選取不限定本表(OV29).M17a 於首輪變異時**存活**(36 格集無格覆蓋「表頭過濾使然之過濾 0 筆文字由空字串換成非空字串」),據以新增 OV30 後被偵測.
+- **穩定性**:最終全套 `npm test --lock` 485 passing(5m36s,2026-10-30);e2e-overlay + api-localeText + unit-getLangText 於修後連續再跑:OV31 加入前 3 次各 40 passing、加入後 3 次各 41 passing,0 失敗(另含變異腳本之未變異基準 2 次).
+- **來源**:2026-10-30 Gitea issue #26 第 2 點;主控 2026-10-30 裁定(預設開啟、另提供關閉選項、文字用另一鍵、不蓋掉載入中不殘留);agv-run02 主控裁定:filterall 使數據為空時顯示過濾 0 筆文字(原顯示 `noRowsToShow`)接受維持,限制 #24(宿主 `hideOverlay()` 後不自動重現、ag-grid 升版須重驗 OV16/OV17/OV29)接受維持文件.
+
 ## 3. 下載
 
 ### R12 兩個下載方法共用 downloadCore
@@ -466,13 +513,15 @@
 
 ### R18 範例即對外文件
 
-- **規則**:對外文件為範例 `src/App<名稱>.vue`,建置為 `docs/examples/ex-<名稱>.html` 與 `test-html/ex-<名稱>.html`;README 不改(使用者指示).命名為 API 名之 camelCase(方法如 AppDownloadData、選項如 AppKpCellFormat),slot 範例以 Slot 為前綴(AppSlotCellRender),變體加後綴(AppShowKeysApplyOrder、AppUploadDataWithConvertKeys、AppSlotCellRenderAlign).新增或改名範例時,App.vue 之選單、v-if、import、components 四處一致.重產順序依 script.txt:gDistApp → gExtractHtml → gDocExams(gDistApp 會清空 docs/examples).
+- **規則**:對外文件為範例 `src/App<名稱>.vue`,建置為 `docs/examples/ex-<名稱>.html` 與 `test-html/ex-<名稱>.html`;README 不改(使用者指示;2026-10-30 agv-run01 曾依主控派工新增 README 兩節〔`opt.localeText`、過濾 0 筆覆蓋層與 Breaking changes〕,經主控裁定為派工之誤,agv-run02 已撤回,README 回到 agv-run01 之前之內容,無例外).新選項、破壞性變更之對外說明改寫在範例頁之說明文字與 `WAggridVue.vue` 之 JSDoc(例:`AppLocaleText.vue`、`AppShowOverlayWhenFilteredEmpty.vue`).命名為 API 名之 camelCase(方法如 AppDownloadData、選項如 AppKpCellFormat),slot 範例以 Slot 為前綴(AppSlotCellRender),變體加後綴(AppShowKeysApplyOrder、AppUploadDataWithConvertKeys、AppSlotCellRenderAlign).新增或改名範例時,App.vue 之選單、v-if、import、components 四處一致.重產順序依 script.txt:gDistApp → gExtractHtml → gDocExams(gDistApp 會清空 docs/examples).
 - **盤點**(兩者須相等):
-  - `git ls-files 'src/App*.vue' | grep -vc '^src/App.vue$'`(77)
-  - `git ls-files docs/examples | grep -c '^docs/examples/ex-.*\.html$'`(77)
+  - `git ls-files 'src/App*.vue' | grep -vc '^src/App.vue$'`(79;2026-10-30 起含 AppLocaleText、AppShowOverlayWhenFilteredEmpty,新檔提交後才計入)
+  - `git ls-files docs/examples | grep -c '^docs/examples/ex-.*\.html$'`(**發布重產後 79**;2026-10-30 agv-run02 新增兩範例後、發布重產前為 77——`docs/examples` 依 script.txt 於發布時重產〔gDistApp → gExtractHtml → gDocExams〕,本輪不手動產生;此段期間兩者不等屬預期,由 `unit-appExamples` 之 AX4 驗 docs/examples 無遺留舊頁,發布重產後須回到相等)
   - test-html 已列於 .gitignore(入版控者只有舊有之 42 個),本機由 gExtractHtml 產生,不作為盤點與測試之依據.
-- **站點**:77 個範例,已套.
+- **站點**:79 個範例,已套(其中 `localeText`、`showOverlayWhenFilteredEmpty` 為 2026-10-30 agv-run02 新增,選單置於新群組 `text`;docs/examples 待發布重產).
 - **測試**:`test/e2e-examples-display.test.mjs`(SL1–SL4、APP-*、SKX1、SKX2、EXF1、AL-*)、`test/e2e-examples-download.test.mjs`(EXD1–EXD3)、`test/e2e-examples-upload.test.mjs`(EXU-E1–E5、EXU-K1–K3);範例頁之 CDN 資源一律路由至本機(第 7 節映射).APP- 之格載入 gDistApp 之產物 app.umd.js,驗選單與標題,不驗本次 dist.
+  - 新增範例(docs/examples 尚未重產者)之驗證:`test/unit-appExamples.test.mjs`(AX1 App.vue 四處〔import、components、v-if、選單〕與 src/App*.vue 一一對應;AX2 本次新增兩範例;AX3 example/code 連結指向自身;AX4 docs/examples 無遺留舊頁;AX5 JSDoc 載明破壞性變更;BLD1 產製器與發布管線同形)與 `test/e2e-examples-overlay.test.mjs`(EXO1–EXO4:自 src 以 `test/tools/exampleBuild.mjs` 當場產製範例頁,於 `test/_tmp/e2e-examples-overlay/`,結束即刪).產製器複製 `toolg/gExtractHtml.mjs` 之 head 與選項及 `toolg/gDocExams.mjs` 之 CDN 換址,**gExtractHtml 之 head 或選項變動時須同步改 `exampleBuild.mjs`**(BLD1 以既有 5 個範例對照 docs/examples 逐字比對,不同步即紅).發布重產 docs/examples 後,新範例頁與測試所產製者應相同.
+  - 範例頁之歷程以頁內 MutationObserver 於載入前即記錄(`openPage` 之 `initScript` 選項),事後比對各態出現之順序,不以時間窗斷言(範例頁自帶 1–3 秒計時器,負載下計時器延遲).
 - **來源**:2026-09-04 提交 626fbda(範例正名).
 
 ## 6. 已知限制(套件不處理,由呼叫端或上游負責)
@@ -502,6 +551,7 @@
 | 21 | filterall 生效時列拖曳,`opt.rows` 被寫成顯示中之子集(被 filterall 隱藏之列從 `opt.rows` 消失):`rowData` 為過濾後之子集,`triggerRowDragChange` 寫回的是子集之新列序(修前修後相同,與欄位保留無涉) | 2026-10-28 agv-run03 實測(探測腳本 `probeDrag2.mjs`/`probeFilterall.html`,留存於 `dnow/20261028054319/agent-out/agv-run03-evidence/scripts/`:4 列、filterall 顯示 2 列,拖曳後 `opt.rows` 剩 2 列);R23 | **待裁示**(範圍外未修):修法須定隱藏列之放置規則(例如維持在原相對位置),屬行為決定 |
 | 22 | 在 `rowDragChange` 回呼內**同步**呼叫 `pasteText`:`opt.rows` 已寫成新列序,但 `vo.rows` 要待 Vue 下一次更新才同步(`changeOpt` 之 `vo.rows = vo.opt.rows`),pasteText 取到舊 `vo.rows` 並以之 `set(vo, 'opt.rows', rows)`,把拖曳後之列序覆寫回舊序(畫面為新序,宿主 `opt.rows` 為舊序;貼入之值仍落在畫面被判斷之列) | 2026-10-28 agv-run03 實測(探測腳本 `probeEdge.mjs` s2,留存處同 #21:拖曳後 `getNowData` 為 a1、a2、a0,宿主 `opt.rows` 為 a0、a1、a2);外審 terra 讀碼提出;修前修後相同 | 呼叫端:回呼內改於下一個 tick(`$nextTick`)再呼叫 pasteText;範圍外未修 |
 | 23 | 置頂/置底列(`genRowsPinnTop`、`genRowsPinnBottom`)只於表格就緒(`agReady`:F:1318、1321)與儲存格值變更(`agCellChange`:置底,F:1283)時重算,列拖曳後不重算;產生器若依列序取值(如取第一列),拖曳後置頂/置底列過時(依總和等與列序無關者不受影響) | 讀碼確認(外審 terra 提出;未實測);修前修後相同 | 呼叫端或待裁示;範圍外未修 |
+| 24 | 過濾 0 筆覆蓋層(R25)之限制:①呼叫端經 `getApi().hideOverlay()` 隱藏後,過濾狀態未改變前不會自動重現(下一次 `modelUpdated`,即過濾、數據更新或排序,才重新判斷);②載入中/noRows 種類以 DOM 類名判斷(`.ag-overlay`、`ag-hidden`、`.ag-overlay-loading-wrapper`、`.ag-overlay-no-rows-wrapper`;ag-grid 31.3.4 無公開之覆蓋層狀態查詢),ag-grid 升版時須重驗(e2e-overlay OV16、OV17、OV29;主控 2026-10-30 裁定接受此限制並維持文件);③ag-grid 之 NoRowsOverlay 於 `setTimeout` 內才取文字,故 `noRowsToShow` 之文字取決於「取文字當下」之表格狀態(狀態在顯示與取文字之間改變,以取文字當下為準);呼叫端自行 `api.showNoRowsOverlay()` 且資料非空而顯示列為 0 時,文字亦為過濾 0 筆文字;④`localeText` 字串不代入 `${variable}` 佔位(內建字典亦同);⑤`modelUpdated` 經 ag-grid-vue 非同步送達(`setTimeout(0)`):表頭過濾使然之 0 列且宿主以 `applyTransaction`/`setGridOption('rowData')` 換數據時,ag-grid 於 `rowDataUpdated` 先隱藏,覆蓋層要到下一個 macrotask 才補顯示(經 opt 換數據者於同一 flush 後之 microtask 補顯示,實測列數、覆蓋層無中間態;外審讀碼推論前者可能閃一幀,未實測);⑥外審 sonnet(讀碼推論)另指出 `bOwnOverlay` 語意為「曾顯示過」而非「現在仍是我們的」:ag-grid 於 `rowDataUpdated` 隱藏我們之覆蓋層而我們尚未同步之一個 macrotask 內,若宿主恰好手動 `showNoRowsOverlay()`,會被誤隱藏,機率極低,未處理 | e2e-overlay OV16、OV17、api-localeText AL5;讀碼(ag-grid-community.js:19454–19463 NoRowsOverlayComponent、49782–49846 OverlayService) | ag-grid 31.3.4 + 呼叫端;範圍外未修 |
 
 ## 7. 測試帳本
 
@@ -532,11 +582,16 @@
 | api-pasteText | api | 4 | pasteTextApi.html(宿主按鈕呼叫公開方法 pasteText) | R13 |
 | e2e-pasteEditable | e2e | 14 | pasteEditable.html | R22 |
 | e2e-rowDrag | e2e | 9 | rowDrag.html(真滑鼠拖曳列) | R23 |
+| unit-getLangText | unit | 3 | `src/components/getLangText.mjs`(node 直接載入,不起瀏覽器) | R24、R25 |
+| api-localeText | api | 7 | overlay.html(宿主按鈕呼叫 ag-grid 公開之 `getGridOption('getLocaleText')`,即元件交給 ag-grid 之文字掛鉤) | R24、R25 |
+| e2e-overlay | e2e | 31 | overlay.html(以 `?g=` 指定要建立之表;真鍵盤於表頭浮動過濾列與宿主搜尋框輸入、宿主按鈕更換 opt 與顯示載入中) | R24、R25 |
 | e2e-examples-display | e2e | 21 | docs/examples 之 slot、showKeys、對齊、filterChange 範例與 app.html | R06–R08、R11、R18、R20 |
 | e2e-examples-download | e2e | 3 | docs/examples 之 ex-downloadData、ex-downloadDisplayData、ex-getDisplayData | R12、R13、R18 |
 | e2e-examples-upload | e2e | 8 | docs/examples 之 ex-uploadData、ex-uploadDataWithConvertKeys | R17、R18 |
+| unit-appExamples | unit | 6 | `src/App.vue` 與 `src/App*.vue` 之接線(AX1–AX5)、範例產製器與 docs/examples 之同形(BLD1;node,不起瀏覽器) | R18、R24、R25 |
+| e2e-examples-overlay | e2e | 4 | 自 src 當場產製之 ex-localeText、ex-showOverlayWhenFilteredEmpty(`test/tools/exampleBuild.mjs`,頁內記錄器以 `openPage` 之 `initScript` 注入) | R18、R24、R25 |
 
-合計 444 格(2026-10-28 agv-run03 全套實測 444 passing).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
+合計 495 格(2026-10-28 agv-run03 全套實測 444 passing;2026-10-30 agv-run01 新增 unit-getLangText 3、api-localeText 7、e2e-overlay 31,合計 41 格,全套實測 485 passing;同日 agv-run02 新增 unit-appExamples 6、e2e-examples-overlay 4,合計 10 格,全套實測 495 passing,見 state.md).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
 
 ### 7.3 舊 tmp 驗收腳本之遷移(2026-10-06~07)
 
@@ -591,6 +646,7 @@
 
 - **宿主頁協定**:`window.__cases`(案例 → 目標、方法、參數)、`window.__case`(setup 選定案例)、`#btnRun`(真點擊,其處理函數呼叫元件方法,同官方範例「按鈕呼叫元件方法」之用法)、`window.__out`(結果);共用層 `runHostCase(ctx, name, opt)`.此協定驗的是公開方法之程式契約,屬 `api-` 層(api-pasteText 與下載、上傳、lifecycle 各檔之方法呼叫案例);**驗使用者操作行為之 e2e 檔不得以此協定代替使用者動作**(pasteText 即因此拆為 e2e-pasteText 與 api-pasteText,2026-10-28 agv-run03).其他宿主按鈕:`#btnUpload`(上傳)、`#btnReloadKeys6`、`#btnLoad10`、`#btnReplaceOpt4`(宿主重新設定或載入數據).
 - **範例頁之外部資源**:`openPage(..., { routeExternalResources: true })` 攔截全部 http(s):vue、w-jsonview-tree → node_modules;w-aggrid-vue → 本地 dist;w-demores 之 dataEasy、dataLikeNumber → `test/fixtures/w-demores/`(取自 w-demores 1.0.34);dataEduagency → 空陣列;@babel/polyfill(nomodule、非宣告之相依)→ 空腳本;其餘中止並記錄,測試端斷言未對照者為 0.
+- **範例頁產製器與頁內歷程記錄**(2026-10-30 agv-run02):`test/tools/exampleBuild.mjs` 的 `buildExample('App<名稱>.vue', 目錄)` 依 gExtractHtml、gDocExams 之作法自 src 產製 `ex-<名稱>.html`(含 CDN 位址,同 docs/examples),供尚未隨發布重產的新範例使用;`openPage` 新增選項 `initScript`(頁面載入前注入,`page.addInitScript`),e2e-examples-overlay 以之注入 MutationObserver 記錄各表「顯示列數與本表覆蓋層可見文字」之歷程,事後依序比對,避免以時間窗斷言自帶 1–3 秒計時器之範例頁.`assertExamplePage`(範例頁標題與兩連結)已移入 `e2e-setup.mjs` 共用.
 - **app.html** 載入 gDistApp 之產物 app.umd.js(內含建置當時之元件),APP- 之格只驗範例建置產物之選單與標題;要驗本次修改須依 script.txt 重產(gDistApp 會清空 docs/examples).
 - **中介檔**:上傳用 xlsx 以 wsemi 產於 `test/_tmp/<檔名>/`、下載檔存檔讀回即刪;該檔 after 刪除目錄(`useTmpDir`).不得用 `./tmp/`.
 - **下載判定**:`assertDownloadCase`(throw、noFile、檔案內容、回傳值與檔案相同、分頁名、檔名、console 提示、未處理之 rejection);百萬列之檔以 `runHostCase(..., { readFile: false })` 只核對已產檔與列數.
@@ -604,9 +660,12 @@
 - **e2e-rowDrag**(2026-10-28):列拖曳全為真滑鼠(L2:`mouse.move/down/up`,按住 a 欄把手 `.ag-row-drag`、先移開 8px 才算開始拖曳、分段移到目標列、需要時續移出表格);頁內標記沿用 `window.__rd`(宿主回呼記錄)、`window.__vm.opt`;拖曳完成之訊號為 `rowDragChange` 回呼已觸發(寫回 `opt.rows` 之同一時點),再等表格靜止;「原位放開」(RD7)以 `rowDragEnd` 觸發後 500ms 觀察窗確認未多發 `rowDragChange`(負向斷言).
 - **headerscroll**(R21):宿主頁以查詢字串切換標頭範本、釘選、寬度、欄數、列數(`head=default|slot|focusable&pin=1&w=&cw=&n=&rows=`);頁首以 `EventTarget.prototype.addEventListener/removeEventListener` 包裝記錄 `.ag-header-viewport` 上 scroll 監聽之註冊與移除(HS17 驗成對).HS9(`focus()`)、HS10、HS18(`scrollIntoView()`)之 act 為呼叫端程式觸發(L5),因其模擬的是呼叫端程式或瀏覽器自身之捲入可見,不是使用者操作;其餘 act 為 L2 真滑鼠(`mouse.click`、`mouse.wheel`)、L1 真鍵盤、L3 `locator.click`(HS1–HS8、HS11 之主觸發,即 issue #9 之重現路徑).`locator.click` 會先把目標捲入可見,故「真滑鼠點擊」格(HS12)改以座標點擊露出之部分,對照組(HS13)先以滾輪捲到完整可見.一致性判準 `alignedProblem`:標頭與資料區 scrollLeft 差 <1px、已渲染各欄標頭格與第 0 列儲存格左緣差 ≤0.5px(至少 3 欄含目標欄);補償於下一個畫面幀後才生效,以偵測等待(`pollUntil`,上限 3 秒)判定;「不得捲動」之負向斷言以 400ms 觀察窗.
 
+- **e2e-overlay / api-localeText**(2026-10-30,issue #26):宿主頁 `test/pages/overlay.html` 以查詢字串 `?g=o1,o5` 只建立所需之表(每格只載入要用的表);空表(無儲存格)之頁面以 `openPage(url, { minCells: 0 })` 開啟.act:過濾為真鍵盤於表頭浮動過濾列(`typeIntoFloatingFilter`,L1)與宿主搜尋框(click + `keyboard.type`,L1);宿主端動作為宿主按鈕(L3,其處理函數呼叫 `getApi().showLoadingOverlay()/hideOverlay()`、`setHeadFilter`/`clearHeadFilter`、更換 `opt`,同官方範例「按鈕呼叫元件方法」之用法,模擬宿主程式的行為);api-localeText 以宿主按鈕取文字掛鉤回傳(`window.__cases` 登錄案例,`runHostCase`).**ag-grid 載入中覆蓋層會攔截指標事件**(`.ag-overlay-loading-wrapper` 蓋住整個表含表頭,Playwright `locator.click` 逾時),故「載入中時過濾」只能由宿主按鈕呼叫 `setHeadFilter`(OV16、OV17),真鍵盤輸入只用於載入中隱藏後.**浮動過濾列輸入框無 placeholder**(`filterOoo` 只用於過濾彈窗),非覆蓋層鍵之覆寫以載入中覆蓋層之 `loadingOoo` 驗(OV5).**列數 0 之偵測等待**:ag-grid 以動畫移除列,覆蓋層文字出現時 `.ag-row` 的 DOM 可能尚未移除,斷言列數前先 `waitRowCount`;表頭過濾清除有防抖,列數本來就是 0 時以過濾模型為空作訊號(OV10).否定斷言(OV4、OV14、OV16、OV17、OV21)皆於終態達成後再觀察 300–700ms 短窗.
+- **修前紅/變異**(2026-10-30 agv-run01):見 R24、R25 測試節與報告.
+
 #### 已知缺口
 
-- 標準圖未產製(C6、C7、C9、C13),待裁示.
+- 標準圖未產製(C6、C7、C9、C13),待裁示.本輪新情境(空表覆寫文字、過濾 0 筆覆蓋層)同樣只以語意斷言(文字、種類、位置於表頭下方且在表格外框內)驗,未新增標準圖.
 - Playwright 之 profile 仍落於系統暫存區(C1 之偏離).
 - e2e 於 Linux(CI)未實測.
 
@@ -637,6 +696,7 @@ npm 最新為 2.1.5(2026-10-06 查).版本欄為該提交時 package.json 之值
 | 工作樹(未提交,2026-10-20) | 標頭容器被程式或瀏覽器單獨捲動(Playwright locator.click 點只露出一部分之欄名、呼叫端對標頭內元素 scrollIntoView 或 focus())後,資料區跟上標頭之位置,欄名不再對到相鄰欄之資料(原標頭單獨位移直到使用者再捲動);真滑鼠點擊、鍵盤導覽、滾輪捲動之行為不變 | 修正 | R21 |
 | 工作樹(未提交,2026-10-28) | 貼上(Ctrl+V、pasteText)對 `opt.kpCellEditable` 之函數型值逐儲存格求值(原以真值判斷,函數恆為真,唯讀列仍被寫入);非布林非函數之真值(如 `1`)原會寫入,改為同 ag-grid 視為不可編輯;函數拋錯時該儲存格略過並於 console 說明一次(原無此情形);判斷於寫入前全部完成;filterall 生效時貼上寫入畫面上被判斷之那一列(原寫入 `vo.rows[node.id]`,即畫面以外之列).布林值行為不變 | 修正、可見行為 | R22 |
 | 工作樹(未提交,2026-10-28 agv-run03) | 列拖曳排序(kpRowDrag)後寫回 `opt.rows` 保留各列全部欄位(原只留 `opt.keys` 之欄位,不在 keys 內之欄位如供 editable 函數判斷之旗標隨之消失,使唯讀列變可編輯);`opt.rows` 內之列物件為 ag-grid 之原列物件(依新列序),不再是提取後之新物件(缺少某 key 之列不再被補成 `''`,物件身分與原列相同);回呼 `rowDragEnd/Leave/Change` 之 `rows` 引數仍為依 keys 提取者(不變,但為副本:在回呼內就地修改 `rows` 不再影響寫回之 `opt.rows`;修改 `row` 現會改到 `opt.rows` 內之同一列物件) | 修正、可見行為(資料遺失) | R23 |
+| 工作樹(未提交,2026-10-30 agv-run01) | **過濾成 0 筆之覆蓋層預設開啟(可見行為變更)**:`opt.rows` 非空而顯示列數為 0 時,①表頭過濾使然:原只剩表頭與空白,現顯示「無符合過濾條件之資料」(en `No Rows Match The Filter`、zh-cn「无符合过滤条件的数据」)覆蓋層;②filterall 使然:原顯示「無資料可顯示」(`noRowsToShow`),現改顯示過濾 0 筆文字.`opt.showOverlayWhenFilteredEmpty=false` 恢復舊行為.顯示列回到 > 0 即隱藏;不蓋掉宿主顯示之載入中覆蓋層.另新增 `opt.localeText`(覆寫表格文字之字典,先查覆寫再走內建,未給時行為不變).截圖或測試若拍到過濾成 0 筆之表會與舊版不同(本套件無此類標準圖).對外說明於範例頁 localeText、showOverlayWhenFilteredEmpty 之說明文字與 JSDoc(2026-10-30 agv-run02;README 不改,R18) | 新增、可見行為 | R24、R25 |
 
 ## 9. 候選規則與待裁示(未裁示,僅記錄)
 

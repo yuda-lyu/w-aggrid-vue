@@ -71,6 +71,32 @@
 - **變異驗證腳本化**(agv-run03,腳本 `mutate.mjs` 用完已自 repo 刪除,留存於 `dnow/20261028054319/agent-out/agv-run03-evidence/scripts/`):讀變異清單 json(`find` 須在 src 恰出現 1 次)→ 備份 src 與 dist 的雜湊 → 逐一套用、`node toolg/gDistRollupComps.mjs`、經 `quiet-run --lock` 跑指定測試檔 → `finally` 以備份位元組還原並比對雜湊.變異清單用單行字串(避免 CRLF 與縮排差異),例:令 Ctrl+V 條件失效 `param.event.code === 'KeyV'` → `'KeyW'`,令隱藏欄不略過 `continue //數據貼到隱藏欄位故跳過` → 註解.這樣可同時證明 e2e(真鍵盤)與 api(程式呼叫)兩層各自偵測不同缺陷.
 - **e2e 共用 helper 放 `test/tools/e2e-setup.mjs`**:`cell`、`waitCellFocused`、`focusCell`、`pasteByKeyboard`、`hostRows`、`nowRows`、`waitRows`;宿主頁須提供 `window.__vm.opt[表格 id]` 與 `window.__vm.$refs[表格 id]`(表格 id 即選擇器 `#<id>` 去掉 `#`).
 
+### 2.5 空表/過濾 0 筆覆蓋層與 localeText(Gitea issue #26,2026-10-30 agv-run01 修正輪)
+
+- **ag-grid 31.3.4 之覆蓋層只在 `rowDataUpdated` 判斷**(`OverlayService.showOrHideOverlay`),判準 `paginationProxy.isEmpty()` 在 clientSide 模型為 `rootNode.allLeafChildren` 為空(**未過濾之全部列**)或欄位未就緒;表頭過濾使顯示列為 0 時不觸發,表格只剩表頭與空白(修前 HEAD dist 實測 `.ag-overlay` 為 `ag-hidden`).filterall 則不同:它改的是給 ag-grid 之 `rowData`(`filterRows`),rowData 為空 → ag-grid 自行顯示 noRows 覆蓋層(文字 `noRowsToShow`,即「無資料」,與真的無資料無從區分).兩種「過濾使然」之 0 列要分開處理:header 由本元件補顯示,filterall 只需換文字.
+- **覆蓋層狀態無公開查詢,靠 DOM**:`.ag-overlay`(隱藏時帶 `ag-hidden`)內 `.ag-overlay-wrapper` 帶種類 class(`ag-overlay-loading-wrapper`、`ag-overlay-no-rows-wrapper`);**隱藏後 class 仍保留**,判斷「是否顯示」要同時看 `ag-hidden`.載入中覆蓋層只在宿主呼叫 `getApi().showLoadingOverlay()`(或 rowData/columnDefs 為 falsy)時出現;本元件傳 `[]` 故開頁不會自動出現載入中.
+- **NoRowsOverlay/LoadingOverlay 於 `setTimeout` 內才取文字**(`localeTextFunc('noRowsToShow')`),所以「依狀態換文字」要在取文字當下判斷(`agGetLocaleText` 內讀 `getDisplayedRowCount`、`getGridOption('rowData')`),不能在顯示前預先設定;`getGridOption('rowData')` 是 ag-grid 實際採用之 rowData,比讀 Vue 的 `vo.rows` 不會在 prop 尚未傳進 ag-grid 時誤判.
+- **ag-grid-vue 把 grid 事件包成非同步送達**(`globalEventListener` 走 ag-grid 的 async 佇列,`setTimeout(0)` 批次):`@modelUpdated` 之處理函數必在 ag-grid 同一輪同步邏輯(含 OverlayService 的 hide)之後執行,所以「ag-grid 自己先隱藏、我們再補顯示」之順序是確定的;代價是 rowData 換新且仍過濾為 0 時,覆蓋層可能閃隱一個 macrotask.
+- **`api.showNoRowsOverlay()` 在資料非空時可用**(`manuallyDisplayed` 為 true,之後 `onNewColumnsLoaded` 不會因欄位重載而隱藏它);隱藏要用 `api.hideOverlay()`,且只該隱藏自己顯示者(`bOwnOverlay`)——ag-grid 自己顯示的 noRows(數據為空/filterall)與宿主顯示的 loading 不可動(OV17 守護).
+- **浮動過濾列之輸入框沒有 placeholder**:`filterOoo` 只用於過濾彈窗(SimpleFilter)之輸入框;測 `localeText` 對非覆蓋層鍵生效,別用浮動過濾框的 placeholder,改用畫面上看得到的鍵(如 `loadingOoo` 之載入中覆蓋層)或直接取文字掛鉤(`api.getGridOption('getLocaleText')`).
+- **測空表之頁面**:`openPage` 的 `minCells` 要給 0(空表無 `.ag-cell`,預設 1 會一直等);宿主頁用 `?g=o1,o5` 只建立所需之表,每格只載入該格要用的表.
+- **ag-grid 的載入中覆蓋層會攔截指標事件**(蓋住整個表含表頭,`locator.click` 逾時並回報 `.ag-overlay-wrapper ... intercepts pointer events`);載入中時過濾只能由宿主程式(`setHeadFilter`/`clearHeadFilter`)進行,真使用者在載入中點不到表頭.noRows 覆蓋層則 `pointer-events: none`(實測 `.ag-overlay` 與 `.ag-overlay-wrapper` 皆 none),過濾 0 筆之覆蓋層顯示中仍可用真鍵盤改過濾框.
+- **宿主換 `opt`(新物件、同一 `rows` 陣列)不會丟失表頭過濾**:實測過濾模型保留、列數維持 0、覆蓋層於約 20ms 內換文字或隱藏,中間無列數閃動(`tmp` 探測以頁內 10ms 取樣);`filterall` 改的是給 ag-grid 之 `rowData` 故為另一路徑(OV10 之快速序列:表頭過濾之清除有 500ms 防抖,於防抖作用前 rowData 換新會使浮動過濾框回填舊模型,測試要以過濾模型為空作訊號).
+- **ag-grid 以動畫移除列**:覆蓋層文字出現時 `.ag-row` DOM 可能尚未移除(實測 3 列),斷言列數前先偵測等待到 0;不是元件缺陷.
+- **外審(sonnet 讀碼,2026-10-30)找出 2 項,皆為我自己的測試與實作共同之盲點**:①文字更新守衛 `st.text !== ''` 把空字串當「尚未寫入」,與「空字串為有效覆寫」衝突;②覆蓋層以文件順序第一個 `.ag-overlay` 取得,巢狀表格(slot 內)會取錯.兩項在 36 格集上皆未被偵測(M17a、M18 之回退當時為存活或無對應格),補 OV28–OV30 後才被偵測——**變異回退「審查後之修正」本身,是檢驗補測是否到位的方法**.測試端之 helper 亦須限定本表之覆蓋層(`.ag-root > .ag-overlay`),否則裝飾用之巢狀殼會讓測試誤判.
+- **w-table-vue 的 `WTableEdit`** 以 `{...vo.opt, language, rows, keys,...}` 加 `cloneDeep(vo.opt)` 逐鍵覆蓋組 `useOpt` 後 `:opt="useOpt"` 原樣給本元件(`WTableEdit.vue` 約 967–1050、228–232),新增之 `opt.localeText`、`opt.showOverlayWhenFilteredEmpty` 因此直接可用;只有 `language` 由 WTableEdit 自己的 prop 覆寫.
+
+### 2.6 範例頁新增與驗證(Gitea issue #26 續,2026-10-30 agv-run02 修正輪)
+
+- **README 不改(R18)**:agv-run01 曾依派工新增 README 兩節,主控裁定為派工之誤並撤回(agv-run02,以編輯還原內容,`git diff README.md` 為空).新選項與破壞性變更之對外說明寫在**範例頁之說明文字**與 `WAggridVue.vue` 之 JSDoc;發布時 script.txt 的 `modifyReadme.mjs` 會處理 README,不由本套件手改.
+- **JSDoc 在 dist 內**:`dist/w-aggrid-vue.umd.js` 含 `@vue-prop` 說明字串,JSDoc 改一個字 dist 雜湊就變(行為不變);改 JSDoc 後要 `node toolg/gDistRollupComps.mjs` 重建,測試才與 src 同源.
+- **docs/examples 隨發布才重產**(script.txt:gDistApp → gExtractHtml → gDocExams,gDistApp 會清空 docs/examples),所以新增範例後、發布前 `docs/examples` 沒有該頁,既有的 e2e-examples 系(以 `exampleUrl` 開 docs/examples)測不到.作法:`test/tools/exampleBuild.mjs` 自 `src/App<名稱>.vue` 當場產製同形頁(複製 gExtractHtml 之 head/選項與 gDocExams 之 CDN 換址)到 `test/_tmp/<案名>/`;**同形性以 BLD1 驗**(既有 5 個範例自 src 產製後與 docs/examples 逐字相同,僅 CDN 版號除外;實測 5/5 相同).gExtractHtml 之 head 或選項改動時須同步 `exampleBuild.mjs`.不要在測試中跑 gExtractHtml 本身:它清空並重寫 `test-html/`、重寫 `test-action/*.action.json`,其中入版控者(test-html 42 個、test-action 38 個)內容是否改變未驗,測試不應動入版控檔.
+- **parseVueCode 的解析約束**(寫範例 .vue 時):`<template>` 取「第 3 行起、去掉最後 2 行」(根 `<div>` 與結尾 `</div>` 被丟棄,內容重新包進 `#app`),template 內不可再含 `<template>`;`data`、`mounted` 以「4 空格縮排之 `    data: function() {`」起、遇第一個「恰 4 空格後接 `}`」之行止,故區塊內縮排須 ≥ 8 空格;`import` 行不進產物,只能用頁面全域(`window.dataEasy`、`jv`);LF 檔會先被正規化為 CRLF.
+- **自帶計時器之範例頁不以時間窗斷言中間態**:範例於 1–3 秒依序改過濾、清空數據,負載下計時器會延遲,「等 1 秒窗內的覆蓋層」會漏;改以 `openPage` 之 `initScript` 於載入前注入 MutationObserver,記錄各表(`.ag-root-wrapper` 依文件順序)「顯示列數＋本表覆蓋層可見文字」之歷程,事後依序比對各態出現(終態出現時前面各態必已記錄).表尚未建立之早期紀錄為空陣列,取欄位時要略過(首次執行即因 `ts[0]` 為 undefined 而紅,為測試端問題,與元件無關).
+- **覆蓋層「顯示但文字尚空」是真實的中間態**:記錄器把它記為 `(blank)`,與「隱藏」(空字串)分開,否則「右表始終無覆蓋層」的斷言會把顯示中的空白覆蓋層當成隱藏;另斷言右表歷程非空,免得空洞通過.
+- **範例頁之配色與寬度沿用既有**(role-coder-for-ui §4):警示/注記文字用範例既有之 `#f26`(AppUploadData、AppUploadDataWithConvertKeys 之注記色;勿另配新紅色);表格寬 620px(同其他範例,三欄預設各 200px 恰好放得下).曾把左右並排之兩表設成 480px,第三欄(price)被截掉,目視截圖才發現,現以 EXO1/EXO3 之 `colsVisible`(表頭各欄右緣皆在表格外框內)守護(變異 W1 被偵測).
+- **eslint**:`no-regex-spaces` 不接受正則內連續空格,寫 `/ {4}/`.
+
 ## 3. 相依套件之非顯而易見行為
 
 ### wsemi

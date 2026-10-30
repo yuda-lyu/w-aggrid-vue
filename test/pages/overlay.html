@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>overlay</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <!-- 宿主頁只負責擺放各表與提供宿主端按鈕; 過濾由測試以真鍵盤於表頭浮動過濾列或宿主之全表搜尋框輸入(e2e-overlay.test.mjs、api-localeText.test.mjs)
+         以查詢字串 ?g=o1,o5 指定要建立之表(未給則建立全部), 每個測試只建立所需之表 -->
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <div v-if="show.o1">
+            <div>o1: 數據為空、zh-tw、未給 localeText(空表提示為內建字典) / 全表搜尋: <input id="fa1" v-model="fa.o1"></div>
+            <w-aggrid-vue id="o1" ref="o1" style="width:700px;" :height="200" :opt="opt.o1" :filterall="fa.o1"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o2">
+            <div>o2: 數據為空、zh-tw、localeText={noRowsToShow:'無數據'}</div>
+            <w-aggrid-vue id="o2" ref="o2" style="width:700px;" :height="200" :opt="opt.o2"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o3">
+            <div>o3: 數據為空、en</div>
+            <w-aggrid-vue id="o3" ref="o3" style="width:700px;" :height="200" :opt="opt.o3"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o4">
+            <div>o4: 數據為空、zh-cn</div>
+            <w-aggrid-vue id="o4" ref="o4" style="width:700px;" :height="200" :opt="opt.o4"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o5">
+            <div>o5: 有數據、zh-tw、未給 localeText 與 showOverlayWhenFilteredEmpty(預設) / 全表搜尋: <input id="fa5" v-model="fa.o5"></div>
+            <w-aggrid-vue id="o5" ref="o5" style="width:700px;" :height="200" :opt="opt.o5" :filterall="fa.o5"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o6">
+            <div>o6: 有數據、zh-tw、showOverlayWhenFilteredEmpty=false / 全表搜尋: <input id="fa6" v-model="fa.o6"></div>
+            <w-aggrid-vue id="o6" ref="o6" style="width:700px;" :height="200" :opt="opt.o6" :filterall="fa.o6"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o7">
+            <div>o7: 有數據、zh-tw、localeText={noRowsToShow:'無數據', noRowsToShowFiltered:'無查詢結果，請更換關鍵字或查詢條件。', filterOoo:'請輸入條件'} / 全表搜尋: <input id="fa7" v-model="fa.o7"></div>
+            <w-aggrid-vue id="o7" ref="o7" style="width:700px;" :height="200" :opt="opt.o7" :filterall="fa.o7"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o8">
+            <div>o8: 有數據、en</div>
+            <w-aggrid-vue id="o8" ref="o8" style="width:700px;" :height="200" :opt="opt.o8"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o9">
+            <div>o9: 有數據、zh-cn</div>
+            <w-aggrid-vue id="o9" ref="o9" style="width:700px;" :height="200" :opt="opt.o9"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o10">
+            <div>o10: 有數據、zh-tw、localeText='abc'(非物件)與 showOverlayWhenFilteredEmpty='no'(非布林值)</div>
+            <w-aggrid-vue id="o10" ref="o10" style="width:700px;" :height="200" :opt="opt.o10"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o11">
+            <div>o11: 有數據、zh-tw、localeText 含非字串之值(noRowsToShow=123、noRowsToShowFiltered=['x'])與有效之 filterOoo、有效之空字串 loadingOoo</div>
+            <w-aggrid-vue id="o11" ref="o11" style="width:700px;" :height="200" :opt="opt.o11"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o12">
+            <div>o12: 有數據、zh-tw、宿主經 getApi() 顯示載入中覆蓋層</div>
+            <button id="btnShowLoading12" @click="showLoading12">顯示載入中</button>
+            <button id="btnHideOverlay12" @click="hideOverlay12">隱藏覆蓋層</button>
+            <button id="btnFilter12" @click="filter12">宿主以 setHeadFilter 過濾 make=zzz</button>
+            <button id="btnClear12" @click="clear12">宿主以 clearHeadFilter 清除 make 過濾</button>
+            <w-aggrid-vue id="o12" ref="o12" style="width:700px;" :height="200" :opt="opt.o12"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o17">
+            <div>o17: 數據為空、zh-tw、宿主於執行中變更 opt 之 localeText 與 language</div>
+            <button id="btnEmpty17" @click="empty17">localeText.noRowsToShow 換成空字串</button>
+            <button id="btnLocale17" @click="locale17">localeText.noRowsToShow 換成新文字</button>
+            <button id="btnLang17" @click="lang17">language 換成 en(並移除 localeText)</button>
+            <w-aggrid-vue id="o17" ref="o17" style="width:700px;" :height="200" :opt="opt.o17"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o18">
+            <div>o18: 有數據、zh-tw、model 欄之表頭 slot 內含一個「巢狀表格之殼」(類名同 ag-grid 之 .ag-root-wrapper > .ag-overlay.ag-hidden, 在文件順序上早於本表之覆蓋層; 模擬儲存格或表頭內放巢狀表格)</div>
+            <w-aggrid-vue id="o18" ref="o18" style="width:700px;" :height="200" :opt="opt.o18">
+                <template v-slot:head-render="props">
+                    <span>{{ props.value }}</span>
+                    <span v-if="props.key === 'model'" class="ag-root-wrapper" style="display:inline-block; width:10px; height:10px; border:none;"><span class="ag-overlay ag-hidden"></span></span>
+                </template>
+            </w-aggrid-vue>
+        </div>
+        <div v-if="show.o16">
+            <div>o16: 有數據、zh-tw、localeText={loadingOoo:'讀取中，請稍候…'}、宿主經 getApi() 顯示載入中覆蓋層</div>
+            <button id="btnShowLoading16" @click="showLoading16">顯示載入中</button>
+            <w-aggrid-vue id="o16" ref="o16" style="width:700px;" :height="200" :opt="opt.o16"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o13">
+            <div>o13: 有數據、zh-tw、宿主更換 opt.rows(空陣列或新數據)</div>
+            <button id="btnRows13Empty" @click="rows13Empty">數據換成空陣列</button>
+            <button id="btnRows13Other" @click="rows13Other">數據換成另一批(含 Zeta)</button>
+            <button id="btnRows13Orig" @click="rows13Orig">數據換回原批</button>
+            <w-aggrid-vue id="o13" ref="o13" style="width:700px;" :height="200" :opt="opt.o13"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o14">
+            <div>o14: 有數據、zh-tw、宿主於執行中變更 opt 之選項 / 全表搜尋: <input id="fa14" v-model="fa.o14"></div>
+            <button id="btnFlag14Off" @click="flag14(false)">showOverlayWhenFilteredEmpty=false</button>
+            <button id="btnFlag14On" @click="flag14(true)">showOverlayWhenFilteredEmpty=true</button>
+            <button id="btnEmptyF14" @click="emptyF14">localeText.noRowsToShowFiltered 換成空字串</button>
+            <button id="btnLocale14" @click="locale14">localeText 換成新文字</button>
+            <button id="btnLang14" @click="lang14">language 換成 en</button>
+            <w-aggrid-vue id="o14" ref="o14" style="width:700px;" :height="200" :opt="opt.o14" :filterall="fa.o14"></w-aggrid-vue>
+        </div>
+        <div v-if="show.o15">
+            <div>o15: 仿 w-table-vue 之 WTableEdit 組 opt 的方式(展開宿主 opt 後以 language、rows、keys 複寫, 其餘鍵經 cloneDeep 複本逐一覆蓋; 僅仿照所測, 非在 w-table-vue 內執行)</div>
+            <w-aggrid-vue id="o15" ref="o15" style="width:700px;" :height="200" :opt="opt.o15"></w-aggrid-vue>
+        </div>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+
+        let keys = ['id', 'make', 'model', 'price']
+        let ft = { id: 'text', make: 'text', model: 'text', price: 'num' }
+        let rows = function() {
+            return [
+                { id: 'r1', make: 'Toyota', model: 'Celica', price: 35000 },
+                { id: 'r2', make: 'Ford', model: 'Mondeo', price: 32000 },
+                { id: 'r3', make: 'Porsche', model: 'Boxter', price: 72000 },
+            ]
+        }
+        let mk = function(ext) {
+            return Object.assign({ keys: keys, rows: rows(), kpHeadFilterType: ft, language: 'zh-tw' }, ext || {})
+        }
+
+        //o15: 仿 WTableEdit 之 useOpt 組法(WTableEdit.vue 之 useOpt: {...vo.opt, language, rows, keys,...} 之後, 對 cloneDeep(vo.opt) 之鍵逐一覆蓋, 但 keys、rows 等不覆蓋)
+        let genWTableLikeOpt = function(optHost, language) {
+            let useOpt = Object.assign({}, optHost, { language: language, rows: rows(), keys: keys })
+            let optTemp = JSON.parse(JSON.stringify(optHost)) //cloneDeep 之等效(localeText 為純資料)
+            Object.keys(optTemp).forEach(function(k) {
+                if (k !== 'keys' && k !== 'rows' && k !== 'kpHead' && k !== 'editable' && k !== 'rowChecked' && k !== 'filterChange') {
+                    useOpt[k] = optTemp[k]
+                }
+            })
+            return useOpt
+        }
+
+        let q = new URLSearchParams(location.search).get('g')
+        let ids = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7', 'o8', 'o9', 'o10', 'o11', 'o12', 'o13', 'o14', 'o15', 'o16', 'o17', 'o18']
+        let show = {}
+        ids.forEach(function(id) {
+            show[id] = q === null ? true : q.split(',').indexOf(id) >= 0
+        })
+
+        //各案例: [表格 ref, 'lt', [key, defaultValue]] 為經 ag-grid 公開之 getGridOption('getLocaleText') 取回元件給 ag-grid 之文字掛鉤並以 { key, defaultValue } 呼叫(ag-grid 取文字所走的同一條路徑)
+        window.__cases = {}
+        window.__case = null
+        window.__out = null
+        let lt = function(vm, ref, key, def) {
+            let f = vm.$refs[ref].getApi().getGridOption('getLocaleText')
+            return f({ key: key, defaultValue: def })
+        }
+
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    show: show,
+                    fa: { o1: '', o5: '', o6: '', o7: '', o14: '' },
+                    opt: {
+                        o1: mk({ rows: [], kpHeadFilterType: ft }),
+                        o2: mk({ rows: [], localeText: { noRowsToShow: '無數據' } }),
+                        o3: mk({ rows: [], language: 'en' }),
+                        o4: mk({ rows: [], language: 'zh-cn' }),
+                        o5: mk(),
+                        o6: mk({ showOverlayWhenFilteredEmpty: false }),
+                        o7: mk({ localeText: { noRowsToShow: '無數據', noRowsToShowFiltered: '無查詢結果，請更換關鍵字或查詢條件。', filterOoo: '請輸入條件' } }),
+                        o8: mk({ language: 'en' }),
+                        o9: mk({ language: 'zh-cn' }),
+                        o10: mk({ localeText: 'abc', showOverlayWhenFilteredEmpty: 'no' }),
+                        o11: mk({ localeText: { noRowsToShow: 123, noRowsToShowFiltered: ['x'], filterOoo: '篩選條件', loadingOoo: '' } }),
+                        o12: mk(),
+                        o13: mk(),
+                        o14: mk(),
+                        o16: mk({ localeText: { loadingOoo: '讀取中，請稍候…' } }),
+                        o17: mk({ rows: [] }),
+                        o18: mk(),
+                        o15: genWTableLikeOpt({ localeText: { noRowsToShowFiltered: '無符合條件之資料(WT)' }, showOverlayWhenFilteredEmpty: true, kpHeadFilterType: ft }, 'zh-tw'),
+                    },
+                }
+            },
+            methods: {
+                run: function() {
+                    //宿主之按鈕處理函數: 依測試選定並登錄於 window.__cases 之案例 [ref, 'lt', [key, def]] 或 [ref, 'ltMany', [[key, def], ...]] 取文字掛鉤之回傳並記錄
+                    let c = window.__cases[window.__case]
+                    let out = { threw: false }
+                    try {
+                        if (c[1] === 'lt') {
+                            out.ret = lt(this, c[0], c[2][0], c[2][1])
+                        }
+                        else {
+                            out.ret = c[2].map((a) => lt(this, c[0], a[0], a[1]))
+                        }
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = String(e && e.message ? e.message : e)
+                    }
+                    window.__out = out
+                },
+                showLoading12: function() {
+                    this.$refs.o12.getApi().showLoadingOverlay()
+                },
+                hideOverlay12: function() {
+                    this.$refs.o12.getApi().hideOverlay()
+                },
+                filter12: function() {
+                    this.$refs.o12.setHeadFilter('make', 'zzz')
+                },
+                clear12: function() {
+                    this.$refs.o12.clearHeadFilter('make')
+                },
+                empty17: function() {
+                    this.opt.o17 = Object.assign({}, this.opt.o17, { localeText: { noRowsToShow: '' } })
+                },
+                locale17: function() {
+                    this.opt.o17 = Object.assign({}, this.opt.o17, { localeText: { noRowsToShow: '目前沒有任何數據' } })
+                },
+                lang17: function() {
+                    this.opt.o17 = Object.assign({}, this.opt.o17, { language: 'en', localeText: undefined })
+                },
+                showLoading16: function() {
+                    this.$refs.o16.getApi().showLoadingOverlay()
+                },
+                rows13Empty: function() {
+                    this.opt.o13 = Object.assign({}, this.opt.o13, { rows: [] })
+                },
+                rows13Other: function() {
+                    this.opt.o13 = Object.assign({}, this.opt.o13, { rows: [{ id: 'z1', make: 'Zeta', model: 'Zed', price: 100 }, { id: 'z2', make: 'Zeta', model: 'Zee', price: 200 }] })
+                },
+                rows13Orig: function() {
+                    this.opt.o13 = Object.assign({}, this.opt.o13, { rows: rows() })
+                },
+                flag14: function(b) {
+                    this.opt.o14 = Object.assign({}, this.opt.o14, { showOverlayWhenFilteredEmpty: b })
+                },
+                emptyF14: function() {
+                    this.opt.o14 = Object.assign({}, this.opt.o14, { localeText: { noRowsToShowFiltered: '' } })
+                },
+                locale14: function() {
+                    this.opt.o14 = Object.assign({}, this.opt.o14, { localeText: { noRowsToShowFiltered: '換新文字:查無符合者' } })
+                },
+                lang14: function() {
+                    this.opt.o14 = Object.assign({}, this.opt.o14, { language: 'en' })
+                },
+            },
+        })
+    </script>
+</body>
+</html>

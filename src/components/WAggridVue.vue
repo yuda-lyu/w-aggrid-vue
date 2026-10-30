@@ -35,6 +35,7 @@
                 @rowDragMove="agRowDragMove"
                 @rowDragLeave="agRowDragLeave"
                 @rowDataUpdated="agRowDataUpdated"
+                @modelUpdated="agModelUpdated"
                 @filterChanged="agFilterChanged"
                 @gridReady="agReady"
             ></ag-grid-vue>
@@ -178,10 +179,21 @@ function isGiven(v) {
 }
 
 
+//descInvalid, 無效之值於提示中之表示: 字串與數值顯示原值, 其餘顯示型態
+function descInvalid(v) {
+    return (isstr(v) || isnum(v)) ? `${v}` : Object.prototype.toString.call(v)
+}
+
+
 //logUseDefault, 選項有給予但非指定之值或型態時, 於console提示改用預設; 無效之值為字串與數值時顯示原值, 其餘顯示型態
 function logUseDefault(name, key, v, def) {
-    let s = (isstr(v) || isnum(v)) ? `${v}` : Object.prototype.toString.call(v)
-    console.log(`[w-aggrid-vue] ${name}: invalid ${key}[${s}], use default ${key} ${def}`)
+    console.log(`[w-aggrid-vue] ${name}: invalid ${key}[${descInvalid(v)}], use default ${key} ${def}`)
+}
+
+
+//logUseDefaultOpt, 元件prop opt之選項有給予但非指定之值或型態時, 於console提示改用預設(prop無方法名, 前綴為opt.<鍵>, R03)
+function logUseDefaultOpt(key, v, def) {
+    console.log(`[w-aggrid-vue] opt.${key} is invalid[${descInvalid(v)}], use default ${def}`)
 }
 
 
@@ -751,6 +763,8 @@ let HeaderSlotRenderer = {
  * @vue-prop {Function} [opt.filterChange=()=>{}] 輸入filter change之觸發事件，於掛載與filterall變更時(from為'filterall')、表頭過濾變更時(含setHeadFilter、clearHeadFilter、clearHeadFilterAll，from為'heads')各觸發1次，傳入{ from, filterall, flts, isFilter }，flts為觸發後讀取當下之生效中過濾模型陣列(依opt.keys之順序，含隱藏欄)，元件或ag-grid已銷毀後不觸發，預設為()=>{}
  * @vue-prop {Boolean} [opt.autoFitColumn=false] 輸入當表格尺寸變更時自動調整欄寬布林值，預設false
  * @vue-prop {String} [opt.language='en'] 輸入指定語系字串，可選'en'、'zh-tw'、'zh-cn'，預設為'en'
+ * @vue-prop {Object} [opt.localeText={}] 輸入覆寫表格文字之字典物件，鍵同ag-grid之locale鍵(例如'noRowsToShow'、'loadingOoo'、'filterOoo'，另有本套件新增之'noRowsToShowFiltered')，值為字串(可為空字串)；查找順序為先查本字典，查無再用opt.language之內建字典，故未給予時行為不變；字串原樣使用，不代入ag-grid之${variable}佔位；非物件時於console提示並視為未給予，值非字串之鍵略過並於console提示；opt變更後ag-grid新取得之文字採用新值，已顯示中之空表/過濾0筆覆蓋層文字會同步更新(其餘已渲染之元件是否重繪取決於ag-grid)。空表提示('noRowsToShow')內建文字為en'No Rows To Show'、zh-tw'無資料可顯示'、zh-cn'无数据可显示'；過濾0筆提示('noRowsToShowFiltered')內建文字為en'No Rows Match The Filter'、zh-tw'無符合過濾條件之資料'、zh-cn'无符合过滤条件的数据'
+ * @vue-prop {Boolean} [opt.showOverlayWhenFilteredEmpty=true] 輸入是否於「數據列數大於0而過濾(表頭過濾或filterall)使顯示列數為0」時顯示提示覆蓋層，提示文字為localeText之'noRowsToShowFiltered'，顯示列數回到大於0時隱藏；數據本身為空(opt.rows為空陣列)時維持顯示'noRowsToShow'。【破壞性變更】本提示預設開啟：以往表頭過濾使顯示列數為0時表格只剩表頭與空白而無提示，filterall使數據為空時顯示的是'noRowsToShow'(與數據本身為空無法區分)，現在兩者皆改為顯示'noRowsToShowFiltered'，故截圖或測試若拍到過濾成0筆之表畫面會改變，欲恢復舊行為請設為false(範例見localeText、showOverlayWhenFilteredEmpty)。ag-grid 31.3.4之覆蓋層只在數據更新時判斷，表頭過濾使顯示列數為0時表格只剩表頭與空白，本選項補上提示。設為false則恢復舊行為(表頭過濾0筆不提示、filterall使數據為空時顯示'noRowsToShow')；顯示時不會蓋掉呼叫端經getApi().showLoadingOverlay()顯示之載入中覆蓋層；非布林值時於console提示並使用預設true
  * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
  */
@@ -792,6 +806,9 @@ export default {
             autoFitColumn: false,
 
             language: '',
+            localeText: {},
+            showOverlayWhenFilteredEmpty: true,
+            bOwnOverlay: false, //本元件是否曾為過濾0筆顯示noRows覆蓋層, 供該狀態結束時隱藏(只隱藏自己顯示者)
 
             rows: [],
             keys: [],
@@ -1044,10 +1061,150 @@ export default {
 
             let vo = this
 
+            //key與def
+            let key = params.key
+            let def = params.defaultValue
+
+            //noRowsToShow, 數據列數大於0而顯示列數為0(表頭過濾或filterall)時改用noRowsToShowFiltered, 資料本身為空時維持noRowsToShow
+            if (key === 'noRowsToShow' && vo.isNoRowsFiltered()) {
+                key = 'noRowsToShowFiltered'
+                def = getLangText('en', key, def)
+            }
+
+            //覆寫字典優先, 以自有屬性判斷避免取到原型鏈之屬性
+            if (Object.prototype.hasOwnProperty.call(vo.localeText, key)) {
+                return vo.localeText[key]
+            }
+
             //getLangText
-            let t = getLangText(vo.language, params.key, params.defaultValue)
+            let t = getLangText(vo.language, key, def)
 
             return t
+        },
+
+        getEmptyKind: function() {
+            // console.log('methods getEmptyKind')
+
+            let vo = this
+
+            //api
+            let api = vo.getApi()
+            if (!isGridAvailable(api)) {
+                return ''
+            }
+
+            //顯示列數大於0
+            if (api.getDisplayedRowCount() > 0) {
+                return ''
+            }
+
+            //data, 數據本身為空, ag-grid於數據更新時自行顯示noRows覆蓋層
+            if (size(vo.rows) === 0) {
+                return 'data'
+            }
+
+            //filterall, filterall使給予ag-grid之rowData為空, ag-grid於數據更新時自行顯示noRows覆蓋層
+            //以ag-grid實際採用之rowData判斷, 避免vo.rows已變更而ag-grid尚未更新時誤判
+            if (size(api.getGridOption('rowData')) === 0) {
+                return 'filterall'
+            }
+
+            //header, 表頭過濾使顯示列數為0, ag-grid不會顯示覆蓋層
+            return 'header'
+        },
+
+        isNoRowsFiltered: function() {
+            // console.log('methods isNoRowsFiltered')
+
+            let vo = this
+
+            //選項關閉則維持舊行為
+            if (!vo.showOverlayWhenFilteredEmpty) {
+                return false
+            }
+
+            let kind = vo.getEmptyKind()
+            return kind === 'filterall' || kind === 'header'
+        },
+
+        getOverlayState: function() {
+            // console.log('methods getOverlayState')
+
+            let vo = this
+
+            //ag-grid 31.3.4無公開之覆蓋層狀態查詢, 以DOM判斷: 覆蓋層顯示時.ag-overlay不含ag-hidden, 種類由.ag-overlay-wrapper之class標示(隱藏後class仍保留, 故須同時檢查是否顯示)
+            //限定為本表自己之覆蓋層: 儲存格或表頭slot內若放有巢狀之表格, 其.ag-overlay在文件順序上較本表者更前面, 不可取第一個
+            let eleRoot = get(vo, '$el', null) ? vo.$el.querySelector('.ag-root-wrapper') : null
+            let eleOverlay = null
+            if (eleRoot) {
+                eleOverlay = Array.from(eleRoot.querySelectorAll('.ag-overlay')).find((e) => e.closest('.ag-root-wrapper') === eleRoot) || null
+            }
+            if (!eleOverlay || eleOverlay.classList.contains('ag-hidden')) {
+                return { type: '', text: '' }
+            }
+            let eleWrapper = eleOverlay.querySelector('.ag-overlay-wrapper')
+            let cl = eleWrapper ? eleWrapper.classList : null
+            if (cl && cl.contains('ag-overlay-loading-wrapper')) {
+                return { type: 'loading', text: eleWrapper.textContent }
+            }
+            if (cl && cl.contains('ag-overlay-no-rows-wrapper')) {
+                return { type: 'norows', text: eleWrapper.textContent }
+            }
+            return { type: 'other', text: '' }
+        },
+
+        syncOverlay: function(bRefresh = false) {
+            // console.log('methods syncOverlay', bRefresh)
+
+            let vo = this
+
+            //api
+            let api = vo.getApi()
+            if (!isGridAvailable(api)) {
+                return
+            }
+
+            //check, 顯示列數大於0且本元件未曾顯示過濾0筆提示且不須更新文字時無事可做
+            if (api.getDisplayedRowCount() > 0 && !vo.bOwnOverlay && !bRefresh) {
+                return
+            }
+
+            //kind與st
+            let kind = vo.getEmptyKind()
+            let st = vo.getOverlayState()
+
+            //過濾使顯示列數為0: 顯示noRows覆蓋層(文字經agGetLocaleText取得noRowsToShowFiltered)
+            if (kind === 'header' && vo.showOverlayWhenFilteredEmpty) {
+
+                //不蓋掉呼叫端顯示之載入中覆蓋層
+                if (st.type === 'loading') {
+                    return
+                }
+
+                vo.bOwnOverlay = true
+                if (st.type !== 'norows' || (bRefresh && st.text !== vo.agGetLocaleText({ key: 'noRowsToShow', defaultValue: 'No Rows To Show' }))) {
+                    api.showNoRowsOverlay()
+                }
+                return
+            }
+
+            //狀態結束(顯示列數回到大於0)或選項關閉: 只隱藏本元件顯示者, 不動載入中或ag-grid自行顯示者
+            if (vo.bOwnOverlay) {
+                vo.bOwnOverlay = false
+                if (st.type === 'norows' && (kind === '' || kind === 'header')) {
+                    api.hideOverlay()
+                    return
+                }
+            }
+
+            //opt變更後ag-grid自行顯示中之noRows覆蓋層(數據本身為空或filterall使數據為空)依新文字更新
+            //不以文字為空字串視為「文字尚未寫入」而略過: localeText之空字串為有效覆寫, 重建覆蓋層之代價僅為於下一個macrotask重取文字
+            if (bRefresh && st.type === 'norows' && (kind === 'data' || kind === 'filterall')) {
+                if (st.text !== vo.agGetLocaleText({ key: 'noRowsToShow', defaultValue: 'No Rows To Show' })) {
+                    api.showNoRowsOverlay()
+                }
+            }
+
         },
 
         agGetRowStyle: function(params) {
@@ -1283,6 +1440,16 @@ export default {
                 vo.setRowsPinnBottom(vo.rows)
 
             }
+
+        },
+
+        agModelUpdated: function(params) {
+            // console.log('methods agModelUpdated', params)
+
+            let vo = this
+
+            //syncOverlay, 表頭過濾、filterall、數據更新等使顯示列數改變時皆會觸發(ag-grid經框架包裝之事件於內部處理完成後才送達), 同步過濾0筆之覆蓋層
+            vo.syncOverlay()
 
         },
 
@@ -2573,11 +2740,45 @@ export default {
                 vo.language = vo.opt.language
             }
 
+            //localeText, 未給予(null、undefined)用內建字典且不提示; 非物件時提示並用內建字典; 值非字串之鍵略過並提示(R01)
+            let localeText = {}
+            if (isGiven(vo.opt.localeText)) {
+                if (isobj(vo.opt.localeText)) {
+                    each(vo.opt.localeText, (v, k) => {
+                        if (isstr(v)) {
+                            localeText[k] = v
+                        }
+                        else {
+                            logUseDefaultOpt(`localeText[${k}]`, v, 'text')
+                        }
+                    })
+                }
+                else {
+                    logUseDefaultOpt('localeText', vo.opt.localeText, '{}')
+                }
+            }
+            vo.localeText = localeText
+
+            //showOverlayWhenFilteredEmpty, 預設true; 非布林值時提示並用預設
+            let showOverlayWhenFilteredEmpty = true
+            if (isbol(vo.opt.showOverlayWhenFilteredEmpty)) {
+                showOverlayWhenFilteredEmpty = vo.opt.showOverlayWhenFilteredEmpty
+            }
+            else if (isGiven(vo.opt.showOverlayWhenFilteredEmpty)) {
+                logUseDefaultOpt('showOverlayWhenFilteredEmpty', vo.opt.showOverlayWhenFilteredEmpty, 'true')
+            }
+            vo.showOverlayWhenFilteredEmpty = showOverlayWhenFilteredEmpty
+
             //columns, 需放在給予rows之前, 避免給予rows沒有column設定
             vo.columns = vo.keys2columns(vo.keys)
 
             //rows
             vo.rows = vo.opt.rows
+
+            //syncOverlay, opt變更(localeText、language、showOverlayWhenFilteredEmpty、rows)後於表格更新完成再同步覆蓋層: 已顯示之提示文字隨之更新, 關閉選項時隱藏本元件顯示之過濾0筆提示
+            vo.$nextTick(() => {
+                vo.syncOverlay(true)
+            })
 
         },
 
