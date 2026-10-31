@@ -97,6 +97,21 @@
 - **範例頁之配色與寬度沿用既有**(role-coder-for-ui §4):警示/注記文字用範例既有之 `#f26`(AppUploadData、AppUploadDataWithConvertKeys 之注記色;勿另配新紅色);表格寬 620px(同其他範例,三欄預設各 200px 恰好放得下).曾把左右並排之兩表設成 480px,第三欄(price)被截掉,目視截圖才發現,現以 EXO1/EXO3 之 `colsVisible`(表頭各欄右緣皆在表格外框內)守護(變異 W1 被偵測).
 - **eslint**:`no-regex-spaces` 不接受正則內連續空格,寫 `/ {4}/`.
 
+### 2.7 淡入、state 與淡入期間改寬之補繪(Gitea issue #31,2026-11-01 agg31 修正輪)
+
+- **現象屬實且與「就緒時間」無關**:最小重現(建議檔附 index.html、run.mjs;Vue 2.7.16、本套件 dist)HEAD 16 輪:預設旗標 2 種、e2e 確定性旗標 3 種;容器不帶過場、改寬後 `refreshCells({ force: true })`、`nofade=1`、`delay=1500` 各 1 種.修後預設與 e2e 旗標各 1 種,雜湊等於各自之 `tr=0`.像素種類以截圖 md5 計(次像素差異不會被容差比對看出,逐 byte 才是判準).
+- **表格就緒約在掛載後 8ms**(宿主頁 `states[0].t` 對 `fadeStartAt` 實測 185ms → 192ms),所以「淡入期間」幾乎就是掛載後的前 0.5 秒;測試的時序前提(改寬落在淡入期間)不要用「掛載後 N ms」(隨表格就緒時間浮動),改相對淡入開始計時(`widenAtFade`),並在案例內先斷言前提.我一度以為 `hchg`(掛載後改高度)可造出「早於 opacity 結束之 height 過場」,實測 height 過場反而晚 16ms 結束(就緒只比改高度早 8ms,兩者起點差不到一幀),該前提不成立;改以 `bgAtFade`(淡入開始後 150ms 改外層 div 背景色,過場晚於 opacity 結束且不改尺寸)驗「他項過場進行中不算淡入結束」.
+- **外層 div 為 `transition:all`**:width(`fitColumns` 改 `vo.width`)、height(prop 改變)、背景色等任一屬性之過場結束也會觸發 `transitionend`(冒泡到根),只認 `propertyName === 'opacity'` 或只認第一個事件都不夠;落定改以位準判斷(`getAnimations()` 無 pending/running 之 CSS 過場),事件為主訊號、0.8 秒後每 50ms 重查為後備,與 w-component-vue 2.5.35 `createTransitionState` 同法(已用 `npm pack` 取得原始碼閱讀,未引用).
+- **補繪判準用尺寸比對,不用「有發過 resize」**:domDetect 於首次取得非 0 尺寸時必發一次 `resize`(`sold` 為 0),若見 resize 即補繪,則每個表格都會多重繪一次;以淡入開始時 `offsetWidth/offsetHeight` 為基準,差 > 1px 才記為改變,且記為改變後每次 resize 皆重新等穩定(尺寸可能變回原值).去抖動用獨立之 `debounce(200)`(wsemi `debounce` 只保留最後一個任務,與 `fitColumns` 之 `dbc` 共用會互相取代).
+- **refresh 與 state 的先後在同一個 JS 工作內,屬性值由 Vue 於 microtask 更新**,所以測試端「補繪當下屬性仍為 showing」無法鑑別「先設 shown 再補繪」之錯誤順序(兩者等價可觀察);程式碼順序(補繪 → `unwatchFade` → `state = 'shown'`)靠讀碼,不靠測試.
+- **「尺寸變化與淡入結束同幀」的事件順序要以實測為準,不要憑規範記憶**:以宿主程式「改寬後同步卡住主執行緒 700ms」造出該情境(`stallWidenAtFade`),實測 Chromium 同一幀內 ResizeObserver 回呼(988.8ms)比 `transitionend`(989.8ms)早約 1ms;但元件拿到的是 domDetect 以 `setTimeout(…,1)` 延後送出之 `resize`,仍晚於 `transitionend`,所以 `transitionend` 處理當下元件的 `resized` 旗標為 false(宿主頁以白箱讀 `hdFade.resized` 記錄,FD12 時序輸出)——「淡入結束時再量一次 `offsetWidth/Height`」因此必要(M13 被 FD12 偵測)。測試的前提不要寫成「宿主端 RO 記錄晚於 transitionend」(首次實跑即因此誤紅),要寫成元件端可觀察的狀態(旗標)或只斷言結果。
+- **「冗餘防護」會讓單一變異存活,屬預期**:M8(停用 `checkFadeResize`)只被 FD5 偵測,FD4 與 FD12 仍綠,因淡入結束時再量尺寸補上了同一判斷;不為此放寬測試,但報告要註明存活的案例是哪幾個、為何。
+- **補強測試的盲點來自「斷言在實作缺漏時仍恆真」**:銷毀後 `getApi()` 為 null 使補繪本來就不執行,只斷言「補繪 0 次」抓不到計時器未清除(M10);ag-grid 的 `api.destroy()` 以 `Object.defineProperties` 覆寫所有 api 方法,宿主包裝的 `refreshCells` 在銷毀後也被蓋掉,只認包裝次數同樣抓不到(M11),要看 ag-grid 的銷毀後呼叫警告或元件的 `state`/`hdFade`。
+- **ag-grid 對本元件儲存格的重繪(`refreshCells({ force: true })`)是銷毀 renderer 再建新的 `span` 與文字節點**(函數型 cellRenderer 被包成 Adapter,`refresh()` 恆回 false);測「沒有被重繪」可為資料區每個元素與文字節點加標記,事後找無標記節點(FD6),並以手動 `refreshCells` 對照證明標記法偵測得到(FD7)。標記前須等各儲存格 renderer 已建立(`firstElementChild` 皆存在),ag-grid 以 animation frame 任務分批建立。
+- **範例產製管線會改寫說明文字中的 `WAggridVue`**:extractHtml 把文字裡的 `WAggridVue` 換成 `w-aggrid-vue`(`CompCssWAggridVue` 變 `CompCssw-aggrid-vue`,範例中給使用端抄的選擇器就錯了).範例說明文字改以 HTML 實體 `W&#65;ggridVue` 書寫,EXS1 比對頁面渲染後之文字.JSDoc 不經此管線.
+- **dist 內程式碼為壓縮後之單行**:變異檔以字串取代產生(每個取代字串須在 dist 內恰出現 1 次,`mkmut.mjs` 檢核),且 dist 內另有一份未壓縮之 SFC 原始碼字串(`\r\n` 跳脫),取代字串要取壓縮後那份(勿含 `\r\n`).
+- **測試鎖排隊很長時(本輪 2 個槽被他套件佔住 1 小時以上;第一次排鎖 23:47 → 00:03 約 16 分鐘取得)的作法**:所有瀏覽器工作寫成一支 `session.mjs`(依序:修前重現、修後重現、新測試、換入 HEAD dist 之修前、換入各變異檔、範例相關、全套),以 `nohup node quiet-run.mjs --lock --lock-wait 10800 -- node session.mjs` 脫離工具逾時單次排鎖;腳本於取得鎖後才讀檔,故排隊期間仍可修改腳本與測試;換入 `dist/` 者於 `finally` 還原並以雜湊核對(開頭先核對 `dist` 等於備份,不等則中止).一個指令一取一放,逐項排隊每次都要重排到隊尾.排隊期間要改碼/測試時,於 `session.mjs` 開頭加「`hold` 旗標檔存在則等其消失(上限 25 分鐘)」,改完刪旗標,鎖提早到也不會用到改一半的檔案;編輯 `session.mjs` 本身可,已啟動之行程不受影響(Node 已載入),但其命令列與環境變數固定,新增行為用旗標檔(`want_p4`、`skip_p4`)而非環境變數.本輪因鎖被他套件長時間佔住(一槽自 00:08 起被占 2 小時以上),共取鎖 4 次、等鎖合計約 2 小時 10 分(16 + 38 + 48 + 29 分),每次取鎖前務必把該次要驗的全部放進同一支腳本.
+
 ## 3. 相依套件之非顯而易見行為
 
 ### wsemi

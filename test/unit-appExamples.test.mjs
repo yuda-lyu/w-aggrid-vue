@@ -1,4 +1,4 @@
-//範例(對外文件)之接線與產製(規則帳本 R18、R24、R25; Gitea issue #26 之範例 localeText、showOverlayWhenFilteredEmpty)
+//範例(對外文件)之接線與產製(規則帳本 R18、R24、R25、R26; Gitea issue #26 之範例 localeText、showOverlayWhenFilteredEmpty,issue #31 之範例 state)
 //unit 層: 只讀 src 與 docs/examples 之檔案並於 node 產製範例頁, 不起瀏覽器
 //R18: 新增或改名範例時, App.vue 之選單、v-if、import、components 四處一致; 範例頁之 example/code 連結指向自身(ex-<名稱>.html)
 import assert from 'assert'
@@ -90,6 +90,23 @@ describe('unit-appExamples:範例之接線與產製', function() {
         let lt = line('localeText')
         assert.ok(lt, 'JSDoc 缺 opt.localeText')
         assert.ok(lt.includes('noRowsToShowFiltered') && lt.includes('noRowsToShow'), lt)
+    })
+
+    it('AX6 新增之範例 AppState 於四處皆在, 選單名為 state(R18)、JSDoc 載明根節點 state 屬性之值與轉換時點(R26)', function() {
+        let { imports, comps, vifs, leaves } = parseApp()
+        assert.ok(FILES.includes('AppState'), 'AppState 檔案')
+        assert.ok(imports.some((v) => v.file === 'AppState'), 'AppState import')
+        assert.ok(comps.includes('AppState'), 'AppState components')
+        assert.ok(vifs.some((v) => v.cmp === 'AppState' && v.pick === 'state'), 'AppState v-if')
+        assert.ok(leaves.includes('state'), 'AppState 選單')
+        assert.strictEqual(getCasename('AppState.vue'), 'state', '產製名稱')
+        //JSDoc: 根節點 state 屬性, 值 showing / shown 與轉換時點(淡入結束、淡入期間改寬之補繪)
+        let vue = fs.readFileSync(path.join(SRC, 'components', 'WAggridVue.vue'), 'utf8')
+        let line = vue.split(/\r?\n/).find((l) => l.includes('@vue-data') && l.includes('[state='))
+        assert.ok(line, 'JSDoc 缺 state')
+        for (let s of ['CompCssWAggridVue', "'showing'", "'shown'", '單向轉換', 'refreshCells({ force: true })', '淡入期間尺寸未改變者不做補繪']) {
+            assert.ok(line.includes(s), `JSDoc state 應含 ${s}`)
+        }
     })
 
     it('BLD1 範例產製器(test/tools/exampleBuild.mjs)與發布時之 gExtractHtml、gDocExams 同形: 既有 5 個範例自 src 產製之頁與 docs/examples 逐字相同(僅 CDN 版號除外)', async function() {

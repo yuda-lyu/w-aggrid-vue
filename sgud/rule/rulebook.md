@@ -39,6 +39,7 @@
 | R23 | 元件寫回 opt.rows 時保留列之全部欄位(列拖曳、貼上);只有整表載入(uploadData)依 opt.keys 提取 | 無(filterall 時列拖曳寫回僅顯示子集,待裁示,第 6 節 #21) |
 | R24 | opt.localeText:覆寫表格文字之字典,先查覆寫字典、查無再走內建字典 | 無 |
 | R25 | 數據列數大於 0 而顯示列數為 0(過濾使然)時顯示覆蓋層,預設開啟;與 ag-grid 原生覆蓋層互不干擾 | 無(宿主 hideOverlay 後不自動重現,第 6 節 #24) |
+| R26 | 根節點 `state` 屬性(showing → shown)表示淡入是否結束;淡入期間根節點尺寸改變者,於淡入結束且尺寸穩定後 `refreshCells({ force: true })` 一次再落定 | 無(淡入結束後才發生之尺寸變化不補繪,第 6 節 #25) |
 
 ## 1. 共通規則
 
@@ -119,7 +120,7 @@
 ### R03 訊息前綴
 
 - **規則**:套件產生之錯誤訊息與 console 提示以 `[w-aggrid-vue] <方法名>: ` 開頭;元件 prop opt 之訊息(prop 無方法名)為 `[w-aggrid-vue] opt ...` 或 `[w-aggrid-vue] opt.<鍵> ...`(已移除鍵之警告、opt 與其 keys、rows 無效),使呼叫端只記錄錯誤內容時仍可辨識來源.內部方法(changeOpt)之名稱不出現在 prop 之訊息中.
-- **盤點**:錯誤見 R02;console:`git grep -nE '^[[:space:]]*console\.(log|warn|error)\(' -- src/components/WAggridVue.vue`(9 筆)
+- **盤點**:錯誤見 R02;console:`git grep -nE '^[[:space:]]*console\.(log|warn|error)\(' -- src/components/WAggridVue.vue`(2026-11-01 為 12 筆:下表 9 筆〔行號為 2026-10-07 之值,其後有位移〕,另 pasteText 之 kpCellEditable 函數拋錯提示〔R22,`pasteText: kpCellEditable[<欄>] threw`〕與 finishFade 之 catch〔R26,見下表末列〕)
 - **站點**(console):
 
 | 行 | 位置 | 狀態 |
@@ -131,6 +132,7 @@
 | 2043、2050 | changeOpt:`opt.keys is invalid, it must be a non-empty array of keys, ...`、`opt.rows is invalid, it must be an array, ...` | 已套(2026-10-07) |
 | 2748 | fitColumns 之 catch:`fitColumns:` | 已套(2026-10-07);表格不可用時已先靜默略過(R19),此 catch 只收非預期之錯誤,未能以操作觸發 |
 | 3068 | triggerFilterChange 之 catch:表格可用而取得過濾狀態失敗時 `triggerFilterChange:` | 已套(2026-10-07);未能以操作觸發(getFilterModel 於表格可用時不拋錯) |
+| 1691(2026-11-01) | finishFade 之 catch:表格可用而 `refreshCells` 拋錯時 `finishFade:`(表格不可用時已先靜默略過,R19) | 已套(R26);未能以操作觸發(refreshCells 於表格可用時不拋錯),state 於 catch 後仍落定為 shown |
 
 - **測試**:R01、R02 之訊息比對(log 與 err 皆含前綴);O1–O4(prop 之訊息);M_cellStyleBad(寫檔失敗之記錄).
 - **來源**:2026-10-06 下載複審 R18、上傳複審 R7;2026-10-07 規則帳本盤點缺陷之修正(三方複審).
@@ -173,7 +175,7 @@
   3. 內部延後執行之路徑(去抖動、resize、delay、事件回呼後之延續)以 `isGridAvailable` 判斷,不可用即靜默略過,不拋錯(無人可接)、不呼叫已銷毀之 api(會印 ag-grid 警告).
   4. 不需表格之方法(downloadData、uploadData、getGridOptions)不檢查;getApi 為存取器,原樣回傳.
 - **單一擁有者**:F 模組層 `isGridAvailable`、`getApiOrThrow`.
-- **盤點**:`git grep -nE 'getApiOrThrow\(|isGridAvailable\(|vo\.getApi\(\)' -- src/components/WAggridVue.vue`(30 行:getApiOrThrow 13 行(定義 1、呼叫 12)、isGridAvailable 8 行(定義 1、呼叫 7)、vo.getApi() 11 行(其中 2 行同時含 isGridAvailable、3 行為註解));命中之 `vo.getApi()` 須皆在 getApiOrThrow 內、isGridAvailable 之引數或註解,或為下表之刻意不套.
+- **盤點**:`git grep -nE 'getApiOrThrow\(|isGridAvailable\(|vo\.getApi\(\)' -- src/components/WAggridVue.vue`(2026-11-01 為 38 行:getApiOrThrow 13 行(定義 1、呼叫 12)、isGridAvailable 11 行(定義 1、呼叫 10)、vo.getApi() 16 行(其中 3 行為註解);2026-10-07 為 30 行,其後新增之站點〔R21 標頭捲動、R22 貼上、R23 列拖曳、R25 覆蓋層、R26 finishFade〕皆在 getApiOrThrow 內、isGridAvailable 之引數,或為下表之刻意不套);命中之 `vo.getApi()` 須皆在 getApiOrThrow 內、isGridAvailable 之引數或註解,或為下表之刻意不套.
 - **站點**:
 
 | 方法 | 處置 | 狀態 |
@@ -182,8 +184,9 @@
 | getFilters、clearHeadFilterAll | getApiOrThrow(reject) | 已套(2026-10-07) |
 | setHeadFilter、clearHeadFilter | getApiOrThrow,await setColumnFilterModel 後再取一次 | 已套(2026-10-07) |
 | refresh(delay 後)、fitColumns 之 fit(去抖動、resize 後)、setRowsPinnTop、setRowsPinnBottom(呼叫端之產生函數與 cellChange 等回呼之後) | isGridAvailable 不成立即 return | 已套(2026-10-07) |
+| finishFade 之 `refreshCells({ force: true })`(淡入結束且尺寸穩定之去抖動後,R26;淡入期間呼叫端經 getApi 銷毀 ag-grid 者) | isGridAvailable 不成立即略過補繪,state 仍落定為 shown(FD10 守護:無銷毀後呼叫之 ag-grid 警告) | 已套(2026-11-01) |
 | triggerFilterChange | 見 R20 | 已套(2026-10-07) |
-| agCellKeyDown 之 `vo.getApi().stopEditing()`、agRowSelect 之 params.api、HeaderSlotRenderer 之 params.api | 由 ag-grid 之事件或表頭元件呼叫,當下表格必在 | 刻意不套(HeaderSlotRenderer 之銷毀見 R08) |
+| agCellKeyDown 之 `vo.getApi().stopEditing()`、agRowDragEnd 與 agRowDragLeave 之 `getNodeRows(vo.getApi())`(R23,於呼叫端回呼之前取得)、agRowSelect 之 params.api、HeaderSlotRenderer 之 params.api | 由 ag-grid 之事件或表頭元件呼叫,當下表格必在 | 刻意不套(HeaderSlotRenderer 之銷毀見 R08) |
 | getApi | 原樣回傳(null 或可能已銷毀之 api) | 範圍外:存取器;w-table-vue 以 isfun 檢查後使用 |
 | downloadData、uploadData、getGridOptions | 不需表格 | 範圍外(uploadData 見 R17 第 8 步) |
 
@@ -407,6 +410,45 @@
 - **穩定性**:最終全套 `npm test --lock` 485 passing(5m36s,2026-10-30);e2e-overlay + api-localeText + unit-getLangText 於修後連續再跑:OV31 加入前 3 次各 40 passing、加入後 3 次各 41 passing,0 失敗(另含變異腳本之未變異基準 2 次).
 - **來源**:2026-10-30 Gitea issue #26 第 2 點;主控 2026-10-30 裁定(預設開啟、另提供關閉選項、文字用另一鍵、不蓋掉載入中不殘留);agv-run02 主控裁定:filterall 使數據為空時顯示過濾 0 筆文字(原顯示 `noRowsToShow`)接受維持,限制 #24(宿主 `hideOverlay()` 後不自動重現、ag-grid 升版須重驗 OV16/OV17/OV29)接受維持文件.
 
+### R26 根節點 `state` 屬性(showing → shown)表示淡入是否結束;淡入期間根節點尺寸改變者,於淡入結束且尺寸穩定後 `refreshCells({ force: true })` 一次再落定
+
+- **成因(2026-11-01,Gitea issue #31,rddmanager 提出)**:外層容器 `transition:all 0.5s; opacity` 於表格就緒(`agReady`)時由 0 改 1,即建立後 0.5 秒淡入.此期間若根節點(`.CompCssWAggridVue`)所在容器以 CSS 過場移動並改寬(典型:置中彈窗最大化),因變寬而補繪之儲存格,其字形像素每次建立不同(次像素差異,約 180 px),過場結束後不自行收斂;`refreshCells({ force: true })` 或 `redrawRows()` 後即收斂為與「容器不帶過場」相同.使用端 e2e 之像素比對因而不穩,且無訊號可等淡入結束.三條件須同時成立:淡入進行中、容器於此期間移動並改寬、表格於此期間補繪新欄(少任一即穩定).
+- **修前實測**(HEAD dist,最小重現〔建議檔附 index.html、run.mjs〕,每組 16 輪,結果以截圖 md5 計種類;證據存任務資料夾 `C:\opensrcOper\dnow\20261031175415\agent-out\agg31-evidence\`〔下稱證據夾,本機 `./tmp` 已於結案清除〕之 `batch-before.tsv`):預設旗標 2 種(9/7)、e2e 確定性旗標 3 種(2/8/6);容器不帶過場 `tr=0` 兩旗標各 1 種;改寬 2 秒後 `refreshCells({ force: true })` 兩旗標各 1 種且雜湊等於 `tr=0`;對照組 `nofade=1`、`delay=1500` 各 1 種.**修後**(證據夾 `batch-after.tsv`〔中間建置〕、`batch-after-final.tsv`〔終版 dist,逐組結果相同〕):預設與 e2e 旗標各 1 種,雜湊分別等於各自之 `tr=0`(預設 `1eea78f9`、e2e `1cce1d6c`);對照組仍各 1 種、雜湊與修前相同.
+- **規則**:
+  1. 根節點(class `CompCssWAggridVue`)帶 DOM 屬性 `state`,值只有 `showing`(初值:表格未就緒,或已就緒而淡入尚在進行,含淡入結束後等待尺寸穩定並補繪之期間)與 `shown`(淡入已結束);**單向**轉換,落定後不再回到 `showing`.使用端等 `[state="shown"]` 再量測或截圖.值與轉換時點寫在 `WAggridVue.vue` 之 JSDoc(`@vue-data state`)與範例頁 `state`.
+  2. **淡入結束以位準判斷**(`watchFade`、`isFadeRunning`):外層 div 自身(子樹過場不計)已無進行中之 CSS 過場(含尚未開始者,以 `getAnimations()` 取得;該 div 為 `transition:all`,淡入期間若 width/height/背景色等亦在過場則一併等其結束).主要訊號為該 div 自身之 `transitionend`/`transitioncancel`(事件自子樹冒泡,限定 `ev.target === el`;事件到達時若仍有進行中之過場則不算結束);後備訊號為表格就緒 0.8 秒後起每 50ms 重查,至多 60 次(再等 3 秒,共約 3.8 秒)後強制結束(祖先 `display:none` 而無過場、事件遺失、高負載下過場延後開始;過場長於此上限者於約 3.8 秒強制落定,FD14).常數與作法比照 w-component-vue 2.5.35 之 `createTransitionState`(事件為主、後備輪詢、上限 3 秒);本套件自寫而不引用:已安裝之 w-component-vue 為 2.5.34 無該函式,且引入跨套件函式與升相依版號超出本輪範圍.
+  3. **淡入期間尺寸有改變才補繪**(`checkFadeResize`、`endFade`、`finishFade`):`watchFade` 於淡入開始時記下根節點 `offsetWidth/offsetHeight`;其後 domDetect(`mounted` 內既有之 `vo.de` `resize`)發出之尺寸與之相差 > 1px(寬或高)即記為「改變」(此後每次 resize 皆重新等待穩定,尺寸變回原值亦然);domDetect 首次發出之尺寸等於淡入開始時之尺寸故不誤判.**淡入結束時(`endFade`)再量一次 `offsetWidth/offsetHeight` 與基準比對**(尺寸變化與淡入結束落在同一幀或主執行緒被長任務卡住時,`transitionend` 先於 ResizeObserver 與 domDetect 之 resize 送達,旗標尚未更新;外審 sonnet 讀碼指出,FD12 守護);未改變 → 立即落定為 `shown`,**不補繪**(`refreshCells` 0 次);已改變 → 以獨立之 `dbcFade = debounce(350)` 等尺寸穩定(最後一次尺寸變化後 0.35 秒無再變化;容器過場可能晚於淡入結束才停,每次 resize 重新計時),再 `api.refreshCells({ force: true })` 恰 1 次,補繪後落定為 `shown`.**等待有上限**:尺寸持續變動(如超過 1px 之回授,domDetect 不阻斷)使去抖動永遠等不到穩定時,自淡入結束起至多再等 3 秒(`hd.timerCap`)即強制補繪並落定,免 `state` 永遠停在 `showing`(第二次外審指出;FD17).350ms 大於 `fitColumns` 之 `dbc` 預設 300ms:`opt.autoFitColumn` 為 true 時尺寸改變後之 `sizeColumnsToFit` 先執行,補繪與落定在欄寬重排之後(FD13).`dbcFade` 不與 `dbc` 共用(wsemi `debounce` 只保留最後一個任務,共用會互相取代).
+  4. 淡入結束**之後**才發生之尺寸變化不補繪、state 維持 `shown`(第 6 節 #25).
+  5. 表格不可用(元件已銷毀,或呼叫端經 getApi 銷毀 ag-grid)時略過補繪,state 仍落定為 `shown`,不拋錯、不呼叫已銷毀之 api(R19);元件銷毀時 `beforeDestroy` 之 `unwatchFade` 移除事件監聽、清除計時器並取消去抖動.`refreshCells` 拋錯時 `console.log('[w-aggrid-vue] finishFade:', err)`(R03)後照常落定.
+  6. 不改變:淡入 0.5 秒之外觀與動畫時間、既有 API 與事件;淡入期間尺寸有改變時自訂 cell-render slot 之儲存格會被重建一次(JSDoc 已載).
+- **單一擁有者**:F `watchFade`、`isFadeRunning`、`unwatchFade`、`checkFadeResize`、`endFade`、`finishFade`(`agReady` 於 `vo.opacity = 1` 後呼叫 `watchFade`;`mounted` 之 `vo.de` `resize` 呼叫 `checkFadeResize`;`beforeDestroy` 呼叫 `unwatchFade`);樣板 `:state="state"`(根節點)、`ref="fade"`(外層 div).
+- **盤點**:`git grep -nE "hdFade|dbcFade|watchFade|state: 'showing'|vo\.state = " -- src/components/WAggridVue.vue`(`vo.state =` 只能出現在 `watchFade`〔無外層 div 時直接 shown〕與 `finishFade`〔落定〕;出現表外之命中須先補列);`git grep -n "refreshCells" -- src/components/WAggridVue.vue`(實作站點只有 `finishFade` 1 處,其餘為註解與 JSDoc);範例 `src/AppState.vue`(R18).
+- **站點**(情境 × 行為):
+
+| 情境 | 淡入結束時 | 補繪 | 落定 | 測試 |
+|---|---|---|---|---|
+| 初值與轉換 | — | — | showing → shown 單向 | FD1 |
+| 淡入期間未改尺寸 | transitionend(或後備) | 無(資料區無新建節點) | 立即 shown | FD2、FD6(FD7 為標記法之對照) |
+| 淡入期間改寬,容器過場早於淡入結束停 | 淡入結束後等 0.35 秒穩定 | refreshCells({ force: true }) 1 次 | 補繪後 shown | FD4 |
+| 淡入期間改寬,容器過場晚於淡入結束才停 | 待容器過場結束且 0.35 秒穩定 | 1 次(晚於容器過場結束) | 補繪後 shown | FD5 |
+| 尺寸變化與淡入結束同一幀(主執行緒卡住;含過場事件遺失由後備輪詢判定結束者) | 淡入結束時再量尺寸 | 1 次 | 補繪後 shown | FD12 |
+| `opt.autoFitColumn` 為 true | 欄寬重排(0.3 秒)先於補繪 | 1 次 | shown 後欄寬不再變 | FD13 |
+| 淡入結束後才改寬 | 已 shown | 無 | 維持 shown | FD8 |
+| 外層 div 另有進行中之過場(如背景色) | opacity 結束不算結束,待全部過場結束 | 無(尺寸未變) | 全部過場結束後 shown | FD3 |
+| 過場事件遺失 | 0.8 秒後輪詢確認無進行中之過場 | 依尺寸 | shown | FD9 |
+| 過場長於後備上限(6 秒) | 約 3.8 秒強制結束 | 依尺寸 | shown(過場仍在進行) | FD14 |
+| 淡入中元件銷毀 | — | 無 | state 不再變動、hdFade 已清 | FD10 |
+| 淡入中呼叫端經 getApi 銷毀 ag-grid | 淡入結束 | 無(isGridAvailable) | shown | FD11 |
+| 像素:淡入期間容器移動並改寬 | — | 1 次 | 全新頁面之畫面 8 輪全相同且等於 `tr=0` | FD15 |
+| 對照組:`nofade=1`、淡入結束後才改寬 | — | 依尺寸 | — | FD16 |
+| 尺寸持續變動(每 80ms 變化 > 1px,去抖動永遠等不到穩定) | 淡入結束起至多再等 3 秒(`hd.timerCap`)即強制補繪 | 1 次 | 強制補繪後 shown,不永遠停在 showing | FD17 |
+
+- **測試**:`test/e2e-fadeState.test.mjs`(FD1–FD17,宿主頁 `test/pages/fade.html`〔`window.__log` 記錄 state 屬性歷程、外層 div opacity 與進行中之過場數、過場事件、尺寸變化、`api.refreshCells` 之呼叫,以網址參數 `widenAtFade`、`widenAfterShown`、`stallWidenAtFade`、`delay`、`dur`、`tr`、`nofade`、`slowfade`、`autoFit`、`lost`、`bgAtFade`、`killAtFade`、`destroyApiAtFade` 造出各情境〕;FD15、FD16 之像素比對採同機同旗標下之逐 byte md5〔要驗的就是次像素差異是否消失,容差比對會掩蓋〕,不存標準圖);範例 `test/e2e-examples-state.test.mjs`(EXS1、EXS2)、`unit-appExamples` AX6.
+- **修前紅**(2026-11-01):以 HEAD dist 位元組覆蓋 dist(`withDist`,跑完以雜湊還原)跑 e2e-fadeState:初版 12 格為 11 紅 1 綠(綠者為「淡入中元件銷毀不補繪不報錯」,修前本來即無補繪,屬保留之格,斷言加強後亦紅)、16 格版 16/16 紅、**終版 17 格 17/17 紅**(證據夾 `mocha-head2.log`);紅者皆因根節點無 `state` 屬性(`waitUntilExist` 逾時,各格前置等待 `[state="shown"]`),故「修前紅」證明的是 `state` 屬性不存在;**像素多種結果(issue #31 之現象)以最小重現 16 輪佐證**(上列:預設 2 種、e2e 3 種),像素格 FD15 對「拿掉補繪」之偵測見變異 M1.
+- **變異**(2026-11-01 agg31;證據夾 `mkmut.mjs`、`session.mjs`、`mocha-mut-*.log`:以字串取代 dist 內壓縮後之程式碼,每個取代字串須在 dist 內恰出現 1 次;`session.mjs` 於取得測試鎖後逐一換入 `dist/`、只跑預期偵測之案例、`finally` 還原並以雜湊核對〔14 次還原皆 OK〕):14 個單點變異全被至少 1 格偵測——M1 補繪呼叫失效(FD4、FD5、FD12、FD15)、M2 去抖動失效〔淡入結束即補繪〕(FD5)、M3 一律補繪〔淡入期間未改尺寸者亦補繪〕(FD6)、M4 表格就緒即落定 shown(FD2)、M5 淡入結束不檢查外層 div 是否仍有進行中之過場(FD3)、M6 後備輪詢延至約 22 小時〔等同拿掉〕(FD9)、M7 淡入結束後之 resize 不重新等待穩定(FD5)、M8 淡入期間尺寸變化偵測失效(FD5;FD12 仍綠——淡入結束時再量尺寸補上,屬預期之冗餘防護)、M9 去抖動 350ms 縮為 1ms(FD5、FD13)、M10 銷毀時不 `unwatchFade`(FD10)、M11 補繪不檢查 `isGridAvailable`(FD11)、M12 後備輪詢無次數上限(FD14)、M13 淡入結束時不再量尺寸(FD12)、M14 穩定等待無上限(FD17).**測試鑑別力之補強(讀碼推論,未以變異實跑補強前之版本)**:12 格版之 FD9〔現 FD10〕對「銷毀後計時器」僅斷言 `refreshes` 為 0,而元件銷毀後 `getApi()` 為 null、`isGridAvailable` 為 false 使補繪本來就不執行,故 M10 在該版應存活;FD10〔現 FD11〕以 `refreshes`(destroy 後 ag-grid 以 `defineProperties` 覆寫 api 方法,宿主頁之包裝被蓋掉)亦無鑑別力.第一次外審(sonnet 讀碼)指出後,FD10 改驗銷毀後元件之 `state` 仍為 `showing` 且 `hdFade` 為 null,FD11 改驗 ag-grid 之銷毀後呼叫警告,實跑 M10、M11 皆被偵測.M13、M14 與 FD12(淡入結束同幀)、FD13(autoFit)、FD17(持續變動)為第二次外審後新增.
+- **穩定性**:終版(測試碼與 dist 與下列全套相同)e2e-fadeState 17 格單檔 1 次 17 passing(約 1m18s);全套 `npm test --lock` 515 passing、0 failing(5m49s,2026-11-01 02:02,e2e-fadeState 在 `--parallel` 負載下與其他 e2e 檔同跑).另於終版連續單檔重跑 5 次(每次全新 mocha 行程)皆 17 passing,終版合計 7 次執行 0 失敗(0/7;樣本小,僅證明未見偶發失敗).終版 dist 之最小重現批次(16 輪 × 10 組)亦與中間建置之結果逐組相同(證據夾 `batch-after-final.tsv`).
+- **來源**:2026-11-01 Gitea issue #31(rddmanager);主控派工 agg31(建議 1 補繪 + 建議 2 `state`;README 不改);`state` 取名 showing/shown 依派工指定,轉換語彙比照 WDrawer(過渡態與終態).
+
 ## 3. 下載
 
 ### R12 兩個下載方法共用 downloadCore
@@ -515,12 +557,13 @@
 
 - **規則**:對外文件為範例 `src/App<名稱>.vue`,建置為 `docs/examples/ex-<名稱>.html` 與 `test-html/ex-<名稱>.html`;README 不改(使用者指示;2026-10-30 agv-run01 曾依主控派工新增 README 兩節〔`opt.localeText`、過濾 0 筆覆蓋層與 Breaking changes〕,經主控裁定為派工之誤,agv-run02 已撤回,README 回到 agv-run01 之前之內容,無例外).新選項、破壞性變更之對外說明改寫在範例頁之說明文字與 `WAggridVue.vue` 之 JSDoc(例:`AppLocaleText.vue`、`AppShowOverlayWhenFilteredEmpty.vue`).命名為 API 名之 camelCase(方法如 AppDownloadData、選項如 AppKpCellFormat),slot 範例以 Slot 為前綴(AppSlotCellRender),變體加後綴(AppShowKeysApplyOrder、AppUploadDataWithConvertKeys、AppSlotCellRenderAlign).新增或改名範例時,App.vue 之選單、v-if、import、components 四處一致.重產順序依 script.txt:gDistApp → gExtractHtml → gDocExams(gDistApp 會清空 docs/examples).
 - **盤點**(兩者須相等):
-  - `git ls-files 'src/App*.vue' | grep -vc '^src/App.vue$'`(79;2026-10-30 起含 AppLocaleText、AppShowOverlayWhenFilteredEmpty,新檔提交後才計入)
-  - `git ls-files docs/examples | grep -c '^docs/examples/ex-.*\.html$'`(**發布重產後 79**;2026-10-30 agv-run02 新增兩範例後、發布重產前為 77——`docs/examples` 依 script.txt 於發布時重產〔gDistApp → gExtractHtml → gDocExams〕,本輪不手動產生;此段期間兩者不等屬預期,由 `unit-appExamples` 之 AX4 驗 docs/examples 無遺留舊頁,發布重產後須回到相等)
+  - `git ls-files 'src/App*.vue' | grep -vc '^src/App.vue$'`(79;2026-10-30 起含 AppLocaleText、AppShowOverlayWhenFilteredEmpty;2026-11-01 新增 AppState〔R26〕,新檔提交後為 80,檔案系統計 `ls src/App*.vue | grep -vc 'src/App.vue'` 現為 80)
+  - `git ls-files docs/examples | grep -c '^docs/examples/ex-.*\.html$'`(**發布重產後 80**〔2026-11-01 新增 ex-state〕;2026-10-30 agv-run02 新增兩範例後、發布重產前為 77——`docs/examples` 依 script.txt 於發布時重產〔gDistApp → gExtractHtml → gDocExams〕,本輪不手動產生;此段期間兩者不等屬預期,由 `unit-appExamples` 之 AX4 驗 docs/examples 無遺留舊頁,發布重產後須回到相等)
   - test-html 已列於 .gitignore(入版控者只有舊有之 42 個),本機由 gExtractHtml 產生,不作為盤點與測試之依據.
-- **站點**:79 個範例,已套(其中 `localeText`、`showOverlayWhenFilteredEmpty` 為 2026-10-30 agv-run02 新增,選單置於新群組 `text`;docs/examples 待發布重產).
+- **站點**:80 個範例,已套(其中 `localeText`、`showOverlayWhenFilteredEmpty` 為 2026-10-30 agv-run02 新增,選單置於新群組 `text`;`state` 為 2026-11-01 新增〔R26〕,選單置於新群組 `dom`;docs/examples 待發布重產).**範例說明文字不可含字面 `WAggridVue`**:範例產製管線(extractHtml)會把文字中的 `WAggridVue` 改成 `w-aggrid-vue`(`CompCssWAggridVue` 變成 `CompCssw-aggrid-vue`,選擇器寫錯),以 HTML 實體 `W&#65;ggridVue` 書寫,EXS1 守護.
 - **測試**:`test/e2e-examples-display.test.mjs`(SL1–SL4、APP-*、SKX1、SKX2、EXF1、AL-*)、`test/e2e-examples-download.test.mjs`(EXD1–EXD3)、`test/e2e-examples-upload.test.mjs`(EXU-E1–E5、EXU-K1–K3);範例頁之 CDN 資源一律路由至本機(第 7 節映射).APP- 之格載入 gDistApp 之產物 app.umd.js,驗選單與標題,不驗本次 dist.
   - 新增範例(docs/examples 尚未重產者)之驗證:`test/unit-appExamples.test.mjs`(AX1 App.vue 四處〔import、components、v-if、選單〕與 src/App*.vue 一一對應;AX2 本次新增兩範例;AX3 example/code 連結指向自身;AX4 docs/examples 無遺留舊頁;AX5 JSDoc 載明破壞性變更;BLD1 產製器與發布管線同形)與 `test/e2e-examples-overlay.test.mjs`(EXO1–EXO4:自 src 以 `test/tools/exampleBuild.mjs` 當場產製範例頁,於 `test/_tmp/e2e-examples-overlay/`,結束即刪).產製器複製 `toolg/gExtractHtml.mjs` 之 head 與選項及 `toolg/gDocExams.mjs` 之 CDN 換址,**gExtractHtml 之 head 或選項變動時須同步改 `exampleBuild.mjs`**(BLD1 以既有 5 個範例對照 docs/examples 逐字比對,不同步即紅).發布重產 docs/examples 後,新範例頁與測試所產製者應相同.
+  - 2026-11-01 新增範例 state(R26):`unit-appExamples` AX6(AppState 於 App.vue 四處皆在、選單名 state、JSDoc `@vue-data state` 載明值與轉換時點)與 `test/e2e-examples-state.test.mjs`(EXS1 標題與連結、說明文字含值/單向轉換/補繪/等待寫法;EXS2 頁內清單依序為 `state="showing"`、容器改寬、`state="shown"`,終態根節點屬性為 shown).
   - 範例頁之歷程以頁內 MutationObserver 於載入前即記錄(`openPage` 之 `initScript` 選項),事後比對各態出現之順序,不以時間窗斷言(範例頁自帶 1–3 秒計時器,負載下計時器延遲).
 - **來源**:2026-09-04 提交 626fbda(範例正名).
 
@@ -552,6 +595,7 @@
 | 22 | 在 `rowDragChange` 回呼內**同步**呼叫 `pasteText`:`opt.rows` 已寫成新列序,但 `vo.rows` 要待 Vue 下一次更新才同步(`changeOpt` 之 `vo.rows = vo.opt.rows`),pasteText 取到舊 `vo.rows` 並以之 `set(vo, 'opt.rows', rows)`,把拖曳後之列序覆寫回舊序(畫面為新序,宿主 `opt.rows` 為舊序;貼入之值仍落在畫面被判斷之列) | 2026-10-28 agv-run03 實測(探測腳本 `probeEdge.mjs` s2,留存處同 #21:拖曳後 `getNowData` 為 a1、a2、a0,宿主 `opt.rows` 為 a0、a1、a2);外審 terra 讀碼提出;修前修後相同 | 呼叫端:回呼內改於下一個 tick(`$nextTick`)再呼叫 pasteText;範圍外未修 |
 | 23 | 置頂/置底列(`genRowsPinnTop`、`genRowsPinnBottom`)只於表格就緒(`agReady`:F:1318、1321)與儲存格值變更(`agCellChange`:置底,F:1283)時重算,列拖曳後不重算;產生器若依列序取值(如取第一列),拖曳後置頂/置底列過時(依總和等與列序無關者不受影響) | 讀碼確認(外審 terra 提出;未實測);修前修後相同 | 呼叫端或待裁示;範圍外未修 |
 | 24 | 過濾 0 筆覆蓋層(R25)之限制:①呼叫端經 `getApi().hideOverlay()` 隱藏後,過濾狀態未改變前不會自動重現(下一次 `modelUpdated`,即過濾、數據更新或排序,才重新判斷);②載入中/noRows 種類以 DOM 類名判斷(`.ag-overlay`、`ag-hidden`、`.ag-overlay-loading-wrapper`、`.ag-overlay-no-rows-wrapper`;ag-grid 31.3.4 無公開之覆蓋層狀態查詢),ag-grid 升版時須重驗(e2e-overlay OV16、OV17、OV29;主控 2026-10-30 裁定接受此限制並維持文件);③ag-grid 之 NoRowsOverlay 於 `setTimeout` 內才取文字,故 `noRowsToShow` 之文字取決於「取文字當下」之表格狀態(狀態在顯示與取文字之間改變,以取文字當下為準);呼叫端自行 `api.showNoRowsOverlay()` 且資料非空而顯示列為 0 時,文字亦為過濾 0 筆文字;④`localeText` 字串不代入 `${variable}` 佔位(內建字典亦同);⑤`modelUpdated` 經 ag-grid-vue 非同步送達(`setTimeout(0)`):表頭過濾使然之 0 列且宿主以 `applyTransaction`/`setGridOption('rowData')` 換數據時,ag-grid 於 `rowDataUpdated` 先隱藏,覆蓋層要到下一個 macrotask 才補顯示(經 opt 換數據者於同一 flush 後之 microtask 補顯示,實測列數、覆蓋層無中間態;外審讀碼推論前者可能閃一幀,未實測);⑥外審 sonnet(讀碼推論)另指出 `bOwnOverlay` 語意為「曾顯示過」而非「現在仍是我們的」:ag-grid 於 `rowDataUpdated` 隱藏我們之覆蓋層而我們尚未同步之一個 macrotask 內,若宿主恰好手動 `showNoRowsOverlay()`,會被誤隱藏,機率極低,未處理 | e2e-overlay OV16、OV17、api-localeText AL5;讀碼(ag-grid-community.js:19454–19463 NoRowsOverlayComponent、49782–49846 OverlayService) | ag-grid 31.3.4 + 呼叫端;範圍外未修 |
+| 25 | 淡入補繪與 `state`(R26)之限制:①只涵蓋表格建立後淡入期間(含淡入結束後等待尺寸穩定)內發生之根節點尺寸改變;淡入結束(state 為 shown)之後才發生之尺寸變化不補繪(issue #31 之觸發條件須在淡入進行中,`delay=1500` 組穩定);②淡入期間尺寸有改變時自訂 cell-render slot 之儲存格因 `refreshCells({ force: true })` 被重建一次(JSDoc 已載);③`state` 只反映淡入與補繪,不代表數據已載入完成;④淡入落定之判斷依賴 `Element.getAnimations()`,不支援者(舊瀏覽器)視為無進行中之過場,以外層 div 自身任一過場事件即結束(可能早於 opacity 淡入結束);⑤`refreshCells` 重繪後之畫面與「容器不帶過場」相同係以 Chromium(Playwright 1.63,確定性旗標與預設旗標)逐 byte 驗證,其他瀏覽器之字形光柵未驗 | e2e-fadeState FD7、FD12;最小重現(證據夾 `batch-*.tsv`) | 設計限制;範圍外未修 |
 
 ## 7. 測試帳本
 
@@ -588,10 +632,12 @@
 | e2e-examples-display | e2e | 21 | docs/examples 之 slot、showKeys、對齊、filterChange 範例與 app.html | R06–R08、R11、R18、R20 |
 | e2e-examples-download | e2e | 3 | docs/examples 之 ex-downloadData、ex-downloadDisplayData、ex-getDisplayData | R12、R13、R18 |
 | e2e-examples-upload | e2e | 8 | docs/examples 之 ex-uploadData、ex-uploadDataWithConvertKeys | R17、R18 |
-| unit-appExamples | unit | 6 | `src/App.vue` 與 `src/App*.vue` 之接線(AX1–AX5)、範例產製器與 docs/examples 之同形(BLD1;node,不起瀏覽器) | R18、R24、R25 |
+| unit-appExamples | unit | 7 | `src/App.vue` 與 `src/App*.vue` 之接線(AX1–AX6)、範例產製器與 docs/examples 之同形(BLD1;node,不起瀏覽器) | R18、R24、R25、R26 |
 | e2e-examples-overlay | e2e | 4 | 自 src 當場產製之 ex-localeText、ex-showOverlayWhenFilteredEmpty(`test/tools/exampleBuild.mjs`,頁內記錄器以 `openPage` 之 `initScript` 注入) | R18、R24、R25 |
+| e2e-fadeState | e2e | 17 | fade.html(置中容器內 7 欄 6 列表格,表格建立後容器以 CSS 過場改寬;`window.__log` 記錄 state 屬性、外層 div 之 opacity 與過場、尺寸變化與 `api.refreshCells` 之呼叫;網址參數造情境) | R26 |
+| e2e-examples-state | e2e | 2 | 自 src 當場產製之 ex-state(`test/tools/exampleBuild.mjs`) | R18、R26 |
 
-合計 495 格(2026-10-28 agv-run03 全套實測 444 passing;2026-10-30 agv-run01 新增 unit-getLangText 3、api-localeText 7、e2e-overlay 31,合計 41 格,全套實測 485 passing;同日 agv-run02 新增 unit-appExamples 6、e2e-examples-overlay 4,合計 10 格,全套實測 495 passing,見 state.md).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
+合計 515 格(2026-11-01 agg31 新增 e2e-fadeState 17、e2e-examples-state 2、unit-appExamples AX6 1 格,全套實測見 state.md;前:495 格(2026-10-28 agv-run03 全套實測 444 passing;2026-10-30 agv-run01 新增 unit-getLangText 3、api-localeText 7、e2e-overlay 31,合計 41 格,全套實測 485 passing;同日 agv-run02 新增 unit-appExamples 6、e2e-examples-overlay 4,合計 10 格,全套實測 495 passing,見 state.md)).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
 
 ### 7.3 舊 tmp 驗收腳本之遷移(2026-10-06~07)
 
@@ -661,6 +707,7 @@
 - **headerscroll**(R21):宿主頁以查詢字串切換標頭範本、釘選、寬度、欄數、列數(`head=default|slot|focusable&pin=1&w=&cw=&n=&rows=`);頁首以 `EventTarget.prototype.addEventListener/removeEventListener` 包裝記錄 `.ag-header-viewport` 上 scroll 監聽之註冊與移除(HS17 驗成對).HS9(`focus()`)、HS10、HS18(`scrollIntoView()`)之 act 為呼叫端程式觸發(L5),因其模擬的是呼叫端程式或瀏覽器自身之捲入可見,不是使用者操作;其餘 act 為 L2 真滑鼠(`mouse.click`、`mouse.wheel`)、L1 真鍵盤、L3 `locator.click`(HS1–HS8、HS11 之主觸發,即 issue #9 之重現路徑).`locator.click` 會先把目標捲入可見,故「真滑鼠點擊」格(HS12)改以座標點擊露出之部分,對照組(HS13)先以滾輪捲到完整可見.一致性判準 `alignedProblem`:標頭與資料區 scrollLeft 差 <1px、已渲染各欄標頭格與第 0 列儲存格左緣差 ≤0.5px(至少 3 欄含目標欄);補償於下一個畫面幀後才生效,以偵測等待(`pollUntil`,上限 3 秒)判定;「不得捲動」之負向斷言以 400ms 觀察窗.
 
 - **e2e-overlay / api-localeText**(2026-10-30,issue #26):宿主頁 `test/pages/overlay.html` 以查詢字串 `?g=o1,o5` 只建立所需之表(每格只載入要用的表);空表(無儲存格)之頁面以 `openPage(url, { minCells: 0 })` 開啟.act:過濾為真鍵盤於表頭浮動過濾列(`typeIntoFloatingFilter`,L1)與宿主搜尋框(click + `keyboard.type`,L1);宿主端動作為宿主按鈕(L3,其處理函數呼叫 `getApi().showLoadingOverlay()/hideOverlay()`、`setHeadFilter`/`clearHeadFilter`、更換 `opt`,同官方範例「按鈕呼叫元件方法」之用法,模擬宿主程式的行為);api-localeText 以宿主按鈕取文字掛鉤回傳(`window.__cases` 登錄案例,`runHostCase`).**ag-grid 載入中覆蓋層會攔截指標事件**(`.ag-overlay-loading-wrapper` 蓋住整個表含表頭,Playwright `locator.click` 逾時),故「載入中時過濾」只能由宿主按鈕呼叫 `setHeadFilter`(OV16、OV17),真鍵盤輸入只用於載入中隱藏後.**浮動過濾列輸入框無 placeholder**(`filterOoo` 只用於過濾彈窗),非覆蓋層鍵之覆寫以載入中覆蓋層之 `loadingOoo` 驗(OV5).**列數 0 之偵測等待**:ag-grid 以動畫移除列,覆蓋層文字出現時 `.ag-row` 的 DOM 可能尚未移除,斷言列數前先 `waitRowCount`;表頭過濾清除有防抖,列數本來就是 0 時以過濾模型為空作訊號(OV10).否定斷言(OV4、OV14、OV16、OV17、OV21)皆於終態達成後再觀察 300–700ms 短窗.
+- **e2e-fadeState**(2026-11-01 agg31,R26):宿主頁 `test/pages/fade.html` 於 `window.__log` 記錄:`states`(根節點 `state` 屬性以 MutationObserver 記錄每次變動,每筆含當下外層 div 之 opacity、進行中之 CSS 過場數〔任何屬性〕、已發生之補繪次數)、`fadeStartAt`(外層 div 之 style 出現 opacity:1)、`tEnds`(外層 div 之 transitionend/transitioncancel)、`hostEndAt`(容器寬度過場結束)、`widenAt`、`resizes`(根節點 ResizeObserver)、`refreshes`(包裝同一個 api 物件之 `refreshCells`,元件內呼叫取得的是被包裝後的函數;輪詢至 api 建立後包裝,補繪發生於淡入結束後,來得及)。**act 為頁面自帶之計時行為**(宿主程式於淡入開始後 N ms 改容器寬度、改背景色、銷毀元件或 ag-grid),屬本檔要驗的情境本身(宿主彈窗最大化等),非使用者輸入,不掛真滑鼠鍵盤;時序前提(改寬落在淡入期間、背景色過場晚於 opacity 結束、容器過場晚於淡入結束)以 `widenAtFade`/`bgAtFade` 相對淡入開始計時並於案例內先斷言前提,不依賴表格就緒時間(實測就緒約在掛載後 8ms)。否定斷言(FD6、FD7、FD9、FD10)於終態達成後再觀察 500–1500ms 短窗。像素組(FD11、FD12)每輪新 context、逐 byte md5 比對同機同旗標之畫面(不存標準圖;差異約 180 px 之次像素,容差比對會掩蓋)。**變異法**:`mkmut.mjs`(證據夾;本機 `./tmp` 已清)以字串取代 dist 內壓縮後之程式碼產生單點變異檔,`session.mjs` 於取得測試鎖後逐一換入 `dist/`、只跑預期偵測之案例(`--grep`)、`finally` 還原並以雜湊核對。
 - **修前紅/變異**(2026-10-30 agv-run01):見 R24、R25 測試節與報告.
 
 #### 已知缺口
@@ -697,6 +744,8 @@ npm 最新為 2.1.5(2026-10-06 查).版本欄為該提交時 package.json 之值
 | 工作樹(未提交,2026-10-28) | 貼上(Ctrl+V、pasteText)對 `opt.kpCellEditable` 之函數型值逐儲存格求值(原以真值判斷,函數恆為真,唯讀列仍被寫入);非布林非函數之真值(如 `1`)原會寫入,改為同 ag-grid 視為不可編輯;函數拋錯時該儲存格略過並於 console 說明一次(原無此情形);判斷於寫入前全部完成;filterall 生效時貼上寫入畫面上被判斷之那一列(原寫入 `vo.rows[node.id]`,即畫面以外之列).布林值行為不變 | 修正、可見行為 | R22 |
 | 工作樹(未提交,2026-10-28 agv-run03) | 列拖曳排序(kpRowDrag)後寫回 `opt.rows` 保留各列全部欄位(原只留 `opt.keys` 之欄位,不在 keys 內之欄位如供 editable 函數判斷之旗標隨之消失,使唯讀列變可編輯);`opt.rows` 內之列物件為 ag-grid 之原列物件(依新列序),不再是提取後之新物件(缺少某 key 之列不再被補成 `''`,物件身分與原列相同);回呼 `rowDragEnd/Leave/Change` 之 `rows` 引數仍為依 keys 提取者(不變,但為副本:在回呼內就地修改 `rows` 不再影響寫回之 `opt.rows`;修改 `row` 現會改到 `opt.rows` 內之同一列物件) | 修正、可見行為(資料遺失) | R23 |
 | 工作樹(未提交,2026-10-30 agv-run01) | **過濾成 0 筆之覆蓋層預設開啟(可見行為變更)**:`opt.rows` 非空而顯示列數為 0 時,①表頭過濾使然:原只剩表頭與空白,現顯示「無符合過濾條件之資料」(en `No Rows Match The Filter`、zh-cn「无符合过滤条件的数据」)覆蓋層;②filterall 使然:原顯示「無資料可顯示」(`noRowsToShow`),現改顯示過濾 0 筆文字.`opt.showOverlayWhenFilteredEmpty=false` 恢復舊行為.顯示列回到 > 0 即隱藏;不蓋掉宿主顯示之載入中覆蓋層.另新增 `opt.localeText`(覆寫表格文字之字典,先查覆寫再走內建,未給時行為不變).截圖或測試若拍到過濾成 0 筆之表會與舊版不同(本套件無此類標準圖).對外說明於範例頁 localeText、showOverlayWhenFilteredEmpty 之說明文字與 JSDoc(2026-10-30 agv-run02;README 不改,R18) | 新增、可見行為 | R24、R25 |
+
+| 工作樹(未提交,2026-11-01 agg31) | 元件根節點新增 DOM 屬性 `state`(`showing` → `shown`,淡入 0.5 秒結束後為 shown;不改外觀與淡入時間、既有 API 與事件);**可見行為**:表格建立後淡入期間若根節點尺寸改變(寬或高差 > 1px),淡入結束且尺寸穩定(0.2 秒)後自動 `api.refreshCells({ force: true })` 一次(使淡入期間補繪之儲存格字形像素固定;自訂 cell-render slot 之儲存格被重建一次);淡入期間尺寸未改變者不重繪.新增範例頁 `state`(選單群組 `dom`) | 新增、可見行為 | R26 |
 
 ## 9. 候選規則與待裁示(未裁示,僅記錄)
 

@@ -106,6 +106,8 @@
 
             <AppShowOverlayWhenFilteredEmpty v-if="cmpPick==='showOverlayWhenFilteredEmpty'"></AppShowOverlayWhenFilteredEmpty>
 
+            <AppState v-if="cmpPick==='state'"></AppState>
+
             <AppGetDisplayData v-if="cmpPick==='getDisplayData'"></AppGetDisplayData>
 
             <AppDownloadData v-if="cmpPick==='downloadData'"></AppDownloadData>
@@ -272,6 +274,7 @@ import AppDefHeadSortMethod from './AppDefHeadSortMethod.vue'
 import AppFilterAllData from './AppFilterAllData.vue'
 import AppLocaleText from './AppLocaleText.vue'
 import AppShowOverlayWhenFilteredEmpty from './AppShowOverlayWhenFilteredEmpty.vue'
+import AppState from './AppState.vue'
 import AppGetDisplayData from './AppGetDisplayData.vue'
 import AppDownloadData from './AppDownloadData.vue'
 import AppDownloadDisplayData from './AppDownloadDisplayData.vue'
@@ -356,6 +359,7 @@ export default {
         AppFilterAllData,
         AppLocaleText,
         AppShowOverlayWhenFilteredEmpty,
+        AppState,
         AppGetDisplayData,
         AppDownloadData,
         AppDownloadDisplayData,
@@ -566,6 +570,12 @@ export default {
                 cmps: [
                     { name: 'localeText' },
                     { name: 'showOverlayWhenFilteredEmpty' },
+                ],
+            },
+            {
+                name: 'dom',
+                cmps: [
+                    { name: 'state' },
                 ],
             },
             {

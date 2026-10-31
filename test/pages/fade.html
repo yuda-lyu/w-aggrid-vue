@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>fade state</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0;">
+    <!--
+        淡入與 state 之宿主頁(規則帳本 R26, issue #31): 置中容器內放 7 欄 6 列表格, 表格建立後 delay 毫秒把容器寬 w0 改為 w1, 容器帶 dur 毫秒之 CSS 過場
+        網址參數(皆為選用):
+            tr=0       : 容器不帶過場(直接改寬)
+            delay=<ms> : 掛載後幾毫秒改寬, 預設 100
+            widenAtFade=<ms> : 改為淡入開始(外層容器 opacity 改為 1)後幾毫秒改寬(確定落在淡入期間), 給了則 delay 無效
+            widenAfterShown=<ms> : 改為 state 落定為 shown 後幾毫秒改寬(確定發生於淡入結束之後), 給了則 delay 無效(須同時給 widenAfterShown 時不給 widenAtFade)
+            stallWidenAtFade=<ms> : 淡入開始後幾毫秒改寬並於同一工作內以同步迴圈卡住主執行緒 stall 毫秒(預設 700): 改寬已套用到 DOM, 版面與 ResizeObserver 待卡住結束後的下一幀才計算(該幀先送已結束之 transitionend, 後送 resize); 配 tr=0 使寬度立即套用
+            autoFit=1  : opt.autoFitColumn 設為 true(window.__log.fits 記錄 api.sizeColumnsToFit 之呼叫時刻)
+            jitter=1   : 淡入開始後 50ms 起每 80ms 切換容器寬度(w1 與 w1-30), 使根節點尺寸持續變動
+            slowfade=1 : 外層容器過場改為 6 秒(長於後備輪詢之上限)
+            dur=<ms>   : 容器寬度過場時長, 預設 100
+            w0=<px>    : 初始寬度, 預設 900(只容得下前 4.5 欄, 其餘欄於改寬時才由表格補繪)
+            w1=<px>    : 改寬後寬度, 預設 1560
+            nowide=1   : 不改寬
+            nofade=1   : 關閉元件外層容器之淡入過場(.CompCssWAggridVue > div { transition: none !important })
+            lost=1     : 於 window 捕獲階段吞掉外層容器之 transitionend、transitioncancel(模擬過場事件遺失)
+            destroyApiAtFade=<ms> : 淡入開始後此毫秒數由呼叫端經 getApi().destroy() 銷毀 ag-grid(元件仍在)
+            killAtFade=<ms> : 淡入開始(外層容器 opacity 改為 1)後此毫秒數移除元件(模擬淡入中銷毀)
+            bgAtFade=<ms> : 淡入開始後此毫秒數把外層容器之背景色改為淡藍(外層容器為 transition:all, 使其在 opacity 淡入結束之後仍有一個進行中之 background-color 過場, 不改變任何尺寸)
+        window.__log: states(state 屬性之歷程, 每筆含當下外層容器 opacity、進行中之 CSS 過場數〔任何屬性〕、已發生之 refreshCells 次數)、fadeStartAt(外層容器 opacity 改為 1 之時刻)、
+            tEnds(外層容器之 transitionend、transitioncancel)、hostEndAt(容器寬度過場結束)、widenAt(改寬時刻)、resizes(根節點尺寸變化之時刻)、refreshes(api.refreshCells 之呼叫)
+    -->
+    <div id="app">
+        <div style="display:flex; justify-content:center; width:100vw;">
+            <div id="host" :style="`width:${wide?w1:w0}px; ${tr?`transition:all ${dur}ms ease-out;`:''}`">
+                <div id="grid" style="height:280px;">
+                    <w-aggrid-vue ref="g1" id="g1" :opt="opt" :height="h" v-if="show"></w-aggrid-vue>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let q = new URLSearchParams(location.search)
+        let num = (k, d) => (q.has(k) ? Number(q.get(k)) : d)
+        let tr = q.get('tr') !== '0'
+        let now = () => performance.now()
+        let log = window.__log = { states: [], fadeStartAt: null, tEnds: [], tRuns: [], hostEndAt: null, widenAt: null, stallEndAt: null, killAt: null, apiDestroyAt: null, resizes: [], refreshes: [], fits: [], lostEnds: 0 }
+
+        if (q.get('nofade') === '1') {
+            let st = document.createElement('style')
+            st.textContent = '.CompCssWAggridVue > div { transition: none !important; }'
+            document.head.appendChild(st)
+        }
+
+        //slowfade: 外層容器之過場改為 6 秒(長於後備輪詢之上限), 驗後備輪詢到上限後強制結束
+        if (q.get('slowfade') === '1') {
+            let st = document.createElement('style')
+            st.textContent = '.CompCssWAggridVue > div { transition: all 6s !important; }'
+            document.head.appendChild(st)
+        }
+
+        //lost: 外層容器之過場事件於捕獲階段即被吞掉, 元件與本頁之監聽皆收不到
+        if (q.get('lost') === '1') {
+            let fn = (e) => {
+                let t = e.target
+                if (t && t.parentElement && t.parentElement.classList.contains('CompCssWAggridVue')) {
+                    log.lostEnds++
+                    e.stopPropagation()
+                }
+            }
+            window.addEventListener('transitionend', fn, true)
+            window.addEventListener('transitioncancel', fn, true)
+        }
+
+        let keys = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    tr,
+                    dur: num('dur', 100),
+                    wide: false,
+                    w0: num('w0', 900),
+                    w1: num('w1', 1560),
+                    h: 240,
+                    show: true,
+                    opt: {
+                        keys,
+                        kpHead: Object.fromEntries(keys.map((k) => [k, k])),
+                        rows: Array.from({ length: 6 }, () => Object.fromEntries(keys.map((k) => [k, 1]))),
+                        defCellAlignH: 'center',
+                        autoFitColumn: q.get('autoFit') === '1',
+                    },
+                }
+            },
+            mounted: function() {
+                let vm = this
+
+                //root, fade, 子組件先於本頁 mounted, 元件根節點此時已在 DOM 中
+                let root = document.querySelector('.CompCssWAggridVue')
+                let fade = root.firstElementChild
+                let snap = () => ({
+                    opacity: getComputedStyle(fade).opacity,
+                    anims: fade.getAnimations().filter((a) => typeof a.transitionProperty === 'string' && (a.pending || a.playState === 'running')).length,
+                    refreshes: log.refreshes.length,
+                })
+
+                //state 屬性之歷程(初值於此記錄, 其後由 MutationObserver 記錄每次變動)
+                log.states.push({ t: now(), state: root.getAttribute('state'), ...snap() })
+                new MutationObserver(() => {
+                    let st = root.getAttribute('state')
+                    log.states.push({ t: now(), state: st, ...snap() })
+                    //widenAfterShown: 落定為 shown 後此毫秒數改寬(確定發生於淡入結束之後)
+                    if (st === 'shown' && q.has('widenAfterShown')) {
+                        setTimeout(widen, num('widenAfterShown', 0))
+                    }
+                }).observe(root, { attributes: true, attributeFilter: ['state'] })
+
+                //widen, 改寬(容器左緣隨置中而移動)
+                let widen = () => {
+                    vm.wide = true
+                    log.widenAt = now()
+                }
+
+                //外層容器 opacity 改為 1 之時刻(淡入開始)
+                new MutationObserver(() => {
+                    if (log.fadeStartAt === null && fade.style.opacity === '1') {
+                        log.fadeStartAt = now()
+                        //widenAtFade: 淡入開始後此毫秒數改寬(使改寬確定落在淡入期間, 不受表格就緒時間影響)
+                        if (q.has('widenAtFade')) {
+                            setTimeout(widen, num('widenAtFade', 0))
+                        }
+                        //stallWidenAtFade: 淡入開始後此毫秒數改寬並於同一工作內以同步迴圈卡住主執行緒 stall 毫秒(預設 700, 長於淡入剩餘時間):
+                        //改寬於卡住前已套用到 DOM, 但版面與 ResizeObserver 要待卡住結束後的下一幀才計算, 該幀先送出已結束之 transitionend, 後送出 resize
+                        if (q.has('stallWidenAtFade')) {
+                            setTimeout(async () => {
+                                vm.wide = true
+                                log.widenAt = now()
+                                await vm.$nextTick()
+                                let t0 = now()
+                                while (now() - t0 < num('stall', 700)) {
+                                    //busy wait
+                                }
+                                log.stallEndAt = now()
+                            }, num('stallWidenAtFade', 0))
+                        }
+                        //jitter: 淡入開始後 50ms 起每 80ms 在 w1 與 w1-30 之間切換容器寬度(每次變化 > 1px,容器過場 100ms, 使根節點尺寸持續變動)
+                        if (q.get('jitter') === '1') {
+                            setTimeout(() => {
+                                log.widenAt = now()
+                                let toggle = true
+                                setInterval(() => {
+                                    vm.w1 = toggle ? 1530 : 1560
+                                    toggle = !toggle
+                                    vm.wide = true
+                                }, 80)
+                            }, 50)
+                        }
+                        //destroyApiAtFade: 淡入中由呼叫端經 getApi() 銷毀 ag-grid(元件仍在)
+                        if (q.has('destroyApiAtFade')) {
+                            setTimeout(() => {
+                                vm.$refs.g1.getApi().destroy()
+                                log.apiDestroyAt = now()
+                            }, num('destroyApiAtFade', 0))
+                        }
+                        //bgAtFade: 淡入中改外層容器背景色, 使其有 background-color 過場(不改尺寸)
+                        if (q.has('bgAtFade')) {
+                            setTimeout(() => {
+                                fade.style.backgroundColor = '#eef'
+                            }, num('bgAtFade', 0))
+                        }
+                        //killAtFade: 淡入中移除元件
+                        if (q.has('killAtFade')) {
+                            setTimeout(() => {
+                                window.__comp = vm.$refs.g1 //移除後仍可讀其 state 與 hdFade(銷毀後不應再變動、無殘留監聽狀態)
+                                vm.show = false
+                                log.killAt = now()
+                            }, num('killAtFade', 0))
+                        }
+                    }
+                }).observe(fade, { attributes: true, attributeFilter: ['style'] })
+
+                //外層容器之過場事件
+                let onEnd = (e) => {
+                    if (e.target !== fade) {
+                        return
+                    }
+                    //resizedFlag: 本監聽先於元件之監聽註冊, 讀到的是元件處理此事件前之 resized 旗標(白箱, 僅供資訊)
+                    let hd = vm.$refs.g1 ? vm.$refs.g1.hdFade : null
+                    log.tEnds.push({ t: now(), type: e.type, prop: e.propertyName, state: root.getAttribute('state'), resizedFlag: hd ? hd.resized : null, ...snap() })
+                }
+                fade.addEventListener('transitionend', onEnd)
+                fade.addEventListener('transitioncancel', onEnd)
+                fade.addEventListener('transitionrun', (e) => {
+                    if (e.target === fade) {
+                        log.tRuns.push({ t: now(), prop: e.propertyName })
+                    }
+                })
+
+                //容器寬度過場結束
+                document.querySelector('#host').addEventListener('transitionend', (e) => {
+                    if (e.target === e.currentTarget && e.propertyName === 'width') {
+                        log.hostEndAt = now()
+                    }
+                })
+
+                //根節點尺寸變化
+                new ResizeObserver(() => {
+                    log.resizes.push({ t: now(), w: root.offsetWidth })
+                }).observe(root)
+
+                //api.refreshCells 之呼叫(api 為同一物件, 元件內呼叫時取得的是被包裝後的函數); 輪詢至 api 建立後包裝
+                let tryWrap = () => {
+                    let c = vm.$refs.g1
+                    let api = c ? c.getApi() : null
+                    if (api) {
+                        let orig = api.refreshCells
+                        api.refreshCells = function() {
+                            log.refreshes.push({ t: now(), arg: JSON.stringify(arguments[0] || null), state: root.getAttribute('state'), ...snap() })
+                            return orig.apply(this, arguments)
+                        }
+                        //sizeColumnsToFit(opt.autoFitColumn 之欄寬重排)之呼叫時刻
+                        let origFit = api.sizeColumnsToFit
+                        api.sizeColumnsToFit = function() {
+                            log.fits.push({ t: now() })
+                            return origFit.apply(this, arguments)
+                        }
+                        return
+                    }
+                    if (now() < 5000) {
+                        requestAnimationFrame(tryWrap)
+                    }
+                }
+                tryWrap()
+
+                //改寬: 掛載後 delay 毫秒(同 issue #31 之重現頁); 給 widenAtFade、stallWidenAtFade、widenAfterShown 者改依淡入開始或落定計時
+                if (q.get('nowide') !== '1' && !q.has('widenAtFade') && !q.has('stallWidenAtFade') && !q.has('widenAfterShown')) {
+                    setTimeout(widen, num('delay', 100))
+                }
+
+            },
+        })
+    </script>
+</body>
+</html>

@@ -4,9 +4,11 @@
         class="CompCssWAggridVue"
         :changeParam="changeParam"
         :changeFilterall="changeFilterall"
+        :state="state"
     >
 
         <div
+            ref="fade"
             :style="`width:${width}%; height:${height}px; transition:all 0.5s; opacity:${opacity};`"
             @mouseleave="leaveTable"
         >
@@ -767,6 +769,7 @@ let HeaderSlotRenderer = {
  * @vue-prop {Boolean} [opt.showOverlayWhenFilteredEmpty=true] 輸入是否於「數據列數大於0而過濾(表頭過濾或filterall)使顯示列數為0」時顯示提示覆蓋層，提示文字為localeText之'noRowsToShowFiltered'，顯示列數回到大於0時隱藏；數據本身為空(opt.rows為空陣列)時維持顯示'noRowsToShow'。【破壞性變更】本提示預設開啟：以往表頭過濾使顯示列數為0時表格只剩表頭與空白而無提示，filterall使數據為空時顯示的是'noRowsToShow'(與數據本身為空無法區分)，現在兩者皆改為顯示'noRowsToShowFiltered'，故截圖或測試若拍到過濾成0筆之表畫面會改變，欲恢復舊行為請設為false(範例見localeText、showOverlayWhenFilteredEmpty)。ag-grid 31.3.4之覆蓋層只在數據更新時判斷，表頭過濾使顯示列數為0時表格只剩表頭與空白，本選項補上提示。設為false則恢復舊行為(表頭過濾0筆不提示、filterall使數據為空時顯示'noRowsToShow')；顯示時不會蓋掉呼叫端經getApi().showLoadingOverlay()顯示之載入中覆蓋層；非布林值時於console提示並使用預設true
  * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
+ * @vue-data {String} [state='showing'] 元件根節點(class為CompCssWAggridVue)之DOM屬性state，表示表格是否已完成淡入，供使用端(例如e2e截圖、量測)以[state="shown"]等待，取值只有'showing'與'shown'，單向轉換(showing→shown，之後不再回到showing)。'showing'：初值，表格未就緒(ag-grid尚未建立完成)，或表格已就緒而外層容器(class為CompCssWAggridVue之第一層div)0.5秒之opacity淡入尚在進行，亦含淡入結束後等待尺寸穩定及補繪之期間；'shown'：淡入已結束(以該div自身已無進行中之CSS過場為準，主要依其transitionend或transitioncancel事件；事件未到達時於表格就緒0.8秒後每50ms重查，至多再等3秒後強制結束)，且淡入期間若元件根節點之尺寸曾改變(例如表格建立後0.5秒內，所在容器以CSS過場移動並改寬)，則已待尺寸穩定(最後一次尺寸變化後0.35秒無再變化，大於autoFitColumn之欄寬重排去抖動0.3秒，故欄寬重排先於補繪；尺寸持續變動時自淡入結束起至多再等3秒即強制補繪)並自動以api.refreshCells({ force: true })重繪一次儲存格(淡入期間因尺寸變化而補繪之儲存格，其字形像素在不同次建立間會有次像素差異且不自行收斂，重繪後即固定)；淡入期間尺寸未改變者不做補繪。淡入期間尺寸有改變時，自訂cell-render slot之儲存格會被重建一次。state只反映淡入與補繪，不代表數據已載入完成；表格建立後根節點尺寸再改變(淡入結束後)不會再補繪，state亦維持'shown'
  */
 export default {
     components: {
@@ -791,9 +794,13 @@ export default {
         let vo = this
         return {
             dbc: debounce(),
+            dbcFade: debounce(350), //淡入結束後等待尺寸穩定之去抖動, 與dbc各自獨立(去抖動只保留最後一個任務, 共用會互相取代); 須大於dbc之300ms, 使autoFitColumn於尺寸改變後之sizeColumnsToFit先執行, 補繪與落定在欄寬重排之後
             de: null,
 
             isReady: false,
+
+            state: 'showing', //showing, shown; 表格未就緒或淡入中為showing, 淡入結束且淡入期間若改變尺寸則待其穩定並補繪後為shown, 詳watchFade
+            hdFade: null, //淡入監聽之狀態, 詳watchFade
 
             bWarnedRemovedKeys: false, //opt含2.0.56已移除之kp鍵時只警告一次
 
@@ -935,6 +942,10 @@ export default {
             if (vo.autoFitColumn) {
                 vo.fitColumns()
             }
+
+            //淡入期間之尺寸變化, 詳watchFade
+            vo.checkFadeResize(s)
+
         })
 
         //paste
@@ -958,6 +969,9 @@ export default {
 
         //釋放監聽
         vo.de.clear()
+
+        //unwatchFade
+        vo.unwatchFade()
 
         //unbindHeaderScrollSync
         vo.unbindHeaderScrollSync()
@@ -1490,8 +1504,213 @@ export default {
             //show
             vo.opacity = 1
 
+            //watchFade, 淡入結束(淡入期間若改變尺寸則待尺寸穩定並補繪)後state落定為shown
+            if (vo.state === 'showing') {
+                vo.watchFade()
+            }
+
             //isReady
             vo.isReady = true
+
+        },
+
+        watchFade: function() {
+            //console.log('methods watchFade')
+
+            let vo = this
+
+            //淡入(外層div之opacity過場, 0.5秒)與state: 表格就緒(opacity改1)時開始監聽, state於淡入結束後落定為shown
+            //淡入期間因容器移動並改寬而補繪之儲存格, 其字形像素於不同次建立間有次像素差異且不自行收斂(refreshCells後即固定), 故淡入期間若根節點尺寸曾改變, 淡入結束後再待尺寸穩定(去抖動, 容器過場可能晚於淡入結束才停)並refreshCells({ force: true })一次, 補繪完成才落定; 淡入期間尺寸未改變者不補繪
+            //淡入結束以位準判斷, 不依賴單一事件: 外層div自身(子樹內之過場不計)已無進行中之CSS過場(含尚未開始者, 該div為transition:all, 淡入期間若高度等亦在過場則一併等其結束)才結束;
+            //主要訊號為該div自身之transitionend或transitioncancel事件, 後備訊號為表格就緒0.8秒後(過場0.5秒再留0.3秒, 同w-component-vue之createTransitionState)起每50ms重查, 至多再等3秒後強制結束(例如祖先為display:none而無過場、過場事件遺失、高負載下過場延後開始)
+
+            //unwatchFade, 重複呼叫時先移除前次監聽
+            vo.unwatchFade()
+
+            //el, shell
+            let el = get(vo, '$refs.fade', null)
+            let shell = get(vo, '$refs.shell', null)
+            if (!el) {
+                vo.state = 'shown'
+                return
+            }
+
+            //hd, w與h為淡入開始時根節點之尺寸, 供比對淡入期間是否改變尺寸
+            let hd = {
+                el,
+                fn: null,
+                timer: null,
+                timerCap: null,
+                w: get(shell, 'offsetWidth', 0),
+                h: get(shell, 'offsetHeight', 0),
+                done: false,
+                resized: false,
+            }
+
+            //fn, 過場事件會自子樹冒泡, 須限定為外層div自身; 該div亦有width與height過場(fitColumns、height屬性改變), 其中任一結束但仍有他項(如opacity)進行中時不算結束
+            hd.fn = (ev) => {
+                if (ev.target !== el || vo.isFadeRunning(el)) {
+                    return
+                }
+                vo.endFade(hd)
+            }
+            el.addEventListener('transitionend', hd.fn)
+            el.addEventListener('transitioncancel', hd.fn)
+
+            //後備計時器, 就緒0.8秒後起每50ms重查是否仍有進行中之過場, 至多再等3秒(60次)後強制結束
+            let n = Math.ceil(3000 / 50)
+            let poll = (i) => {
+                if (vo.hdFade !== hd) {
+                    return
+                }
+                if (!vo.isFadeRunning(el) || i >= n) {
+                    vo.endFade(hd)
+                    return
+                }
+                hd.timer = setTimeout(() => {
+                    poll(i + 1)
+                }, 50)
+            }
+            hd.timer = setTimeout(() => {
+                poll(0)
+            }, 800)
+
+            //save
+            vo.hdFade = hd
+
+        },
+
+        isFadeRunning: function(el) {
+            //console.log('methods isFadeRunning')
+
+            //外層div自身是否仍有進行中(含尚未開始)之CSS過場, getAnimations會先更新樣式, 故高負載下尚未開始之過場也會取得; 不支援getAnimations時視為無
+            try {
+                return some(el.getAnimations(), (a) => isstr(a.transitionProperty) && (a.pending || a.playState === 'running'))
+            }
+            catch (err) {
+                return false
+            }
+
+        },
+
+        unwatchFade: function() {
+            //console.log('methods unwatchFade')
+
+            let vo = this
+
+            //hd
+            let hd = vo.hdFade
+            if (!hd) {
+                return
+            }
+
+            //removeEventListener
+            hd.el.removeEventListener('transitionend', hd.fn)
+            hd.el.removeEventListener('transitioncancel', hd.fn)
+
+            //clearTimeout, cancel
+            clearTimeout(hd.timer)
+            clearTimeout(hd.timerCap)
+            vo.dbcFade.cancel()
+
+            //clear
+            vo.hdFade = null
+
+        },
+
+        checkFadeResize: function(s) {
+            //console.log('methods checkFadeResize', s)
+
+            let vo = this
+
+            //hd, 非淡入期間(未就緒或已落定)不處理
+            let hd = vo.hdFade
+            if (!hd) {
+                return
+            }
+
+            //尺寸與淡入開始時相同(含表格建立後domDetect首次發出之resize)者不算改變; 已判定改變者之後每次resize皆重新等待穩定, 不再比對(尺寸可能變回原值)
+            if (!hd.resized) {
+                let w = get(s, 'snew.width', 0)
+                let h = get(s, 'snew.height', 0)
+                if (Math.abs(w - hd.w) <= 1 && Math.abs(h - hd.h) <= 1) {
+                    return
+                }
+                hd.resized = true
+            }
+
+            //淡入已結束則重新去抖動, 待尺寸穩定; 淡入未結束則於結束時處理
+            if (hd.done) {
+                vo.dbcFade(() => {
+                    vo.finishFade(hd, true)
+                })
+            }
+
+        },
+
+        endFade: function(hd) {
+            //console.log('methods endFade')
+
+            let vo = this
+
+            //已被取代或已結束
+            if (vo.hdFade !== hd || hd.done) {
+                return
+            }
+            hd.done = true
+
+            //淡入結束時再量一次尺寸: 尺寸變化與淡入結束落在同一幀(或主執行緒被長任務卡住)時, transitionend先於ResizeObserver與domDetect之resize事件, resized旗標尚未更新
+            if (!hd.resized) {
+                let shell = get(vo, '$refs.shell', null)
+                if (Math.abs(get(shell, 'offsetWidth', 0) - hd.w) > 1 || Math.abs(get(shell, 'offsetHeight', 0) - hd.h) > 1) {
+                    hd.resized = true
+                }
+            }
+
+            //淡入期間未改變尺寸, 直接落定
+            if (!hd.resized) {
+                vo.finishFade(hd, false)
+                return
+            }
+
+            //淡入期間曾改變尺寸, 待尺寸穩定後補繪; 尺寸持續變動(例如超過1px之回授)時至多再等3秒即強制補繪並落定, 免state永遠停在showing
+            hd.timerCap = setTimeout(() => {
+                vo.finishFade(hd, true)
+            }, 3000)
+            vo.dbcFade(() => {
+                vo.finishFade(hd, true)
+            })
+
+        },
+
+        finishFade: function(hd, bRefresh) {
+            //console.log('methods finishFade', bRefresh)
+
+            let vo = this
+
+            //已被取代(含元件銷毀)
+            if (vo.hdFade !== hd) {
+                return
+            }
+
+            //refreshCells, 表格不可用時略過
+            if (bRefresh) {
+                let api = vo.getApi()
+                if (isGridAvailable(api)) {
+                    try {
+                        api.refreshCells({ force: true })
+                    }
+                    catch (err) {
+                        console.log('[w-aggrid-vue] finishFade:', err)
+                    }
+                }
+            }
+
+            //unwatchFade
+            vo.unwatchFade()
+
+            //state
+            vo.state = 'shown'
 
         },
 
