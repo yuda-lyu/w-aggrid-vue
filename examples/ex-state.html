@@ -1,0 +1,205 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>example for state</title>
+
+    <!-- @babel/polyfill -->
+    <script
+        nomodule
+        src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"
+    ></script>
+
+    <!-- vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
+
+    <!-- extractHtml已自動添加@babel/polyfill與vue -->
+
+    <!-- w-aggrid-vue -->
+    <script src="https://cdn.jsdelivr.net/npm/w-aggrid-vue@2.1.16/dist/w-aggrid-vue.umd.js"></script>
+
+    <!-- data -->
+    <script src="https://cdn.jsdelivr.net/npm/w-demores/res/data/dataEasy.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-demores/res/data/dataEduagency.js"
+    ></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-demores/res/data/dataLikeNumber.js"
+    ></script>
+
+    <!-- w-jsonview-tree -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/w-jsonview-tree@latest/dist/w-jsonview-tree.umd.js"
+    ></script>
+    <script>
+  let jv = window["w-jsonview-tree"];
+    </script>
+
+    <style>
+  .item-link {
+    display: inline-block;
+    margin: 10px 10px 0px 0px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    color: #fff;
+    background-color: #443a65;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .bkh {
+    /* 寬 */
+    padding: 20px;
+  }
+  @media screen and (max-width: 800px) {
+    /* 中 */
+    .bkh {
+      padding: 10px;
+    }
+  }
+  @media screen and (max-width: 400px) {
+    /* 窄 */
+    .bkh {
+      padding: 5px;
+    }
+  }
+  .bkp {
+    /* 寬 */
+    padding: 0px 20px;
+  }
+  @media screen and (max-width: 800px) {
+    /* 中 */
+    .bkp {
+      padding: 0px 10px;
+    }
+  }
+  @media screen and (max-width: 400px) {
+    /* 窄 */
+    .bkp {
+      padding: 0px 5px;
+    }
+  }
+    </style>
+</head>
+<body
+    style="font-family:'Microsoft JhengHei','Avenir','Helvetica'; padding:0px; margin:0px;"
+>
+    <div id="app" class="bkh" style>
+        <div class="bkh">
+            <div style="font-size:1.5rem;">state</div>
+            <a
+                href="//yuda-lyu.github.io/w-aggrid-vue/examples/ex-state.html"
+                target="_blank"
+                class="item-link"
+            >example</a>
+            <a
+                href="//github.com/yuda-lyu/w-aggrid-vue/blob/master/docs/examples/ex-state.html"
+                target="_blank"
+                class="item-link"
+            >code</a>
+        </div>
+
+        <div class="bkp">
+            <div
+                id="ckdesc"
+                style="max-width:1240px; padding-bottom:20px; font-size:10pt; line-height:1.6;"
+            >
+                <div>元件根節點(class 為 CompCssW&#65;ggridVue)帶有 DOM 屬性 state，表示表格是否已完成淡入。表格建立後外層容器有 0.5 秒之淡入(opacity 0 → 1)，使用端若在淡入期間量測或截圖(例如 e2e 之像素比對)，畫面尚未落定。</div>
+                <ul style="margin:5px 0px;">
+                    <li>state="showing"：初值。表格尚未就緒，或已就緒而淡入尚在進行(含淡入結束後等待容器尺寸穩定並補繪之期間)。</li>
+                    <li>state="shown"：淡入已結束。單向轉換，之後不再回到 showing。</li>
+                </ul>
+                <div>淡入期間若元件根節點之尺寸有改變(例如所在容器以 CSS 過場移動並改寬)，此期間補繪之儲存格字形像素在不同次建立間有次像素差異且不自行收斂；故元件會在淡入結束且尺寸穩定(最後一次尺寸變化後 0.35 秒無再變化)後自動以 api.refreshCells({ force: true }) 重繪一次儲存格，重繪完成才落定為 shown(自訂 cell-render slot 之儲存格因此被重建一次)。淡入期間尺寸未改變者不重繪，淡入結束即為 shown。</div>
+                <div style="padding-top:10px;">
+                    使用端等待落定後再量測或截圖：
+                    <code>await page.waitForSelector('.CompCssW&#65;ggridVue[state="shown"]')</code>
+                </div>
+                <div
+                    style="padding-top:10px;"
+                >本範例於表格建立後 0.1 秒把容器由 620px 改為 900px(容器帶 100ms 過場，落在淡入期間)，下方依序列出 state 屬性之變化與時刻。</div>
+            </div>
+
+            <div style="display:flex; padding-bottom:40px; overflow-x:auto;">
+                <div style="position:relative;">
+                    <div
+                        :style="`width:${w}px; transition:all 100ms ease-out;`"
+                    >
+                        <w-aggrid-vue ref="rftable" :opt="opt" :height="220"></w-aggrid-vue>
+                    </div>
+
+                    <pre id="ckmsg"></pre>
+                </div>
+
+                <div style="padding:0px 20px;">
+                    <div
+                        :style="`border:1px solid #ddd; width:600px; min-width:600px; height:300px; overflow-y:auto;`"
+                    >
+                        <div style="padding-left:5px;">
+                            <div id="optjson" style="font-size:10pt;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+  //install
+  Vue.component("w-aggrid-vue", window["w-aggrid-vue"]);
+
+  //initialize
+  new Vue({
+    el: "#app",
+
+    data: function() {
+      return {
+        w: 620,
+        opt: {
+          keys: ["make", "model", "price"],
+          kpHeadFilterType: {
+            //default: num (num,text,time,set)
+            make: "text",
+            model: "text",
+            price: "num"
+          },
+          rows: JSON.parse(JSON.stringify(window.dataEasy))
+        },
+        action: []
+      };
+    },
+    mounted: function() {
+      let vo = this;
+      jv(vo.opt, document.querySelector("#optjson"), { expanded: true });
+
+      //msg
+      let t0 = performance.now();
+      let lines = [];
+      let msg = function(s) {
+        lines.push(`${Math.round(performance.now() - t0)}ms: ${s}`);
+        document.querySelector("#ckmsg").innerText = lines.join("\n");
+      };
+
+      //root, 元件根節點之state屬性, 初值與其後之變化皆列出
+      let root = vo.$refs.rftable.$el;
+      msg(`state="${root.getAttribute("state")}"`);
+      let mo = new MutationObserver(function() {
+        msg(`state="${root.getAttribute("state")}"`);
+      });
+      mo.observe(root, { attributes: true, attributeFilter: ["state"] });
+
+      //容器於表格建立後0.1秒改寬, 落在淡入期間
+      setTimeout(function() {
+        msg("container width 620px -> 900px");
+        vo.w = 900;
+      }, 100);
+    },
+    computed: {},
+    methods: {}
+  });
+    </script>
+</body>
+</html>
