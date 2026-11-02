@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>invisible scrollbar</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <!-- 查詢字串: rows=列數(預設 30), w=表格寬度px(預設 800), h=表格高度px(元件之 height 屬性, 預設 300), n=中間欄數(預設 8, 每欄 150px; 欄寬總和大於表格寬時有橫向捲軸), rw=最右欄寬度px(預設 60), pin=1(k 欄釘選左側), pinb=1(置底一列 rBOT) -->
+    <!-- 欄: k(列識別) | act(內含按鈕) | c0～c{n-1} | actR(最右欄, 內含填滿儲存格寬度之按鈕); clicked 記錄被點到的按鈕, 格式 "<欄>:<列識別>" -->
+    <div id="app">
+        <w-aggrid-vue id="g1" :style="{ width: w + 'px' }" :height="h" :opt="opt">
+            <template v-slot:cell-render="props">
+                <button v-if="props.key === 'act'" class="btn-act" :data-row="props.row.k" @click="clicked.push('act:' + props.row.k)">按鈕</button>
+                <button v-else-if="props.key === 'actR'" class="btn-actR" style="display:block; width:100%;" :data-row="props.row.k" @click="clicked.push('actR:' + props.row.k)">按鈕</button>
+                <span v-else>{{ props.value }}</span>
+            </template>
+        </w-aggrid-vue>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        var q = new URLSearchParams(location.search)
+        var nRows = Number(q.get('rows') || 30)
+        var w = Number(q.get('w') || 800)
+        var h = Number(q.get('h') || 300)
+        var n = Number(q.get('n') || 8)
+        var keys = ['k', 'act']
+        var rw = Number(q.get('rw') || 60)
+        var kpHeadWidth = { k: 120, act: 140, actR: rw }
+        for (var i = 0; i < n; i++) {
+            keys.push('c' + i)
+            kpHeadWidth['c' + i] = 150
+        }
+        keys.push('actR')
+        var rows = []
+        for (var r = 0; r < nRows; r++) {
+            rows.push({ k: 'r' + String(r).padStart(3, '0'), act: '', c0: 'v' + r, actR: '' })
+        }
+        var opt = { keys: keys, rows: rows, kpHeadWidth: kpHeadWidth }
+        if (q.get('pin') === '1') {
+            opt.kpHeadFixLeft = { k: true }
+        }
+        //pinb=1: 置底列一列(列識別 rBOT, 欄 act、actR 含按鈕)
+        if (q.get('pinb') === '1') {
+            opt.genRowsPinnBottom = function() {
+                return [{ k: 'rBOT', act: '', c0: 'BOT', actR: '' }]
+            }
+        }
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return { w: w, h: h, opt: opt, clicked: [] }
+            },
+        })
+    </script>
+</body>
+</html>

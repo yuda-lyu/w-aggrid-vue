@@ -24,6 +24,12 @@
 - **範例頁之標題**:`.bkh` 之 innerText 含「example code」等按鈕文字,取第一行才是標題.
 - **元件銷毀後之情境**:掛載後隨即 `$parent.$destroy()`,掛載時排定之非同步工作(過濾事件)會在銷毀後才執行,其 console 訊息落在呼叫之後;宿主頁之處理函數於呼叫後再等約 300ms 才寫結果,訊息才收得到.
 
+- **發布流程改寫範例頁引用時,測試之外部資源對照表須同步**(2026-11-02 ag268,全庫連動跟跑測試 26 案紅):發布腳本 `toolg/gDocExams.mjs`(實檔名;呼叫 w-package-tools `genDocsExams`)把範例頁內其他自有套件之 jsDelivr/unpkg 網址改為 `https://<擁有者>.github.io/<套件>/dist/<檔>`、本套件 dist 保持相對路徑 `../dist/`.`e2e-setup.mjs` 之 `EXTERNAL` 只認舊形時,範例頁 e2e 一律以「未對照之外部資源」或「`jv is not a function`」(w-jsonview-tree 被中止所致)紅;**產品程式無誤**.查因順序:①看 `docs/examples/ex-*.html` 的 `<script src>` 實況(Grep 或一支只讀腳本列出全部引用與頁數)②讀 `node_modules/w-package-tools/src/genDocsExams.mjs` 與其 `test/unit-genDocsExams.test.mjs` 確認改寫規則(不臆測)③比對 `EXTERNAL`.處置:對照表補新形、移除不再出現之舊形(留著會成過期項);產製器 `exampleBuild.mjs` **直接呼叫 `genDocsExams`** 而非複製其改寫規則,規則再變時產製結果自動跟隨,測試只需同步對照表(`unit-appExamples` EXT1 在 node 先紅,指名未對照之網址,不必等整批 e2e 紅).
+- **本套件 dist 改為相對路徑後,`routeExternal`(只攔 http/https)見不到它,另以 `file:` 路由改由專案 `dist/` 供應**(2026-11-02 ag268):範例頁以 `../dist/w-aggrid-vue.umd.js`(file:)載入,`openPage` 的 `routeLocalDist` 對 `file:` 且以 `/dist/w-aggrid-vue.umd.js` 結尾的請求 `route.fulfill` 專案 `dist/` 的內容並記 mapped `'w-aggrid-vue'`;`assertRouted`(`e2e-setup.mjs` 共用)驗未對照為 0 且 dist 恰載入一次.**`page.route` 可攔截 `file:` 子資源請求且 `route.fulfill` 有效**(以尾端標記實測).探測時須先供應 vue(UMD 依賴全域 Vue,缺了 `window['w-aggrid-vue']` 不會定義),否則會把「元件未定義」誤判成「攔截無效」——本輪第一版探測即因此誤判,後以補上 vue 之對照組(無路由/fulfill/continue 三模式)才釐清.
+- **不以 `docs/dist` 與 `dist/` 逐位元組相同作為測試之把關**(2026-11-02 ag268 首版曾如此,後撤回):`docs/dist` 是 genDocsDist 自 `dist/` 複製之發布副本,改 src 重建 dist 後在發布前必然落後;本套件測試又不得手動更新 `docs/`,把關會使範例頁測試在下一輪改 src 時永遠紅.改以路由供應專案 `dist/`,副本新舊不影響測試;`docs/dist` 檔是否存在仍由 EXT2 驗(頁內相對路徑不致懸空).
+- **取得測試鎖之前,工作樹就已是被測對象**(2026-11-02 ag268):`quiet-run --lock` 排鎖等待中(可達數分鐘)若修改測試檔,取得鎖後跑的就是改後的檔,「修前」基準因此污染(mocha `--parallel` 的工作者行程於不同時點才載入共用模組,同一輪可能前後版本混用).要取修前基準:送出前先確認 `git status` 乾淨,送出後到該輪結束(`summary.txt` 出現)之間**不改任何測試樹之檔**(工作在 `./tmp/` 備稿、改 sgud 不受影響);已污染者停掉重跑(`TaskStop` 後 `quiet-run --release-stale --cwd <repo>` 回收殘留鎖),不拿混合版本當基準.
+- **變異驗證改測試檔後的還原**:以暫存備份 `cmp` 驗位元組一致(用 `Edit` 刪除整行可能連同換行一起吞掉,2026-11-02 實測 `Edit` 還原一行後與備份差一個換行),不一致就從備份複製回來.
+
 ### 2.2 tmp 驗收腳本(舊法,可能已清除)
 
 - **啟動**:`chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true })`,測試頁以 `file:///` 載入 `../dist/w-aggrid-vue.umd.js` 與 `../node_modules/vue/dist/vue.min.js`.
@@ -111,6 +117,17 @@
 - **範例產製管線會改寫說明文字中的 `WAggridVue`**:extractHtml 把文字裡的 `WAggridVue` 換成 `w-aggrid-vue`(`CompCssWAggridVue` 變 `CompCssw-aggrid-vue`,範例中給使用端抄的選擇器就錯了).範例說明文字改以 HTML 實體 `W&#65;ggridVue` 書寫,EXS1 比對頁面渲染後之文字.JSDoc 不經此管線.
 - **dist 內程式碼為壓縮後之單行**:變異檔以字串取代產生(每個取代字串須在 dist 內恰出現 1 次,`mkmut.mjs` 檢核),且 dist 內另有一份未壓縮之 SFC 原始碼字串(`\r\n` 跳脫),取代字串要取壓縮後那份(勿含 `\r\n`).
 - **測試鎖排隊很長時(本輪 2 個槽被他套件佔住 1 小時以上;第一次排鎖 23:47 → 00:03 約 16 分鐘取得)的作法**:所有瀏覽器工作寫成一支 `session.mjs`(依序:修前重現、修後重現、新測試、換入 HEAD dist 之修前、換入各變異檔、範例相關、全套),以 `nohup node quiet-run.mjs --lock --lock-wait 10800 -- node session.mjs` 脫離工具逾時單次排鎖;腳本於取得鎖後才讀檔,故排隊期間仍可修改腳本與測試;換入 `dist/` 者於 `finally` 還原並以雜湊核對(開頭先核對 `dist` 等於備份,不等則中止).一個指令一取一放,逐項排隊每次都要重排到隊尾.排隊期間要改碼/測試時,於 `session.mjs` 開頭加「`hold` 旗標檔存在則等其消失(上限 25 分鐘)」,改完刪旗標,鎖提早到也不會用到改一半的檔案;編輯 `session.mjs` 本身可,已啟動之行程不受影響(Node 已載入),但其命令列與環境變數固定,新增行為用旗標檔(`want_p4`、`skip_p4`)而非環境變數.本輪因鎖被他套件長時間佔住(一槽自 00:08 起被占 2 小時以上),共取鎖 4 次、等鎖合計約 2 小時 10 分(16 + 38 + 48 + 29 分),每次取鎖前務必把該次要驗的全部放進同一支腳本.
+
+### 2.8 隱形捲軸(捲軸寬 0)時橫向捲軸疊在資料區之上(Gitea issue #54,2026-11-02 ag284 修正輪)
+
+- **issue 之修法草案不可直接採用**:草案 `position: relative; bottom: auto;` 在有置底列(`genRowsPinnBottom`)時使捲軸上移蓋住置底列——ag-grid 對隱形橫向捲軸另設**行內 style** `bottom = 置底列總高度`(`refreshCompBottom`,`noStyle.js:47786`),原本是把絕對定位之捲軸抬到置底列之上;改成相對定位後同一個值變成向上位移.行內 style 贏過樣式表,須 `bottom: auto !important`.issue 之測試草案沒有置底列案例,所以草案之「6 項皆綠」看不出來;**接受外部之修法草案時,先在最小重現上列出該元素所有被 JS 行內設定之屬性**(`style.xxx =`),再決定要不要 `!important`.
+- **元件之高度以 `height` 屬性設,不以 style**:根 `div.CompCssWAggridVue` 之 style 高度不影響內層外層 div(其 `height` 屬性預設 300px,內層 `ag-grid-vue` 高度 100%);issue 測試草案之宿主頁 `:style="{ height: h + 'px' }"` 無效,其 IS4「3 列、h=150」實際高 300px,為恆綠之空測.宿主頁寫完先量實際尺寸(root 高度、資料區高度)再寫斷言.
+- **「列少而無垂直捲動」要造出可鑑別之邊界**:資料區 = 表格高 − 2(邊框)− 65(表頭與過濾列);列高 28px(balham).3 列(遠離邊界)修前修後皆綠;**列總高度恰填滿資料區**(5 列、高 207px:資料區 140 = 5×28)時,修前無垂直捲動而最後一列下半(中央距下緣 14px)在 16px 之捲軸下→紅;修後資料區讓出 16px(124),出現垂直捲動量,捲到底後可點.「無垂直捲動」於修後不再成立(邊界帶內必然),測試改為「有捲動量就捲到底」.
+- **直向隱形捲軸改占位會使橫向捲動範圍錯位**:實測(探測 `probe3`/`probe4`)資料區 782px、橫向捲軸(全寬)798px,最大可捲量 738 對 722;ag-grid 對實體捲軸以橫向捲軸右側間隔加直向捲軸寬度補償(`setFakeHScrollSpacerWidths`),隱形時寬度為 0 故不補償;CSS 補 `padding-right:16px`(需 `:has()`)可使兩者範圍數值相等,但捲到最右仍夾在 722.結論:直向不改(規則帳本 #26),不要再試「純 CSS 讓隱形直向捲軸占位」.判準是**橫向捲軸最大可捲量 = 資料區最大可捲量,且捲到最右時最後一欄右緣 = 資料區右緣**(IS6 守護).
+- **探測腳本以 `addInitScript` 注入樣式時,`document.documentElement` 在 init 時可能為 null**(靜默失敗,注入無效,結果與未注入相同而誤判「修法無效」):先判斷再附加,不在則以 `MutationObserver(document, {childList, subtree})` 等到它出現.本輪第一次探測因此得到「H 變體與修前相同」之假結果,以版面數字(hs 位置未變)發現.
+- **量測無頭瀏覽器之捲軸寬**:建 100×100、`overflow:scroll` 之元素量 `offsetWidth - clientWidth`(同 ag-grid `initScrollbarWidthAndVisibility`);Playwright 預設帶 `--hide-scrollbars` 故為 0;以 `launchBrowser({ ignoreDefaultArgs: ['--hide-scrollbars'] })` 可得實體捲軸(15px)之對照版面(用於比對 ag-grid 原生之占位排列)。
+- **看不見之捲軸無法拖曳**:隱形捲軸沒有可拖曳之桿(`--hide-scrollbars`),「使用者拖捲軸 → 資料區同步」無真實操作路徑;以程式設定捲軸之 `scrollLeft` 代之並於案內標「未走 UI」,使用者之捲動路徑以真滾輪(`mouse.wheel`)驗.
+- **全套測試等鎖**:本輪 3 個鎖位長時間被他套件占滿(其中兩個自 21:01 起),見 2.7 末條之作法——把需鎖之作業(變異、穩定性重跑、範例頁查核)各寫成一支腳本、每支一次排鎖、排隊期間做文件.
 
 ## 3. 相依套件之非顯而易見行為
 

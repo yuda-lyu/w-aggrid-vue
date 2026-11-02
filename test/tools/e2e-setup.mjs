@@ -62,11 +62,15 @@ export function useTmpDir(name) {
 }
 
 
-//EXTERNAL, 官方範例頁自 CDN 載入之資源一律改由本機供應, 測試不依賴網路且測到的是本地 dist
-const EXTERNAL = [
+//EXTERNAL, 官方範例頁(docs/examples/ex-*.html、app.html 與 exampleBuild 產製之頁)載入之 http(s) 資源一律改由本機供應, 測試不依賴網路
+//對照表須與發布流程 w-package-tools 之 genDocsExams 的改寫結果同形(它把頁內自有套件(wsemi 與 w-*)之 jsDelivr/unpkg 網址一律改為 https://<擁有者>.github.io/<套件>/dist/<檔>, 不釘版):
+//  ①自有套件被改寫成 gh-pages 網址者(w-jsonview-tree)以 ^…$ 全錨定該網址; ②keepCdn 預設之 w-demores 與第三方(vue、@babel/polyfill)保持 jsDelivr 形;
+//  ③本套件自身之 dist 為相對路徑 ../dist/w-aggrid-vue.umd.js(file:, 不在此表; 由 routeLocalDist 另以 file: 路由改由專案 dist/ 供應, 不論 docs/dist 是否過期)
+//genDocsExams 之改寫規則或頁內引用變動時, 本表須同步; unit-appExamples 之 EXT1 以 docs/examples 全部頁面之外部資源逐一核對
+export const EXTERNAL = [
     { re: /\/npm\/vue@2[^/]*\/dist\/vue\.min\.js$/, file: 'node_modules/vue/dist/vue.min.js' },
-    { re: /\/npm\/w-aggrid-vue@[^/]+\/dist\/w-aggrid-vue\.umd\.js$/, file: 'dist/w-aggrid-vue.umd.js', key: 'w-aggrid-vue' },
-    { re: /\/npm\/w-jsonview-tree@[^/]+\/dist\/w-jsonview-tree\.umd\.js$/, file: 'node_modules/w-jsonview-tree/dist/w-jsonview-tree.umd.js' },
+    //自有套件之 gh-pages 網址(genDocsExams 改寫後之形態); 範例頁以之載入 w-jsonview-tree, 由本機 node_modules 供應(同 package.json 之 devDependencies)
+    { re: /^https:\/\/yuda-lyu\.github\.io\/w-jsonview-tree\/dist\/w-jsonview-tree\.umd\.js$/, file: 'node_modules/w-jsonview-tree/dist/w-jsonview-tree.umd.js' },
     //範例頁之 @babel/polyfill 為 nomodule 腳本(Chrome 不執行), 且非本套件宣告之相依, 以空腳本供應
     { re: /\/npm\/@babel\/polyfill(@[^/]+)?\/dist\/polyfill\.min\.js$/, body: '' },
     { re: /\/npm\/w-demores(@[^/]+)?\/res\/data\/dataEasy\.js$/, file: 'test/fixtures/w-demores/dataEasy.js' },
@@ -76,20 +80,43 @@ const EXTERNAL = [
 ]
 
 
+//findExternal, 網址在 EXTERNAL 中之對照項, 無則 undefined
+export function findExternal(url) {
+    return EXTERNAL.find((v) => v.re.test(url))
+}
+
+
 //routeExternal, 攔截全部 http(s) 請求: 對照表內者由本機供應, 其餘中止並記錄(測試端斷言未對照者為 0)
 async function routeExternal(page, hits) {
     await page.route(/^https?:\/\//, async (route) => {
         let url = route.request().url()
-        let m = EXTERNAL.find((v) => v.re.test(url))
+        let m = findExternal(url)
         if (!m) {
             hits.unmapped.push(url)
             await route.abort()
             return
         }
-        hits.mapped.push(m.key || url)
+        hits.mapped.push(url)
         let body = m.body !== undefined ? m.body : fs.readFileSync(path.join(projRoot, m.file))
         await route.fulfill({ status: 200, contentType: 'application/javascript', body })
     })
+}
+
+
+//routeLocalDist, 範例頁以相對路徑 ../dist/w-aggrid-vue.umd.js(file:, 不經 routeExternal)載入之本套件 dist, 一律改由專案 dist/ 供應並記為 mapped 'w-aggrid-vue'
+//docs/dist 是 genDocsDist 自 dist 複製之發布副本, 改 src 重建 dist 後可能尚未同步; 以路由供應使範例頁測到的恆為本地 dist, 不受副本新舊影響
+async function routeLocalDist(page, hits) {
+    await page.route(/^file:\/\/.*\/dist\/w-aggrid-vue\.umd\.js$/, async (route) => {
+        hits.mapped.push('w-aggrid-vue')
+        await route.fulfill({ status: 200, contentType: 'application/javascript', body: fs.readFileSync(path.join(projRoot, 'dist', 'w-aggrid-vue.umd.js')) })
+    })
+}
+
+
+//assertRouted, 範例頁之外部資源皆已對照本機(未對照者為 0)且確實載入本地 dist
+export function assertRouted(ctx) {
+    assert.deepStrictEqual(ctx.external.unmapped, [], '未對照之外部資源')
+    assert.strictEqual(ctx.external.mapped.filter((k) => k === 'w-aggrid-vue').length, 1, '應載入一次本地 dist')
 }
 
 
@@ -120,6 +147,7 @@ export async function openPage(url, opt = {}) {
         page.on('download', (d) => ctx.downloads.push(d))
         if (routeExternalResources) {
             await routeExternal(page, ctx.external)
+            await routeLocalDist(page, ctx.external)
         }
         if (initScript) {
             await page.addInitScript(initScript)

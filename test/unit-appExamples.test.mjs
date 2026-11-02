@@ -1,10 +1,11 @@
 //範例(對外文件)之接線與產製(規則帳本 R18、R24、R25、R26; Gitea issue #26 之範例 localeText、showOverlayWhenFilteredEmpty,issue #31 之範例 state)
 //unit 層: 只讀 src 與 docs/examples 之檔案並於 node 產製範例頁, 不起瀏覽器
 //R18: 新增或改名範例時, App.vue 之選單、v-if、import、components 四處一致; 範例頁之 example/code 連結指向自身(ex-<名稱>.html)
+//R18: 範例頁之外部資源與 e2e-setup 之 EXTERNAL 對照表一致(EXT1、EXT2): w-package-tools 之 genDocsExams 改寫規則變動、範例頁引用變動時由此格先紅
 import assert from 'assert'
 import fs from 'fs'
 import path from 'path'
-import { projRoot, useTmpDir } from './tools/e2e-setup.mjs'
+import { projRoot, useTmpDir, EXTERNAL, findExternal } from './tools/e2e-setup.mjs'
 import { buildExample, getCasename } from './tools/exampleBuild.mjs'
 
 const SRC = path.join(projRoot, 'src')
@@ -109,14 +110,60 @@ describe('unit-appExamples:範例之接線與產製', function() {
         }
     })
 
-    it('BLD1 範例產製器(test/tools/exampleBuild.mjs)與發布時之 gExtractHtml、gDocExams 同形: 既有 5 個範例自 src 產製之頁與 docs/examples 逐字相同(僅 CDN 版號除外)', async function() {
+    it('BLD1 範例產製器(test/tools/exampleBuild.mjs)與發布時之 gExtractHtml、gDocExams(genDocsExams)同形: 既有 5 個範例自 src 產製之頁與 docs/examples 逐字相同(行尾除外); 自有套件引用為 gh-pages 網址、本套件 dist 為相對路徑', async function() {
         //此等價成立, 以 buildExample 產製之新範例頁才等同發布後之 docs/examples 頁
-        let norm = (s) => s.replace(/\r\n/g, '\n').replace(/w-aggrid-vue@[\d.]+/g, 'w-aggrid-vue@X')
+        let norm = (s) => s.replace(/\r\n/g, '\n')
         for (let f of ['AppFilterAllData', 'AppSetHeadFilter', 'AppKpCellFormat', 'AppShowKeysApplyOrder', 'AppSlotCellRender']) {
             let r = await buildExample(`${f}.vue`, tmp.dir)
             let built = norm(fs.readFileSync(r.fpHtml, 'utf8'))
             let docs = norm(fs.readFileSync(path.join(projRoot, 'docs', 'examples', `${r.fn}.html`), 'utf8'))
             assert.ok(built === docs, `${r.fn} 與 docs/examples 不同`)
+            //genDocsExams 之改寫結果(規則: 自有套件之 CDN 網址 → gh-pages 網址, 本套件 dist 保持相對路徑 ../dist/, keepCdn 之 w-demores 與第三方保持 jsDelivr)
+            let srcs = [...built.matchAll(/<script\b[^>]*?\bsrc="([^"]+)"/g)].map((m) => m[1])
+            assert.ok(srcs.includes('../dist/w-aggrid-vue.umd.js'), `${r.fn}: 本套件 dist 應為相對路徑 ../dist/`)
+            assert.ok(srcs.includes('https://yuda-lyu.github.io/w-jsonview-tree/dist/w-jsonview-tree.umd.js'), `${r.fn}: w-jsonview-tree 應為 gh-pages 網址`)
+            assert.deepStrictEqual(srcs.filter((s) => /jsdelivr\.net\/npm\/(wsemi|w-(?!demores))/.test(s)), [], `${r.fn}: 不應殘留自有套件(w-demores 除外)之 jsDelivr 網址`)
+            //產製器於 outDir 置 docs/dist 之 dist 副本, 使相對路徑指向本地 dist
+            assert.ok(fs.readFileSync(path.join(path.dirname(r.fpHtml), '..', 'dist', 'w-aggrid-vue.umd.js')).equals(fs.readFileSync(path.join(projRoot, 'dist', 'w-aggrid-vue.umd.js'))), `${r.fn}: 產製器之 dist 副本應同專案 dist`)
         }
+    })
+
+    //pageRefs, docs/examples 內全部頁面(ex-*.html 與 app.html)之 script src 與 link href(含跨行之標籤)
+    function pageRefs() {
+        let dir = path.join(projRoot, 'docs', 'examples')
+        let out = []
+        for (let file of fs.readdirSync(dir).filter((f) => /\.html$/.test(f))) {
+            let c = fs.readFileSync(path.join(dir, file), 'utf8')
+            for (let m of c.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)\s*=\s*"([^"]+)"/g)) {
+                out.push({ file, ref: m[1] })
+            }
+        }
+        return out
+    }
+
+    it('EXT1 docs/examples 全部頁面(ex-*.html 與 app.html)之 http(s) 外部資源皆在 e2e-setup 之 EXTERNAL 對照表內; 對照項皆指向存在之本機檔且皆被使用(無過期項)(R18)', function() {
+        //genDocsExams 改寫規則或範例頁引用變動時, 對照表未同步會使 e2e 範例頁以「jv is not a function」等形式整批紅; 此格於 node 直接點名未對照之網址
+        let refs = pageRefs()
+        let urls = refs.filter((r) => /^https?:\/\//.test(r.ref))
+        assert.ok(urls.length > 0, '應有外部資源')
+        let unmapped = [...new Set(urls.filter((r) => !findExternal(r.ref)).map((r) => r.ref))]
+        assert.deepStrictEqual(unmapped, [], '未對照之外部資源')
+        //每個對照項: 有 file 者其檔存在; 且至少被一個頁面引用(對照表不留已不再出現之舊形)
+        for (let e of EXTERNAL) {
+            if (e.file) {
+                assert.ok(fs.existsSync(path.join(projRoot, e.file)), `對照項 ${e.re} 之本機檔不存在: ${e.file}`)
+            }
+            assert.ok(urls.some((r) => e.re.test(r.ref)), `對照項 ${e.re} 已無頁面使用(過期項, 應移除)`)
+        }
+    })
+
+    it('EXT2 docs/examples 之每個 ex-*.html 皆恰一次以相對路徑 ../dist/w-aggrid-vue.umd.js 載入本套件 dist(genDocsExams 對自身 dist 引用保持相對路徑), 且該檔(docs/dist)存在; e2e 以 file: 路由改由專案 dist/ 供應(R18)', function() {
+        let refs = pageRefs()
+        let exFiles = fs.readdirSync(path.join(projRoot, 'docs', 'examples')).filter((f) => /^ex-.*\.html$/.test(f))
+        let rels = refs.filter((r) => /^ex-/.test(r.file) && !/^https?:\/\//.test(r.ref))
+        assert.deepStrictEqual([...new Set(rels.map((r) => r.ref))], ['../dist/w-aggrid-vue.umd.js'], 'ex 頁之相對路徑資源')
+        assert.deepStrictEqual(rels.map((r) => r.file).sort(), exFiles.slice().sort(), '每個 ex 頁恰引用一次')
+        //頁內相對路徑所指之檔(發布站台上之 docs/dist)存在; 其內容為 genDocsDist 自 dist 複製之發布副本, 新舊不屬本套件測試之判準(e2e 以路由改由 dist/ 供應)
+        assert.ok(fs.existsSync(path.join(projRoot, 'docs', 'dist', 'w-aggrid-vue.umd.js')), 'docs/dist/w-aggrid-vue.umd.js 不存在(範例頁之相對路徑失效)')
     })
 })

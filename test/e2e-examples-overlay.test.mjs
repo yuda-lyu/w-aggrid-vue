@@ -1,9 +1,9 @@
 //官方範例 localeText、showOverlayWhenFilteredEmpty(對外文件; 規則帳本 R18、R24、R25; Gitea issue #26)
-//使用者路徑: ①開範例頁(依 gExtractHtml、gDocExams 之作法自 src 當場產製, CDN 資源一律路由至本機, w-aggrid-vue 為本地 dist; 同形性見 unit-appExamples 之 BLD1)
+//使用者路徑: ①開範例頁(依 gExtractHtml、gDocExams 之作法自 src 當場產製, CDN 與 gh-pages 資源一律路由至本機, 頁內相對路徑 ../dist/ 之 w-aggrid-vue 亦路由為本地 dist; 同形性見 unit-appExamples 之 BLD1)
 //②無操作: 範例於掛載後自行執行(1 秒時表頭過濾使顯示列數為 0, 2 或 3 秒時清除過濾, localeText 範例於 3 秒時再清空數據) ③看到說明文字、表格與覆蓋層文字
 //④以頁內 MutationObserver 於頁面載入前即開始記錄「各表之顯示列數與覆蓋層可見文字」之歷程, 事後逐項比對順序(不以時間窗斷言, 不受負載下計時器延遲影響) ⑤比對說明文字(含破壞性變更)與歷程 ⑥無副作用
 import assert from 'assert'
-import { openPage, useTmpDir, assertNoErrors, assertExamplePage } from './tools/e2e-setup.mjs'
+import { openPage, useTmpDir, assertNoErrors, assertExamplePage, assertRouted } from './tools/e2e-setup.mjs'
 import { pollUntil } from './tools/e2eLib.mjs'
 import { buildExample } from './tools/exampleBuild.mjs'
 
@@ -116,6 +116,7 @@ describe('e2e-examples-overlay:官方範例 localeText、showOverlayWhenFiltered
         ctx = await openExample(pages.localeText)
         await assertExamplePage(ctx.page, 'localeText', 'localeText')
         assert.deepStrictEqual(await colsVisible(ctx.page), [{ n: 3, inside: true }])
+        assertRouted(ctx)
         let desc = await ctx.page.locator('#ckdesc').innerText()
         //說明文字須載明: 查找順序、兩個鍵、破壞性變更(預設開啟)與恢復舊行為之方法
         for (let s of ['opt.localeText', 'opt.language', 'noRowsToShow', 'noRowsToShowFiltered', '破壞性變更', 'opt.showOverlayWhenFilteredEmpty = false']) {

@@ -40,6 +40,7 @@
 | R24 | opt.localeText:覆寫表格文字之字典,先查覆寫字典、查無再走內建字典 | 無 |
 | R25 | 數據列數大於 0 而顯示列數為 0(過濾使然)時顯示覆蓋層,預設開啟;與 ag-grid 原生覆蓋層互不干擾 | 無(宿主 hideOverlay 後不自動重現,第 6 節 #24) |
 | R26 | 根節點 `state` 屬性(showing → shown)表示淡入是否結束;淡入期間根節點尺寸改變者,於淡入結束且尺寸穩定後 `refreshCells({ force: true })` 一次再落定 | 無(淡入結束後才發生之尺寸變化不補繪,第 6 節 #25) |
+| R27 | 隱形捲軸(瀏覽器捲軸寬為 0)時橫向捲軸改占位排列,不疊在資料列之上 | 無(直向隱形捲軸仍疊在資料區右緣 16px,實測後不改,第 6 節 #26) |
 
 ## 1. 共通規則
 
@@ -449,6 +450,42 @@
 - **穩定性**:終版(測試碼與 dist 與下列全套相同)e2e-fadeState 17 格單檔 1 次 17 passing(約 1m18s);全套 `npm test --lock` 515 passing、0 failing(5m49s,2026-11-01 02:02,e2e-fadeState 在 `--parallel` 負載下與其他 e2e 檔同跑).另於終版連續單檔重跑 5 次(每次全新 mocha 行程)皆 17 passing,終版合計 7 次執行 0 失敗(0/7;樣本小,僅證明未見偶發失敗).終版 dist 之最小重現批次(16 輪 × 10 組)亦與中間建置之結果逐組相同(證據夾 `batch-after-final.tsv`).
 - **來源**:2026-11-01 Gitea issue #31(rddmanager);主控派工 agg31(建議 1 補繪 + 建議 2 `state`;README 不改);`state` 取名 showing/shown 依派工指定,轉換語彙比照 WDrawer(過渡態與終態).
 
+### R27 隱形捲軸(瀏覽器捲軸寬為 0)時,橫向捲軸改占位排列,不疊在資料列之上
+
+- **成因(2026-11-02,Gitea issue #54,rddmanager 提出)**:ag-grid 31.3.4 以瀏覽器捲軸寬判斷「隱形捲軸」(`getScrollbarWidth()` 為 0,`isInvisibleScrollbar()`;`ag-grid-community.noStyle.js:9683-9716`),隱形時橫向捲軸元件(`.ag-body-horizontal-scroll`)帶 `ag-scrollbar-invisible`、高度 16px(`setScrollVisible`,同檔 47815-47826),樣式為 `position:absolute; bottom:0`(`ag-grid.css:1447-1451`)——疊在資料區底部 16px 之上,且其容器攔截滑鼠事件;只有 Apple 平台(`ag-apple-scrollbar`)平時 `visibility:hidden`.捲軸寬為 0 之環境:浮動捲軸之瀏覽器(macOS 預設)、Playwright 等無頭瀏覽器(`--hide-scrollbars`,本套件與各專案之 e2e 皆在此環境).**後果**:有橫向捲動之表格捲到最下時,最後一列之下半(約 16px)點不到;w-table-vue 之「新增數據列」會 `ensureIndexVisible(最後一列, 'bottom')`,新列儲存格內按鈕必落在此區.
+- **規則**:
+  1. 樣式區(`<style>`,F 末段)加 `.CompCssWAggridVue .ag-body-horizontal-scroll.ag-scrollbar-invisible { position: relative; bottom: auto !important; }`:隱形之橫向捲軸改回一般流排列,資料區讓出其高度(`.ag-body` 為 `flex: 1 1 auto`,隨之縮短 16px);選擇器以 `.CompCssWAggridVue` 為前綴,只作用於本套件之表格;**不限平台**(不加 `:not(.ag-apple-scrollbar)`,主控裁定;Apple 平台平時隱藏者變成固定留白 16px,同實體捲軸之版面).高度、顯示與否仍由 ag-grid 決定:有橫向捲動時 16px,無橫向捲動時 `ag-hidden`(`display:none`)不占位.
+  2. **`bottom: auto !important` 之 `!important` 不可省**(issue 草案為 `bottom: auto;`,實測不足):ag-grid 於隱形捲軸時以**行內 style** 把 `bottom` 設為置底列總高度(`refreshCompBottom`,同檔 47786-47792),把絕對定位之捲軸抬到置底列(`genRowsPinnBottom`)之上;改為 `position: relative` 後此行內值變成向上位移,捲軸反而上移而蓋住置底列(實測:有置底列時,無 `!important` 之捲軸 265~281 蓋在置底列按鈕 268~291 之上,點中央被攔截;加 `!important` 後捲軸 293~309 排在置底列區 265~293 之下,按鈕可點).
+  3. **直向隱形捲軸不比照**(第 6 節 #26):直向改占位使資料區窄 16px,而橫向捲軸(全寬)之捲動範圍不變,橫向最大可捲量比資料區短 16px,捲到最右時最後一欄右緣被裁切;ag-grid 對實體捲軸以橫向捲軸之右側間隔(spacer)加上直向捲軸寬度補償,隱形時該寬度為 0 故不補償.
+  4. 不改:橫向捲軸之捲動與資料區、表頭之同步(實測 `scrollLeft` 逐項相同)、固定欄、置頂/置底列、無橫向捲動時之版面(`ag-hidden` 不占位).
+- **單一擁有者**:F 樣式區末段該規則(含說明註解);元件程式不動.
+- **盤點**:`git grep -n "ag-scrollbar-invisible" -- src/components/WAggridVue.vue`(2 行:說明註解、選擇器;出現表外命中須先補列);`git grep -n "ag-body-vertical-scroll" -- src/components/WAggridVue.vue`(0 行;若日後為直向捲軸加規則,須先解決橫向範圍補償並改 IS14、IS15,見 #26);改 ag-grid 版本時重驗 `refreshCompBottom` 之行內 `bottom`(IS13)與 `setScrollVisible` 之 16px(IS1).
+- **站點**(情境 × 行為):
+
+| 情境 | 行為 | 測試 |
+|---|---|---|
+| 前置:捲軸寬 0、帶 `ag-scrollbar-invisible`、有橫向捲動 | 橫向捲軸 16px,資料區下緣即其上緣(占位) | IS1(每格 `open` 另驗前置,否則紅) |
+| 呼叫端 `ensureIndexVisible(最後一列, 'bottom')` | 最後一列按鈕中央最上層為按鈕,下緣在橫向捲軸上緣之上,真滑鼠點中央生效且只觸發一次 | IS2 |
+| 使用者以滾輪捲到底 | 同上 | IS3 |
+| 列少而無垂直捲動(3 列) | 最後一列可點(修前亦綠,保留) | IS4 |
+| 列數恰填滿資料區(5 列、高 207px:修前無垂直捲動而最後一列下半在捲軸之下) | 修後資料區讓出 16px 而出現垂直捲動量,捲到底後最後一列可點 | IS5 |
+| 橫向滾輪捲動至最右 | 資料區、表頭、橫向捲軸 `scrollLeft` 相同,最大可捲量相等,最右欄表頭與儲存格右緣對齊資料區右緣 | IS6 |
+| 設定橫向捲軸之 `scrollLeft`(未走 UI) | 資料區與表頭同步 | IS7 |
+| 橫向捲動後再捲到最下 | 橫向位置不變,最後一列下緣在捲軸之上 | IS8 |
+| 無橫向捲動 | 橫向捲軸不顯示不占位,資料區下緣=表格底;最後一列可點 | IS9 |
+| 容器寬度改變使橫向捲動出現/消失 | 捲軸隨之顯示/隱藏,無捲動時不占位 | IS10 |
+| 固定欄(k 欄釘選左) | 固定欄與中間欄區並排、表頭與資料欄左緣對齊、捲動同步;呼叫端捲到最後一列可點 | IS11、IS12 |
+| 置底列(`genRowsPinnBottom`) | 置底列按鈕可點,橫向捲軸排在置底列區之下 | IS13 |
+| 直向隱形捲軸(不改) | 仍 `position:absolute` 疊在資料區右緣 16px;最右欄按鈕中央可點、右緣 2px 處被直向捲軸攔截 | IS14 |
+| 直向若也改占位(對照,不採用之依據) | 橫向捲軸最大可捲量比資料區少 16px,捲到最右時最後一欄右緣超出資料區 16px 被裁切 | IS15 |
+
+- **測試**:`test/e2e-invisibleScrollbar.test.mjs`(IS1–IS15,宿主頁 `test/pages/invisibleScrollbar.html`,查詢字串 `rows`、`w`、`h`〔元件 `height` 屬性,非 style〕、`n`、`rw`、`pin`、`pinb`;欄 k、act〔按鈕〕、c0–c{n-1}、actR〔最右欄,填滿儲存格寬之按鈕〕).act 為 L2 真滑鼠(`mouse.click`、`mouse.wheel`);`ensureIndexVisible`(IS2、IS11 之呼叫端捲動)與設定橫向捲軸之 `scrollLeft`(IS7,隱形捲軸無可拖曳之捲軸桿)為未走 UI 之 setup(已於案內標明);IS10 之 `window.__vm.w` 為宿主改容器寬度(setup).點擊生效以 `clicked` 記錄判定(須恰為該按鈕一筆).
+- **修前紅**(2026-11-02 ag284,HEAD dist,即未含修正之 dist;log `tmp/quiet-run/20261102-215312-ag284-red.log`):15 格 **7 紅 8 綠**.紅:IS1(資料區下緣 309 ≠ 橫向捲軸上緣 293)、IS2、IS3(按鈕 283~306、橫向捲軸 293~309,中央最上層為 `div.ag-body-horizontal-scroll-container`)、IS5(按鈕 190~213、橫向捲軸 200~216,同)、IS8(最後一列下緣 309 > 捲軸上緣 293)、IS12(固定欄,同 IS2)、IS13(橫向捲軸上緣 265 不在置底列區下緣 309 之下);綠(保留與記錄):IS4、IS6、IS7、IS9、IS10、IS11、IS14、IS15.
+- **變異**(2026-11-02 ag284;`mutate.mjs`〔證據夾 `ag284-evidence/scripts/`;本機 `./tmp` 已清〕於取得測試鎖後,對修正後之 dist 以字串取代暫時換入 `dist/`、跑整檔、`finally` 還原並以雜湊核對〔還原後 sha256 與修正後相同〕):6 個變異皆被偵測——M1 移除修正規則(等同修前)→ IS1、IS2、IS3、IS5、IS8、IS12、IS13 紅(與 HEAD dist 之修前紅相同);M2 `bottom: auto !important` 去掉 `!important`(issue 草案之形)→ 只有 IS13 紅(置底列按鈕中央最上層為 `div.ag-body-horizontal-scroll-container`);M3 `position` 改回 `absolute` → 13 格紅(只剩 IS1、IS7 綠);M4 直向隱形捲軸也改占位 → IS6、IS11、IS14 紅(三格皆在「捲到最右」之等待逾時:滾輪捲動後資料區 `scrollLeft` 停在 722〔橫向捲軸之最大可捲量〕,到不了資料區之最大可捲量 738,最後一欄右緣被裁切;IS15 之對照即此情形,故 IS15 綠);M5 無橫向捲動時仍占位(`.ag-root` 底部加 16px 內距)→ IS9、IS10 紅;M6 表頭容器左移 8px → IS6、IS11 紅(表頭右緣 817 ≠ 資料區右緣 809、表頭格與資料格左緣差 8).
+- **穩定性**:修正後 dist 整檔連跑 6 次(綠燈驗證 1 次 + `mutate.mjs` 連跑 5 次,每次全新 mocha 行程)皆 15 passing、0 failing;其後僅改測試檔之案號標籤與逾時訊息(無斷言變動),終版再單檔連跑 3 次(各 15 passing)並於全套 `npm test --lock` 內跑 1 次(`--parallel` 負載下,15 passing),終版合計 4 次、前版 6 次執行 0 失敗(0/10;樣本小,僅證明未見偶發失敗);全套結果見 state.md.
+- **升版影響(對使用端)**:捲軸寬為 0 之環境(無頭瀏覽器、浮動捲軸)下,有橫向捲動之表格資料區高度少 16px(同有實體捲軸時之版面);各專案以無頭瀏覽器產製之 e2e 標準圖,凡拍到有橫向捲軸之表格者底部列位置會改變,須重產;有實體捲軸之瀏覽器(一般 Windows Chrome)不受影響.**本套件無 `test/pics`**(標準圖未產製,7.4),故無標準圖須重產.
+- **來源**:2026-11-02 Gitea issue #54(rddmanager);主控派工 ag284(橫向修正 + 直向同型問題查核;不限平台、不加 `:not(.ag-apple-scrollbar)`;README 不改).
+
 ## 3. 下載
 
 ### R12 兩個下載方法共用 downloadCore
@@ -558,11 +595,12 @@
 - **規則**:對外文件為範例 `src/App<名稱>.vue`,建置為 `docs/examples/ex-<名稱>.html` 與 `test-html/ex-<名稱>.html`;README 不改(使用者指示;2026-10-30 agv-run01 曾依主控派工新增 README 兩節〔`opt.localeText`、過濾 0 筆覆蓋層與 Breaking changes〕,經主控裁定為派工之誤,agv-run02 已撤回,README 回到 agv-run01 之前之內容,無例外).新選項、破壞性變更之對外說明改寫在範例頁之說明文字與 `WAggridVue.vue` 之 JSDoc(例:`AppLocaleText.vue`、`AppShowOverlayWhenFilteredEmpty.vue`).命名為 API 名之 camelCase(方法如 AppDownloadData、選項如 AppKpCellFormat),slot 範例以 Slot 為前綴(AppSlotCellRender),變體加後綴(AppShowKeysApplyOrder、AppUploadDataWithConvertKeys、AppSlotCellRenderAlign).新增或改名範例時,App.vue 之選單、v-if、import、components 四處一致.重產順序依 script.txt:gDistApp → gExtractHtml → gDocExams(gDistApp 會清空 docs/examples).
 - **盤點**(兩者須相等):
   - `git ls-files 'src/App*.vue' | grep -vc '^src/App.vue$'`(79;2026-10-30 起含 AppLocaleText、AppShowOverlayWhenFilteredEmpty;2026-11-01 新增 AppState〔R26〕,新檔提交後為 80,檔案系統計 `ls src/App*.vue | grep -vc 'src/App.vue'` 現為 80)
-  - `git ls-files docs/examples | grep -c '^docs/examples/ex-.*\.html$'`(**發布重產後 80**〔2026-11-01 新增 ex-state〕;2026-10-30 agv-run02 新增兩範例後、發布重產前為 77——`docs/examples` 依 script.txt 於發布時重產〔gDistApp → gExtractHtml → gDocExams〕,本輪不手動產生;此段期間兩者不等屬預期,由 `unit-appExamples` 之 AX4 驗 docs/examples 無遺留舊頁,發布重產後須回到相等)
+  - `git ls-files docs/examples | grep -c '^docs/examples/ex-.*\.html$'`(**發布重產後 80**〔2026-11-01 新增 ex-state;2026-11-02 發布重產後檔案系統實測 docs/examples 之 ex-*.html 為 80,與 src 相等〕;2026-10-30 agv-run02 新增兩範例後、發布重產前為 77——`docs/examples` 依 script.txt 於發布時重產〔gDistApp → gExtractHtml → gDocExams〕,本輪不手動產生;此段期間兩者不等屬預期,由 `unit-appExamples` 之 AX4 驗 docs/examples 無遺留舊頁,發布重產後須回到相等)
   - test-html 已列於 .gitignore(入版控者只有舊有之 42 個),本機由 gExtractHtml 產生,不作為盤點與測試之依據.
-- **站點**:80 個範例,已套(其中 `localeText`、`showOverlayWhenFilteredEmpty` 為 2026-10-30 agv-run02 新增,選單置於新群組 `text`;`state` 為 2026-11-01 新增〔R26〕,選單置於新群組 `dom`;docs/examples 待發布重產).**範例說明文字不可含字面 `WAggridVue`**:範例產製管線(extractHtml)會把文字中的 `WAggridVue` 改成 `w-aggrid-vue`(`CompCssWAggridVue` 變成 `CompCssw-aggrid-vue`,選擇器寫錯),以 HTML 實體 `W&#65;ggridVue` 書寫,EXS1 守護.
+- **站點**:80 個範例,已套(其中 `localeText`、`showOverlayWhenFilteredEmpty` 為 2026-10-30 agv-run02 新增,選單置於新群組 `text`;`state` 為 2026-11-01 新增〔R26〕,選單置於新群組 `dom`;docs/examples 已於 2026-11-02 發布重產).**範例說明文字不可含字面 `WAggridVue`**:範例產製管線(extractHtml)會把文字中的 `WAggridVue` 改成 `w-aggrid-vue`(`CompCssWAggridVue` 變成 `CompCssw-aggrid-vue`,選擇器寫錯),以 HTML 實體 `W&#65;ggridVue` 書寫,EXS1 守護.
 - **測試**:`test/e2e-examples-display.test.mjs`(SL1–SL4、APP-*、SKX1、SKX2、EXF1、AL-*)、`test/e2e-examples-download.test.mjs`(EXD1–EXD3)、`test/e2e-examples-upload.test.mjs`(EXU-E1–E5、EXU-K1–K3);範例頁之 CDN 資源一律路由至本機(第 7 節映射).APP- 之格載入 gDistApp 之產物 app.umd.js,驗選單與標題,不驗本次 dist.
-  - 新增範例(docs/examples 尚未重產者)之驗證:`test/unit-appExamples.test.mjs`(AX1 App.vue 四處〔import、components、v-if、選單〕與 src/App*.vue 一一對應;AX2 本次新增兩範例;AX3 example/code 連結指向自身;AX4 docs/examples 無遺留舊頁;AX5 JSDoc 載明破壞性變更;BLD1 產製器與發布管線同形)與 `test/e2e-examples-overlay.test.mjs`(EXO1–EXO4:自 src 以 `test/tools/exampleBuild.mjs` 當場產製範例頁,於 `test/_tmp/e2e-examples-overlay/`,結束即刪).產製器複製 `toolg/gExtractHtml.mjs` 之 head 與選項及 `toolg/gDocExams.mjs` 之 CDN 換址,**gExtractHtml 之 head 或選項變動時須同步改 `exampleBuild.mjs`**(BLD1 以既有 5 個範例對照 docs/examples 逐字比對,不同步即紅).發布重產 docs/examples 後,新範例頁與測試所產製者應相同.
+  - 新增範例(docs/examples 尚未重產者)之驗證:`test/unit-appExamples.test.mjs`(AX1 App.vue 四處〔import、components、v-if、選單〕與 src/App*.vue 一一對應;AX2 本次新增兩範例;AX3 example/code 連結指向自身;AX4 docs/examples 無遺留舊頁;AX5 JSDoc 載明破壞性變更;BLD1 產製器與發布管線同形)與 `test/e2e-examples-overlay.test.mjs`(EXO1–EXO4:自 src 以 `test/tools/exampleBuild.mjs` 當場產製範例頁,於 `test/_tmp/e2e-examples-overlay/`,結束即刪).產製器複製 `toolg/gExtractHtml.mjs` 之 head 與選項產出 test-html 階段頁,第二段**直接呼叫 `toolg/gDocExams.mjs` 所用之 w-package-tools `genDocsExams`**(目錄配置同發布流程:`<目錄>/test-html` → `<目錄>/docs/examples`,另置 `<目錄>/docs/dist` 之 dist 副本使頁內 `../dist/` 指向本地 dist;不另寫改寫規則,genDocsExams 規則變動時產製結果自動跟隨),**gExtractHtml 之 head 或選項變動時須同步改 `exampleBuild.mjs`**(BLD1 以既有 5 個範例對照 docs/examples 逐字比對,不同步即紅;2026-11-02 ag268 一次性實證 src 全部 80 個範例自產製器產出者與 docs/examples 逐字相同).發布重產 docs/examples 後,新範例頁與測試所產製者應相同.
+  - **範例頁外部資源對照表須隨 genDocsExams 改寫規則同步**(2026-11-02 ag268,全庫連動跟跑測試 26 案紅之成因):排程第 257、268 項後,發布流程的 `genDocsExams`(`toolg/gDocExams.mjs`)把範例頁內其他自有套件(wsemi 與 w-*)之 jsDelivr/unpkg 網址一律改為 `https://<擁有者>.github.io/<套件>/dist/<檔>`(不釘版、一律 https),本套件自身 dist 保持相對路徑 `../dist/w-aggrid-vue.umd.js`(`docs/dist` 由 genDocsDist 自 dist 複製),`w-demores`(keepCdn 預設)與第三方(vue、@babel/polyfill)保持 jsDelivr.`test/tools/e2e-setup.mjs` 之 `EXTERNAL` 原只認舊形(`w-aggrid-vue@<版>`、`w-jsonview-tree@<版>` 之 jsDelivr),w-jsonview-tree 之 gh-pages 網址被中止、頁內 `jv` 未定義,範例頁 e2e 25 案與 BLD1 共 26 案紅(產品程式無誤).現行對照見第 7.5 節「範例頁之外部資源」;舊形二項已移除(docs/examples 與產製器皆不再出現).守護:`unit-appExamples` **EXT1**(docs/examples 全部 81 頁之 http(s) 資源皆在 `EXTERNAL`、每個對照項檔存在且至少被一頁使用〔無過期項〕)、**EXT2**(80 個 ex 頁皆恰一次以相對路徑載入 dist,且該檔〔`docs/dist`〕存在)、`assertRouted`(e2e-examples-download/overlay/state 驗外部資源未對照為 0、本地 dist 恰載入一次).genDocsExams 改寫規則或範例頁引用變動時,EXT1 先紅,再同步 `EXTERNAL`.
   - 2026-11-01 新增範例 state(R26):`unit-appExamples` AX6(AppState 於 App.vue 四處皆在、選單名 state、JSDoc `@vue-data state` 載明值與轉換時點)與 `test/e2e-examples-state.test.mjs`(EXS1 標題與連結、說明文字含值/單向轉換/補繪/等待寫法;EXS2 頁內清單依序為 `state="showing"`、容器改寬、`state="shown"`,終態根節點屬性為 shown).
   - 範例頁之歷程以頁內 MutationObserver 於載入前即記錄(`openPage` 之 `initScript` 選項),事後比對各態出現之順序,不以時間窗斷言(範例頁自帶 1–3 秒計時器,負載下計時器延遲).
 - **來源**:2026-09-04 提交 626fbda(範例正名).
@@ -596,6 +634,7 @@
 | 23 | 置頂/置底列(`genRowsPinnTop`、`genRowsPinnBottom`)只於表格就緒(`agReady`:F:1318、1321)與儲存格值變更(`agCellChange`:置底,F:1283)時重算,列拖曳後不重算;產生器若依列序取值(如取第一列),拖曳後置頂/置底列過時(依總和等與列序無關者不受影響) | 讀碼確認(外審 terra 提出;未實測);修前修後相同 | 呼叫端或待裁示;範圍外未修 |
 | 24 | 過濾 0 筆覆蓋層(R25)之限制:①呼叫端經 `getApi().hideOverlay()` 隱藏後,過濾狀態未改變前不會自動重現(下一次 `modelUpdated`,即過濾、數據更新或排序,才重新判斷);②載入中/noRows 種類以 DOM 類名判斷(`.ag-overlay`、`ag-hidden`、`.ag-overlay-loading-wrapper`、`.ag-overlay-no-rows-wrapper`;ag-grid 31.3.4 無公開之覆蓋層狀態查詢),ag-grid 升版時須重驗(e2e-overlay OV16、OV17、OV29;主控 2026-10-30 裁定接受此限制並維持文件);③ag-grid 之 NoRowsOverlay 於 `setTimeout` 內才取文字,故 `noRowsToShow` 之文字取決於「取文字當下」之表格狀態(狀態在顯示與取文字之間改變,以取文字當下為準);呼叫端自行 `api.showNoRowsOverlay()` 且資料非空而顯示列為 0 時,文字亦為過濾 0 筆文字;④`localeText` 字串不代入 `${variable}` 佔位(內建字典亦同);⑤`modelUpdated` 經 ag-grid-vue 非同步送達(`setTimeout(0)`):表頭過濾使然之 0 列且宿主以 `applyTransaction`/`setGridOption('rowData')` 換數據時,ag-grid 於 `rowDataUpdated` 先隱藏,覆蓋層要到下一個 macrotask 才補顯示(經 opt 換數據者於同一 flush 後之 microtask 補顯示,實測列數、覆蓋層無中間態;外審讀碼推論前者可能閃一幀,未實測);⑥外審 sonnet(讀碼推論)另指出 `bOwnOverlay` 語意為「曾顯示過」而非「現在仍是我們的」:ag-grid 於 `rowDataUpdated` 隱藏我們之覆蓋層而我們尚未同步之一個 macrotask 內,若宿主恰好手動 `showNoRowsOverlay()`,會被誤隱藏,機率極低,未處理 | e2e-overlay OV16、OV17、api-localeText AL5;讀碼(ag-grid-community.js:19454–19463 NoRowsOverlayComponent、49782–49846 OverlayService) | ag-grid 31.3.4 + 呼叫端;範圍外未修 |
 | 25 | 淡入補繪與 `state`(R26)之限制:①只涵蓋表格建立後淡入期間(含淡入結束後等待尺寸穩定)內發生之根節點尺寸改變;淡入結束(state 為 shown)之後才發生之尺寸變化不補繪(issue #31 之觸發條件須在淡入進行中,`delay=1500` 組穩定);②淡入期間尺寸有改變時自訂 cell-render slot 之儲存格因 `refreshCells({ force: true })` 被重建一次(JSDoc 已載);③`state` 只反映淡入與補繪,不代表數據已載入完成;④淡入落定之判斷依賴 `Element.getAnimations()`,不支援者(舊瀏覽器)視為無進行中之過場,以外層 div 自身任一過場事件即結束(可能早於 opacity 淡入結束);⑤`refreshCells` 重繪後之畫面與「容器不帶過場」相同係以 Chromium(Playwright 1.63,確定性旗標與預設旗標)逐 byte 驗證,其他瀏覽器之字形光柵未驗 | e2e-fadeState FD7、FD12;最小重現(證據夾 `batch-*.tsv`) | 設計限制;範圍外未修 |
+| 26 | 直向隱形捲軸(捲軸寬為 0 之環境,如浮動捲軸、無頭瀏覽器)仍以 `position:absolute; right:0; z-index:10` 疊在資料區右緣 16px(`ag-grid.css:1447-1451`、`1476-1482`),其容器攔截滑鼠:最右欄之儲存格距右緣 16px 內之部分(含填滿儲存格寬度之按鈕之右側)點不到,事件由直向捲軸容器接走.**實測**(2026-11-02 ag284,e2e-invisibleScrollbar IS14):欄寬 60px 之最右欄、按鈕填滿儲存格內容區(儲存格右內距 12px),捲到最右時按鈕右緣距資料區右緣 12px,其右側 4px 落在直向捲軸(793~809)內,按鈕中央可點(最上層為按鈕)、右緣 2px 處最上層為 `div.ag-body-vertical-scroll-container`,真滑鼠點該處不觸發按鈕.**不改之原因**(IS15 與探測 `probe3`/`probe4` 之實測):直向改為占位(`position:relative`)可讓出 16px(資料區 782px、直向捲軸 793~809、表頭與資料欄左緣仍對齊),但橫向捲軸(全寬 798px)之捲動範圍不變:最大可捲量 722 對資料區之 738,橫向捲軸捲到最右時最後一欄右緣超出資料區右緣 16px 被裁切(按鈕右側 4px 被裁掉,比原本「看得到點不到」更差);ag-grid 對實體捲軸以橫向捲軸右側間隔加直向捲軸寬度補償(`setFakeHScrollSpacerWidths`,同檔 47797-47813),隱形時 `getScrollbarWidth()` 為 0 故無補償;以 `:has()` 對橫向捲軸補 16px 右內距(`.ag-root:has(.ag-body-vertical-scroll.ag-scrollbar-invisible:not(.ag-hidden)) .ag-body-horizontal-scroll{padding-right:16px}`)使兩者範圍數值相等(738),但捲到最右時仍夾在 722(ag-grid 另有以全寬計之上限,未再追查)且依賴 `:has()`(舊瀏覽器不支援),故不採用.**影響面**:只在「最右欄距右緣 16px 內有互動內容」且「有垂直捲動量」時發生(無垂直捲動量時直向捲軸 `ag-hidden`,IS14 前置);本專案(rddmanager)未觀察到受影響之按鈕.**替代作法(未採用,待裁示)**:①呼叫端於最右欄加 16px 以上之右內距或留一欄空白欄;②日後若 ag-grid 升版提供隱形直向捲軸之占位排列(含橫向範圍補償),再比照 R27 處理並改 IS14、IS15 | e2e-invisibleScrollbar IS14、IS15;探測 `tmp/ag284/probe2.mjs`~`probe5.mjs`(結案已清,數值載於本欄與報告) | ag-grid 31.3.4;範圍外未修,維持文件 |
 
 ## 7. 測試帳本
 
@@ -604,6 +643,18 @@
 - `npm test`(package.json 既有之 `mocha --parallel "test/*.test.mjs" --timeout 180000`,不改).單檔 `npx mocha test/<檔>.test.mjs --reporter spec --timeout 180000`,單格另加 `--grep "<代號>"`.
 - 測試對象為本地 `dist/w-aggrid-vue.umd.js`(宿主頁以 file:// 載入 `../../dist/` 與 `../../node_modules/vue/dist/vue.min.js`;範例頁之 CDN 改路由至本機):**改 src 後須先 `node toolg/gDistRollupComps.mjs`**.
 - 新增之格須先在修正前之 dist 跑一次:「修」之格紅、「保留」之格綠,才證明測得到缺陷(2026-10-07 之 74 格紅、153 格綠即如此驗過;其後補之 PB1 以 HEAD 之 dist 驗紅).
+- **改動範圍 → e2e 檔**(主控共通守則 12:非最末輪只跑受影響者;改到共用基礎〔`test/tools`、樣式區、建置設定〕即擴大):
+
+| 改動範圍 | 跑 |
+|---|---|
+| 樣式區 `<style>`(版面、捲軸、焦點框) | e2e-invisibleScrollbar(R27)、e2e-headerscroll(R21)、e2e-focus(R09)、e2e-display-*、e2e-overlay、e2e-rowDrag、e2e-pasteText、e2e-pasteEditable、e2e-examples-*;幾何有共用變動時全套 |
+| 下載、上傳方法 | e2e-download-*、e2e-upload-matrix、e2e-lifecycle、e2e-showKeys、unit-hucre-limits、e2e-examples-download、e2e-examples-upload |
+| 過濾、覆蓋層、localeText | e2e-filters、e2e-overlay、api-localeText、unit-getLangText、e2e-examples-overlay |
+| 淡入、`state` | e2e-fadeState、e2e-examples-state |
+| 貼上、列拖曳 | e2e-pasteText、api-pasteText、e2e-pasteEditable、e2e-rowDrag |
+| 範例(`src/App*.vue`)、`docs/examples`、`test/tools/exampleBuild.mjs` | unit-appExamples、e2e-examples-* |
+| `test/tools/e2e-setup.mjs`、`e2eLib.mjs`、建置設定 | 全套 |
+
 - CI(`.github/workflows/ci-test.yml`,ubuntu-latest,push 時 `npm install`、`npm test`)執行同一組測試;e2e 於 Linux 尚未實測(瀏覽器由 w-package-tools-e2e 於缺少時自動安裝;CJK 字型差異可能影響幾何量測之格,如 AL-*、S 系列),同組織之 w-component-vue、w-web-sso 亦於 CI 跑 e2e.
 
 ### 7.2 測試檔
@@ -632,12 +683,13 @@
 | e2e-examples-display | e2e | 21 | docs/examples 之 slot、showKeys、對齊、filterChange 範例與 app.html | R06–R08、R11、R18、R20 |
 | e2e-examples-download | e2e | 3 | docs/examples 之 ex-downloadData、ex-downloadDisplayData、ex-getDisplayData | R12、R13、R18 |
 | e2e-examples-upload | e2e | 8 | docs/examples 之 ex-uploadData、ex-uploadDataWithConvertKeys | R17、R18 |
-| unit-appExamples | unit | 7 | `src/App.vue` 與 `src/App*.vue` 之接線(AX1–AX6)、範例產製器與 docs/examples 之同形(BLD1;node,不起瀏覽器) | R18、R24、R25、R26 |
+| unit-appExamples | unit | 9 | `src/App.vue` 與 `src/App*.vue` 之接線(AX1–AX6)、範例產製器與 docs/examples 之同形(BLD1)、docs/examples 全部頁面之外部資源與 `EXTERNAL` 對照表一致(EXT1)、ex 頁恰一次以相對路徑載入 dist 且 docs/dist 檔存在(EXT2)(node,不起瀏覽器) | R18、R24、R25、R26 |
 | e2e-examples-overlay | e2e | 4 | 自 src 當場產製之 ex-localeText、ex-showOverlayWhenFilteredEmpty(`test/tools/exampleBuild.mjs`,頁內記錄器以 `openPage` 之 `initScript` 注入) | R18、R24、R25 |
 | e2e-fadeState | e2e | 17 | fade.html(置中容器內 7 欄 6 列表格,表格建立後容器以 CSS 過場改寬;`window.__log` 記錄 state 屬性、外層 div 之 opacity 與過場、尺寸變化與 `api.refreshCells` 之呼叫;網址參數造情境) | R26 |
 | e2e-examples-state | e2e | 2 | 自 src 當場產製之 ex-state(`test/tools/exampleBuild.mjs`) | R18、R26 |
+| e2e-invisibleScrollbar | e2e | 15 | invisibleScrollbar.html(30 列、欄寬總和大於表格寬之表;含按鈕之欄 act、最右欄 actR;查詢字串造列數、寬高、固定欄、置底列) | R27;第 6 節 #26 |
 
-合計 515 格(2026-11-01 agg31 新增 e2e-fadeState 17、e2e-examples-state 2、unit-appExamples AX6 1 格,全套實測見 state.md;前:495 格(2026-10-28 agv-run03 全套實測 444 passing;2026-10-30 agv-run01 新增 unit-getLangText 3、api-localeText 7、e2e-overlay 31,合計 41 格,全套實測 485 passing;同日 agv-run02 新增 unit-appExamples 6、e2e-examples-overlay 4,合計 10 格,全套實測 495 passing,見 state.md)).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
+合計 532 格(2026-11-02 ag284 新增 e2e-invisibleScrollbar 15 格,全套 `npm test --lock` 實測 532 passing、0 failing,既有 517 格皆未改動且全綠,見 state.md;前:517 格(2026-11-02 ag268 新增 unit-appExamples EXT1、EXT2 共 2 格,全套實測見 state.md);再前:515 格(2026-11-01 agg31 新增 e2e-fadeState 17、e2e-examples-state 2、unit-appExamples AX6 1 格,全套實測見 state.md);再前:495 格(2026-10-28 agv-run03 全套實測 444 passing;2026-10-30 agv-run01 新增 unit-getLangText 3、api-localeText 7、e2e-overlay 31,合計 41 格,全套實測 485 passing;同日 agv-run02 新增 unit-appExamples 6、e2e-examples-overlay 4,合計 10 格,全套實測 495 passing,見 state.md)).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
 
 ### 7.3 舊 tmp 驗收腳本之遷移(2026-10-06~07)
 
@@ -691,8 +743,8 @@
 #### 專案特有機制
 
 - **宿主頁協定**:`window.__cases`(案例 → 目標、方法、參數)、`window.__case`(setup 選定案例)、`#btnRun`(真點擊,其處理函數呼叫元件方法,同官方範例「按鈕呼叫元件方法」之用法)、`window.__out`(結果);共用層 `runHostCase(ctx, name, opt)`.此協定驗的是公開方法之程式契約,屬 `api-` 層(api-pasteText 與下載、上傳、lifecycle 各檔之方法呼叫案例);**驗使用者操作行為之 e2e 檔不得以此協定代替使用者動作**(pasteText 即因此拆為 e2e-pasteText 與 api-pasteText,2026-10-28 agv-run03).其他宿主按鈕:`#btnUpload`(上傳)、`#btnReloadKeys6`、`#btnLoad10`、`#btnReplaceOpt4`(宿主重新設定或載入數據).
-- **範例頁之外部資源**:`openPage(..., { routeExternalResources: true })` 攔截全部 http(s):vue、w-jsonview-tree → node_modules;w-aggrid-vue → 本地 dist;w-demores 之 dataEasy、dataLikeNumber → `test/fixtures/w-demores/`(取自 w-demores 1.0.34);dataEduagency → 空陣列;@babel/polyfill(nomodule、非宣告之相依)→ 空腳本;其餘中止並記錄,測試端斷言未對照者為 0.
-- **範例頁產製器與頁內歷程記錄**(2026-10-30 agv-run02):`test/tools/exampleBuild.mjs` 的 `buildExample('App<名稱>.vue', 目錄)` 依 gExtractHtml、gDocExams 之作法自 src 產製 `ex-<名稱>.html`(含 CDN 位址,同 docs/examples),供尚未隨發布重產的新範例使用;`openPage` 新增選項 `initScript`(頁面載入前注入,`page.addInitScript`),e2e-examples-overlay 以之注入 MutationObserver 記錄各表「顯示列數與本表覆蓋層可見文字」之歷程,事後依序比對,避免以時間窗斷言自帶 1–3 秒計時器之範例頁.`assertExamplePage`(範例頁標題與兩連結)已移入 `e2e-setup.mjs` 共用.
+- **範例頁之外部資源**(2026-11-02 ag268 改):`openPage(..., { routeExternalResources: true })` 攔截全部 http(s),對照表為 `e2e-setup.mjs` 匯出之 `EXTERNAL`(`findExternal(url)` 查表,共 6 項):vue(`vue@2.x`)→ node_modules;w-jsonview-tree 之 gh-pages 網址 `https://yuda-lyu.github.io/w-jsonview-tree/dist/w-jsonview-tree.umd.js`(`^…$` 全錨定,genDocsExams 改寫後之形態)→ node_modules;w-demores 之 dataEasy、dataLikeNumber → `test/fixtures/w-demores/`(取自 w-demores 1.0.34);dataEduagency → 空陣列;@babel/polyfill(nomodule、非宣告之相依)→ 空腳本;其餘中止並記錄,測試端斷言未對照者為 0.**本套件 dist**:頁內為相對路徑 `../dist/w-aggrid-vue.umd.js`(file:;genDocsExams 對自身 dist 保持相對路徑,`docs/dist` 是 genDocsDist 自 `dist/` 複製之發布副本,改 src 重建 dist 後可能尚未同步),不在 `EXTERNAL`;`openPage` 另以 `routeLocalDist` 對 `file:` 且以 `/dist/w-aggrid-vue.umd.js` 結尾之請求路由,改由專案 `dist/` 供應並記為 mapped `'w-aggrid-vue'`(`page.route` 可攔截 file:、`route.fulfill` 有效,2026-11-02 實測),使範例頁測到的恆為本地 dist、不受副本新舊影響;`assertRouted(ctx)`(`e2e-setup.mjs` 共用)驗未對照為 0 且該 dist 恰載入一次.舊形(jsDelivr `w-aggrid-vue@<版>`、`w-jsonview-tree@<版>`)已移除:docs/examples 與產製器皆不再出現,留著即成 EXT1 之過期項.
+- **範例頁產製器與頁內歷程記錄**(2026-10-30 agv-run02):`test/tools/exampleBuild.mjs` 的 `buildExample('App<名稱>.vue', 目錄)` 依 gExtractHtml 之 head 與選項產出 test-html 階段頁、再呼叫 gDocExams 所用之 `genDocsExams`,於 `<目錄>/docs/examples/` 產出 `ex-<名稱>.html`(引用形同 docs/examples:自有套件為 gh-pages 網址、本套件 dist 為 `../dist/` 並於 `<目錄>/docs/dist/` 置 dist 副本),供尚未隨發布重產的新範例使用;`openPage` 新增選項 `initScript`(頁面載入前注入,`page.addInitScript`),e2e-examples-overlay 以之注入 MutationObserver 記錄各表「顯示列數與本表覆蓋層可見文字」之歷程,事後依序比對,避免以時間窗斷言自帶 1–3 秒計時器之範例頁.`assertExamplePage`(範例頁標題與兩連結)已移入 `e2e-setup.mjs` 共用.
 - **app.html** 載入 gDistApp 之產物 app.umd.js(內含建置當時之元件),APP- 之格只驗範例建置產物之選單與標題;要驗本次修改須依 script.txt 重產(gDistApp 會清空 docs/examples).
 - **中介檔**:上傳用 xlsx 以 wsemi 產於 `test/_tmp/<檔名>/`、下載檔存檔讀回即刪;該檔 after 刪除目錄(`useTmpDir`).不得用 `./tmp/`.
 - **下載判定**:`assertDownloadCase`(throw、noFile、檔案內容、回傳值與檔案相同、分頁名、檔名、console 提示、未處理之 rejection);百萬列之檔以 `runHostCase(..., { readFile: false })` 只核對已產檔與列數.
@@ -708,6 +760,7 @@
 
 - **e2e-overlay / api-localeText**(2026-10-30,issue #26):宿主頁 `test/pages/overlay.html` 以查詢字串 `?g=o1,o5` 只建立所需之表(每格只載入要用的表);空表(無儲存格)之頁面以 `openPage(url, { minCells: 0 })` 開啟.act:過濾為真鍵盤於表頭浮動過濾列(`typeIntoFloatingFilter`,L1)與宿主搜尋框(click + `keyboard.type`,L1);宿主端動作為宿主按鈕(L3,其處理函數呼叫 `getApi().showLoadingOverlay()/hideOverlay()`、`setHeadFilter`/`clearHeadFilter`、更換 `opt`,同官方範例「按鈕呼叫元件方法」之用法,模擬宿主程式的行為);api-localeText 以宿主按鈕取文字掛鉤回傳(`window.__cases` 登錄案例,`runHostCase`).**ag-grid 載入中覆蓋層會攔截指標事件**(`.ag-overlay-loading-wrapper` 蓋住整個表含表頭,Playwright `locator.click` 逾時),故「載入中時過濾」只能由宿主按鈕呼叫 `setHeadFilter`(OV16、OV17),真鍵盤輸入只用於載入中隱藏後.**浮動過濾列輸入框無 placeholder**(`filterOoo` 只用於過濾彈窗),非覆蓋層鍵之覆寫以載入中覆蓋層之 `loadingOoo` 驗(OV5).**列數 0 之偵測等待**:ag-grid 以動畫移除列,覆蓋層文字出現時 `.ag-row` 的 DOM 可能尚未移除,斷言列數前先 `waitRowCount`;表頭過濾清除有防抖,列數本來就是 0 時以過濾模型為空作訊號(OV10).否定斷言(OV4、OV14、OV16、OV17、OV21)皆於終態達成後再觀察 300–700ms 短窗.
 - **e2e-fadeState**(2026-11-01 agg31,R26):宿主頁 `test/pages/fade.html` 於 `window.__log` 記錄:`states`(根節點 `state` 屬性以 MutationObserver 記錄每次變動,每筆含當下外層 div 之 opacity、進行中之 CSS 過場數〔任何屬性〕、已發生之補繪次數)、`fadeStartAt`(外層 div 之 style 出現 opacity:1)、`tEnds`(外層 div 之 transitionend/transitioncancel)、`hostEndAt`(容器寬度過場結束)、`widenAt`、`resizes`(根節點 ResizeObserver)、`refreshes`(包裝同一個 api 物件之 `refreshCells`,元件內呼叫取得的是被包裝後的函數;輪詢至 api 建立後包裝,補繪發生於淡入結束後,來得及)。**act 為頁面自帶之計時行為**(宿主程式於淡入開始後 N ms 改容器寬度、改背景色、銷毀元件或 ag-grid),屬本檔要驗的情境本身(宿主彈窗最大化等),非使用者輸入,不掛真滑鼠鍵盤;時序前提(改寬落在淡入期間、背景色過場晚於 opacity 結束、容器過場晚於淡入結束)以 `widenAtFade`/`bgAtFade` 相對淡入開始計時並於案例內先斷言前提,不依賴表格就緒時間(實測就緒約在掛載後 8ms)。否定斷言(FD6、FD7、FD9、FD10)於終態達成後再觀察 500–1500ms 短窗。像素組(FD11、FD12)每輪新 context、逐 byte md5 比對同機同旗標之畫面(不存標準圖;差異約 180 px 之次像素,容差比對會掩蓋)。**變異法**:`mkmut.mjs`(證據夾;本機 `./tmp` 已清)以字串取代 dist 內壓縮後之程式碼產生單點變異檔,`session.mjs` 於取得測試鎖後逐一換入 `dist/`、只跑預期偵測之案例(`--grep`)、`finally` 還原並以雜湊核對。
+- **e2e-invisibleScrollbar**(2026-11-02 ag284,R27):宿主頁 `test/pages/invisibleScrollbar.html` 以查詢字串造情境(`rows`、`w`、`h`、`n`、`rw`、`pin`、`pinb`),**表格高度須以元件 `height` 屬性設定**(元件根 div 之 style 高度不影響內層外層 div,其 `height` 屬性預設 300px;以 style 設高度為無效);按鈕以 `cell-render` slot 渲染並於 `window.__vm.clicked` 記錄(`<欄>:<列識別>`).`open(q)` 每格都先驗前置(`getComputedStyle` 無法取捲軸寬,以「100×100 之 `overflow:scroll` 元素 `offsetWidth - clientWidth`」量,須為 0,且橫向捲軸帶 `ag-scrollbar-invisible`),否則紅——本檔只在隱形捲軸環境有意義(Chromium headless 之 `--hide-scrollbars`);`assertClickable` 之判準為「按鈕中央 `elementFromPoint` 為按鈕本身、按鈕下緣在橫向捲軸上緣之上、真滑鼠點中央後 `clicked` 恰為該按鈕一筆」,等待以「按鈕已渲染且矩形連續 3 次〔各 100ms〕不變」之偵測(`pollUntil`),不用固定延時.**列數恰填滿資料區之案例(IS5)**依列高 28px(balham)、表頭區 65px 推出表格高 207px(資料區 140px = 5 列),升 ag-grid 或換主題時須重驗其前置斷言(列總高度大於資料區上緣至橫向捲軸上緣之距離).
 - **修前紅/變異**(2026-10-30 agv-run01):見 R24、R25 測試節與報告.
 
 #### 已知缺口
@@ -746,6 +799,7 @@ npm 最新為 2.1.5(2026-10-06 查).版本欄為該提交時 package.json 之值
 | 工作樹(未提交,2026-10-30 agv-run01) | **過濾成 0 筆之覆蓋層預設開啟(可見行為變更)**:`opt.rows` 非空而顯示列數為 0 時,①表頭過濾使然:原只剩表頭與空白,現顯示「無符合過濾條件之資料」(en `No Rows Match The Filter`、zh-cn「无符合过滤条件的数据」)覆蓋層;②filterall 使然:原顯示「無資料可顯示」(`noRowsToShow`),現改顯示過濾 0 筆文字.`opt.showOverlayWhenFilteredEmpty=false` 恢復舊行為.顯示列回到 > 0 即隱藏;不蓋掉宿主顯示之載入中覆蓋層.另新增 `opt.localeText`(覆寫表格文字之字典,先查覆寫再走內建,未給時行為不變).截圖或測試若拍到過濾成 0 筆之表會與舊版不同(本套件無此類標準圖).對外說明於範例頁 localeText、showOverlayWhenFilteredEmpty 之說明文字與 JSDoc(2026-10-30 agv-run02;README 不改,R18) | 新增、可見行為 | R24、R25 |
 
 | 工作樹(未提交,2026-11-01 agg31) | 元件根節點新增 DOM 屬性 `state`(`showing` → `shown`,淡入 0.5 秒結束後為 shown;不改外觀與淡入時間、既有 API 與事件);**可見行為**:表格建立後淡入期間若根節點尺寸改變(寬或高差 > 1px),淡入結束且尺寸穩定(0.2 秒)後自動 `api.refreshCells({ force: true })` 一次(使淡入期間補繪之儲存格字形像素固定;自訂 cell-render slot 之儲存格被重建一次);淡入期間尺寸未改變者不重繪.新增範例頁 `state`(選單群組 `dom`) | 新增、可見行為 | R26 |
+| 工作樹(未提交,2026-11-02 ag284) | **可見行為(版面)**:捲軸寬為 0 之環境(無頭瀏覽器、浮動捲軸之瀏覽器)下,有橫向捲動之表格,橫向隱形捲軸由疊在資料區底部 16px 之上改為占位排列,**資料區高度少 16px**(同有實體捲軸時之版面);捲到最下時最後一列不再被橫向捲軸蓋住,儲存格內按鈕可點.無橫向捲動者、有實體捲軸之瀏覽器、直向隱形捲軸(仍疊在資料區右緣 16px,第 6 節 #26)不變.使用端以無頭瀏覽器產製之 e2e 標準圖,凡拍到有橫向捲軸之表格者,底部列位置改變,升版後須重產(本套件無標準圖) | 修正、可見行為 | R27 |
 
 ## 9. 候選規則與待裁示(未裁示,僅記錄)
 

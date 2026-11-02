@@ -1,9 +1,9 @@
 //官方範例 state(對外文件; 規則帳本 R18、R26; Gitea issue #31)
-//使用者路徑: ①開範例頁(依 gExtractHtml、gDocExams 之作法自 src 當場產製, CDN 資源一律路由至本機, w-aggrid-vue 為本地 dist; 同形性見 unit-appExamples 之 BLD1)
+//使用者路徑: ①開範例頁(依 gExtractHtml、gDocExams 之作法自 src 當場產製, CDN 與 gh-pages 資源一律路由至本機, 頁內相對路徑 ../dist/ 之 w-aggrid-vue 亦路由為本地 dist; 同形性見 unit-appExamples 之 BLD1)
 //②無操作: 範例於掛載後 0.1 秒把容器由 620px 改為 900px, 並於頁內列出根節點 state 屬性之變化 ③看到說明文字、表格與 state 變化清單 ④無輸入
 //⑤比對說明文字(值與轉換時點、等待寫法)與清單(依序為 showing、改寬、shown) ⑥無副作用
 import assert from 'assert'
-import { openPage, useTmpDir, assertNoErrors, assertExamplePage } from './tools/e2e-setup.mjs'
+import { openPage, useTmpDir, assertNoErrors, assertExamplePage, assertRouted } from './tools/e2e-setup.mjs'
 import { waitUntilExist } from './tools/e2eLib.mjs'
 import { buildExample } from './tools/exampleBuild.mjs'
 
@@ -38,7 +38,7 @@ describe('e2e-examples-state:官方範例 state', function() {
         for (let s of ['CompCssWAggridVue', 'state="showing"', 'state="shown"', '單向轉換', 'api.refreshCells({ force: true })', '0.35 秒', '淡入期間尺寸未改變者不重繪', '[state="shown"]']) {
             assert.ok(desc.includes(s), `說明文字應含 ${s}`)
         }
-        assert.deepStrictEqual(ctx.external.unmapped, [], '範例頁之外部資源皆已對照本機')
+        assertRouted(ctx)
         assertNoErrors(ctx)
     })
 

@@ -3699,4 +3699,9 @@ export default {
   border-color: transparent !important;
   outline: none;
 }
+/* 隱形捲軸(瀏覽器捲軸寬為0, 如浮動捲軸、無頭瀏覽器)時, ag-grid 31之橫向捲軸以position:absolute; bottom:0疊在資料區底部(ag-grid.css之.ag-body-horizontal-scroll.ag-scrollbar-invisible), 非Apple平台恆顯示並攔截點擊, 捲到最下時最後一列之下半(約16px)點不到; 改回占位排列, 由資料區讓出捲軸之高度(高度仍由ag-grid依是否有橫向捲動設定, 無橫向捲動時隱藏而不占位); bottom須加!important: ag-grid於隱形捲軸時以行內style把bottom設為置底列總高度(將絕對定位之捲軸抬到置底列之上), 改為相對定位後該值會使捲軸上移而蓋住置底列; 直向隱形捲軸不比照(占位排列會使資料區比橫向捲軸窄16px, 捲到最右時最後一欄右緣被裁切, 見規則帳本R27與6節#26) */
+.CompCssWAggridVue .ag-body-horizontal-scroll.ag-scrollbar-invisible{
+  position: relative;
+  bottom: auto !important;
+}
 </style>
