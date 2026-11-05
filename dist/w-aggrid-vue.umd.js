@@ -1,5 +1,5 @@
 /*!
- * w-aggrid-vue v2.1.22
+ * w-aggrid-vue v2.1.23
  * (c) 2018-2021 yuda-lyu(semisphere)
  * Released under the MIT License.
  */
