@@ -134,7 +134,8 @@
 ### wsemi
 
 - **`isearr` 單元素特例**:長度為 1 且唯一元素為「空」(`{}`、`''`、`null`、`[]`)時回 false.所以 `ltdtmapping([{}], keys)` 回 `[]`(只有 1 列空物件時取代模式會清空整張表);`[[]]` 為 false 而 `[[],[]]` 為 true.不可拿 `isearr` 當「非空陣列」或二維判準.
-- **`ltdtkeys2mat`**:任一列非有效物件即整批回 `[]`(不是只丟該列);非字串非數值之值走 `o2j`,null 成為字串 `'null'`、Date 成為含引號之 JSON 字串.`returnWithStateAndMsg` 對 `[]` 也回 error,不能用來區分「無數據」與「列無效」.
+- **`ltdtkeys2mat`**:任一列非物件(`null`、陣列、字串)即整批回 `[]`(不是只丟該列;2026-11-16 以 1.9.61 實測);`{}` 自 1.9.61 起為有效列(各欄給 `empty`,原判無效),本套件之下載列皆含 useKeys 全部之鍵故不受影響.`returnWithStateAndMsg` 對 `[]` 也回 error,不能用來區分「無數據」與「列無效」.
+- **`ltdtkeys2mat` 之值表示法**(1.9.61 起,2026-11-16 實測):`null` ⇒ `'null'`(本套件先轉空白,故不出現)、自有 `undefined` ⇒ `empty`、`NaN` ⇒ `'NaN'`、`±Infinity` ⇒ `'Infinity'`／`'-Infinity'`、Date ⇒ 不帶引號之 ISO 字串、函數 ⇒ `'null'`、BigInt ⇒ `String(v)`、物件與陣列 ⇒ 鍵排序後之 JSON;有限數字 `0` 仍為數字.1.9.60 以前為 NaN ⇒ `'null'`、Infinity ⇒ 空白、Date ⇒ 帶引號之 JSON(本庫 `V_types_raw`、`V_types_disp` 之期望曾記舊表示,wsemi 升版後轉紅,2026-11-16 改為新表示).**升 wsemi 後若下載檔內容之測試轉紅,先以 `node_modules/wsemi` 實測該函數對各型別之輸出,再判斷是期望過時或產品缺陷**;`ltdtkeysheads2mat` 不在本套件之下載路徑上(`downloadExcelFileFromData` 只在 `iseobj(data[0])` 為真時才走,本套件傳二維陣列,首列為陣列,`iseobj` 為 false).
 - **`cstr`**:非字串、非數值、非 Symbol、非 BigInt 一律回 `''`(Date 會變空字串).
 - **`haskey`** 用 `key in obj`(含原型鏈、不解析路徑);`ltdtmapping` 取值用 lodash `get`(會解析 `a.b` 路徑).判斷「列有沒有這個鍵之值」要與取值一致,用 `get(row, key) !== undefined`.
 - **`ispm`** 只認原生 Promise 與帶 then 之函數,不認一般 thenable 物件;非同步路徑一律用原生 `await`.

@@ -526,7 +526,7 @@
   2. 取出之值 cloneDeep 後寫入新列物件,掛鉤改寫巢狀值不影響表格數據.
   3. funGetLtdtHook 之後另建列物件,把 useKeys 欄之 null 轉為 ''(畫面亦顯示空白);掛鉤收到的仍是原值.
   4. 表頭一律 map 為新陣列,不與 useKeys 或呼叫端之陣列同址;useHead 時取 kpHead,無對應者退回 key.
-  5. 其餘值依 wsemi ltdtkeys2mat 轉換:布林為 'true'、'false',物件與陣列為 JSON 字串(NaN、Infinity、Date 見第 6 節).
+  5. 其餘值依 wsemi ltdtkeys2mat 轉換(wsemi 1.9.61 起,下載檔之文字表示):布林為 'true'、'false',物件與陣列為鍵排序後之 JSON 字串,NaN 為 'NaN'、Infinity 為 'Infinity'、-Infinity 為 '-Infinity',Date 為不帶引號之 ISO 字串(如 `2026-01-02T00:00:00.000Z`),函數視為 null(第 6 節 #2).本套件先把 useKeys 欄之 null 轉為空白(第 3 點),故 wsemi 之 null ⇒ 'null' 不會出現在下載檔;undefined 亦為空白.1.9.60 以前為 NaN ⇒ 'null'、Infinity ⇒ 空白、Date ⇒ 帶引號之 JSON 字串,已不適用.
 - **單一擁有者**:downloadCore(320–377).
 - **盤點**:`git grep -nE 'cloneDeep\(v\)|isnull\(t\[key\]\)|let heads = map|haskey\(vo\.kpHead' -- src/components/WAggridVue.vue`(4 筆:337、361、372、373)
 - **站點**:皆在 downloadCore,已套.
@@ -610,7 +610,7 @@
 | # | 限制 | 證據 | 歸屬 |
 |---|---|---|---|
 | 1 | 寫檔失敗無法回報:wsemi downloadExcelFileFromData 以 resolve 回 { error }(hucre 拒絕)或 reject(觸發下載時之例外),下載方法已同步回傳;本套件以 `[w-aggrid-vue] <方法名>: can not write excel file` 記錄於 console.事前可擋者(分頁名 R16、Excel 上限 R15)已同步處理,已知仍可到達者只有 mat 掛鉤之儲存格物件(#10) | wsemi 原始碼;M_cellStyleBad | wsemi |
-| 2 | 下載之 Infinity 為空白、NaN 為 'null'、Date 為含引號之 JSON 字串(如 `"2026-01-02T00:00:00.000Z"`) | V_types_raw、V_types_disp | wsemi ltdtkeys2mat、hucre;要可讀格式請用 kpCellFormat |
+| 2 | 下載檔之特殊值文字表示(wsemi 1.9.61 起,2026-11-16 實測):NaN 為 'NaN'、Infinity 為 'Infinity'、-Infinity 為 '-Infinity'、Date 為不帶引號之 ISO 字串(如 `2026-01-02T00:00:00.000Z`);1.9.60 以前為 NaN ⇒ 'null'、Infinity ⇒ 空白、Date ⇒ 帶引號之 JSON 字串.要其他格式請用 kpCellFormat | V_types_raw、V_types_disp(含 ninf 列) | wsemi ltdtkeys2mat(src/components/WAggridVue.vue:415);要可讀格式請用 kpCellFormat |
 | 3 | 上傳讀回之值一律為字串;日期儲存格為 'YYYY-MM-DDTHH:mm:ss.SSS'(wsemi 1.9.10 起,1.9.9 為 '') | R_dateCell | wsemi |
 | 4 | 下載後再上傳:格式化後之字串不可逆;以 useHead 下載之表頭須設 kpConvertKeysWhenUploadData 反向對照 | downloadData 之 JSDoc | 呼叫端 |
 | 5 | 置頂、置底列不輸出(與 ag-grid 匯出不同) | Q_pinnedRows_disp、Q_pinnedRows_raw | 刻意 |

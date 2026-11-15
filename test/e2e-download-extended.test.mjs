@@ -24,7 +24,8 @@ let rowsOver = (name) => new RegExp(`^\\[w-aggrid-vue\\] ${name}: too many rows,
 let writeFail = (name) => new RegExp(`^\\[w-aggrid-vue\\] ${name}: can not write excel file`)
 //分頁名稱長度依 UTF-16 單位計(同 Excel 與 hucre 之 name.length), 表情符號與擴充 B 區漢字各佔 2 單位
 let logSheet = (re) => new RegExp(`invalid sheetName\\[${re}\\], use default sheetName 'data'`)
-let VT = [['id', 'v'], ['null', ''], ['undef', ''], ['nan', 'null'], ['inf', ''], ['bool', 'true'], ['obj', '{"a":1}'], ['arr', '[1,2]'], ['date', '"2026-01-02T00:00:00.000Z"'], ['empty', ''], ['zero', '0']]
+//VT: 各型別之值於下載檔之文字表示(wsemi 1.9.61 起之 ltdtkeys2mat: NaN、±Infinity 為同名字串, Date 為不帶引號之 ISO 字串; null 與 undefined 於本套件先轉為空白, R14)
+let VT = [['id', 'v'], ['null', ''], ['undef', ''], ['nan', 'NaN'], ['inf', 'Infinity'], ['ninf', '-Infinity'], ['bool', 'true'], ['obj', '{"a":1}'], ['arr', '[1,2]'], ['date', '2026-01-02T00:00:00.000Z'], ['empty', ''], ['zero', '0']]
 let CK = [['MAKE(改)', 'model'], ['Toyota', 'Celica'], ['Ford', 'Mondeo']]
 
 //前置狀態(setup 例外: 以 grid API 建立使用者先前操作之結果), 於點擊前執行
@@ -73,7 +74,7 @@ let custom = {
 
 //每格: [代號, 說明(含對應規則), 應然]
 let cases = [
-    ['V_types_raw', 'raw 各型別之值:null 與 undefined 為空白,其餘依 wsemi 轉換(R14)', { file: VT, retSame: false }],
+    ['V_types_raw', 'raw 各型別之值:null 與 undefined 為空白,NaN、±Infinity 為同名字串,Date 為不帶引號之 ISO 字串,其餘依 wsemi 轉換(R14、第 6 節 #2)', { file: VT, retSame: false }],
     ['V_types_disp', 'disp 各型別之值:同上(R14)', { file: VT, retSame: false }],
     ['S_sheetSlash', 'sheetName 含 /:改用 data 並提示(R01、R16)', { file: F4, sheet: 'data', log: /invalid sheetName\[2026\/10\], use default sheetName 'data'/ }],
     ['S_sheet32', 'sheetName 32 字:改用 data 並提示(R16)', { file: F4, sheet: 'data', log: /invalid sheetName\[x{32}\], use default sheetName 'data'/ }],
