@@ -88,7 +88,7 @@ let cases = [
     ['S_sheetExtB16', 'sheetName 為 16 個擴充 B 區漢字(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('(𠀀){16}') }],
     ['S_sheetUnits31', 'sheetName 29 字加 1 表情符號(31 單位,上限):照用且無提示(R16)', { file: F4, sheet: 'x'.repeat(29) + '😀', nolog: /invalid sheetName/ }],
     ['S_sheetUnits32', 'sheetName 30 字加 1 表情符號(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('x{30}😀') }],
-    ['S_sheetBoxed', 'sheetName 為 new String 包裝之字串:改用 data 並提示(R16,hucre 要求字串原始值)', { file: F4, sheet: 'data', log: logSheet('boxed') }],
+    ['S_sheetBoxed', 'sheetName 為 new String 包裝之字串(非字串原始值):改用 data 並提示,提示依型態表示(與陣列、布林等非原始值同,R16;wsemi 1.9.69 起判斷函數只收原始值)', { file: F4, sheet: 'data', log: logSheet('\\[object String\\]') }],
     ['C_keys16384', 'keys 掛鉤回 16384 欄(Excel 上限):照常產檔(R15)', { file: WIDE(16384) }],
     ['C_keys16385', 'keys 掛鉤回 16385 欄:同步拋錯且不產檔(R15)', { throw: colsAt('downloadData', 0) }],
     ['C_keys16385_disp', 'disp 同上(R15)', { throw: colsAt('downloadDisplayData', 0) }],

@@ -51,7 +51,6 @@ describe('unit-hucre-limits:寫檔器之拒絕條件', function() {
             ['保留名 history', 'history', false],
             ['保留名 HISTORY', 'HISTORY', false],
             ['中文與數字', '報表2026-10', true],
-            ['new String 包裝之字串(非字串原始值)', new String('boxed'), false],
         ]
         for (let [title, name, accept] of cases) {
             it(`${title}:${accept ? '接受' : '拒絕'}`, async function() {
@@ -65,6 +64,16 @@ describe('unit-hucre-limits:寫檔器之拒絕條件', function() {
                 }
             })
         }
+
+        //wsemi 1.9.69 起判斷函數只收原始值: new String 包裝之字串與非字串(5、{}、null)同樣視為未給, 以預設 'data' 寫出, 不會到達 hucre 之檢查(downloadCore 事前即以 typeof 擋下並提示, 見 R16)
+        it('new String 包裝之字串(非字串原始值):視為未給, 與 5、{}、null 同樣改用預設 data 並接受', async function() {
+            for (let name of [new String('boxed'), 5, {}, null]) {
+                let r = await write(H, name)
+                assert.ok(r.ok, `應接受, 實際 ${r.error}`)
+                let d = await getDataFromExcelFileU8Arr(r.u8a, { fmt: 'array' })
+                assert.strictEqual(d[0].sheetname, 'data')
+            }
+        })
     })
 
     describe('欄數(欄索引上限 16383)', function() {

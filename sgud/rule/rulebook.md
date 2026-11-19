@@ -558,7 +558,7 @@
 
 | 條件 | hucre 1.2.0 | F bSheetName | 狀態 |
 |---|---|---|---|
-| 字串原始值且非空 | typeof 為 string 且 length > 0 | `typeof sheetName === 'string' && sheetName.length > 0`(wsemi isestr 對 new String() 亦為 true,不可用) | 已套(2026-10-07) |
+| 字串原始值且非空 | typeof 為 string 且 length > 0 | `typeof sheetName === 'string' && sheetName.length > 0`(wsemi 1.9.68 以前 isestr 對 new String() 為 true 故不可用;1.9.69 起為 false,與 typeof 一致,仍保留 typeof 以不依賴 wsemi) | 已套(2026-10-07) |
 | 長度 | `name.length > 31` 即拒(計 UTF-16 碼元) | `sheetName.length <= 31`(不可用 lodash size,其計 Unicode 碼位) | 已套(2026-10-07) |
 | 禁用字元 | `/[[\]:*?/\\]/` | 同 | 已套 |
 | 首尾單引號 | startsWith、endsWith 單引號即拒 | 同 | 已套 |
@@ -566,7 +566,8 @@
 | 控制字元 | 不拒,寫成 `_xHHHH_` | 不檢查 | 範圍外:見第 6 節 #13 |
 
 - **升版時**:wsemi 或 hucre 升版即重跑上列 hucre 盤點並逐條比對,並跑 `npx mocha test/unit-hucre-limits.test.mjs`(1.1.0 → 1.2.0 未變,2026-10-06).
-- **測試**:S_sheetSlash、S_sheet32、S_sheetApos、S_sheetHistory、S_sheetEmpty、S_sheetEmoji16、S_sheetEmoji16_disp、S_sheetExtB16、S_sheetUnits32、S_sheetBoxed(皆為 'data' 並提示)、S_sheetValid、S_sheetEmoji15、S_sheetUnits31(照用、無提示);unit-hucre-limits 之分頁名 21 格.
+- **測試**:S_sheetSlash、S_sheet32、S_sheetApos、S_sheetHistory、S_sheetEmpty、S_sheetEmoji16、S_sheetEmoji16_disp、S_sheetExtB16、S_sheetUnits32、S_sheetBoxed(皆為 'data' 並提示)、S_sheetValid、S_sheetEmoji15、S_sheetUnits31(照用、無提示);unit-hucre-limits 之分頁名 21 格(20 格為 hucre 之接受/拒絕條件;另 1 格為 wsemi 1.9.69 起 `new String(...)` 與 `5`、`{}`、`null` 同樣視為未給、以預設 `'data'` 寫出,不再到達 hucre,2026-11-19 由原「拒絕」改).
+- **非字串與包裝字串之處置一致**:downloadCore 以 typeof 擋下非字串原始值(含 `new String(...)`、`5`、`{}`、`null`)並依 R01 用 'data'(非 null/undefined 者提示);wsemi 1.9.69 之 `getExcelWorkbookFromData` 對同批輸入亦用 'data'.兩層一致,無包裝物件專用之分支.console 提示中之無效值依 `descInvalid`(`isstr`／`isnum` 顯示原值,其餘顯示型態):1.9.69 起 `new String('boxed')` 顯示為 `[object String]`(原顯示 `boxed`),與陣列、布林等非原始值同(S_sheetBoxed 之期望依此).
 - **來源**:2026-10-06 下載複審 R3;使用者裁示改為預設並提示;2026-10-07 三方複審(boxed String).
 
 ## 4. 上傳
@@ -800,6 +801,7 @@ npm 最新為 2.1.5(2026-10-06 查).版本欄為該提交時 package.json 之值
 
 | 工作樹(未提交,2026-11-01 agg31) | 元件根節點新增 DOM 屬性 `state`(`showing` → `shown`,淡入 0.5 秒結束後為 shown;不改外觀與淡入時間、既有 API 與事件);**可見行為**:表格建立後淡入期間若根節點尺寸改變(寬或高差 > 1px),淡入結束且尺寸穩定(0.2 秒)後自動 `api.refreshCells({ force: true })` 一次(使淡入期間補繪之儲存格字形像素固定;自訂 cell-render slot 之儲存格被重建一次);淡入期間尺寸未改變者不重繪.新增範例頁 `state`(選單群組 `dom`) | 新增、可見行為 | R26 |
 | 工作樹(未提交,2026-11-02 ag284) | **可見行為(版面)**:捲軸寬為 0 之環境(無頭瀏覽器、浮動捲軸之瀏覽器)下,有橫向捲動之表格,橫向隱形捲軸由疊在資料區底部 16px 之上改為占位排列,**資料區高度少 16px**(同有實體捲軸時之版面);捲到最下時最後一列不再被橫向捲軸蓋住,儲存格內按鈕可點.無橫向捲動者、有實體捲軸之瀏覽器、直向隱形捲軸(仍疊在資料區右緣 16px,第 6 節 #26)不變.使用端以無頭瀏覽器產製之 e2e 標準圖,凡拍到有橫向捲軸之表格者,底部列位置改變,升版後須重產(本套件無標準圖) | 修正、可見行為 | R27 |
+| 工作樹(未提交,2026-11-19 agv492i) | 相依 wsemi 升為 ^1.9.69(判斷函數只收原始值,包裝物件判為 false):下載 `sheetName` 為 `new String(...)` 時仍改用 'data' 並於 console 提示(不變),**提示中之無效值由 `boxed` 改為 `[object String]`**(依型態表示,同陣列、布林等非原始值);非字串原始值(`5`、`{}`、`null`)之處置不變 | 可見行為(相依) | R01、R16 |
 
 ## 9. 候選規則與待裁示(未裁示,僅記錄)
 

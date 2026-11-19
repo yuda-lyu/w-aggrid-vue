@@ -142,7 +142,7 @@
 - **`isDate`** 預設會解析字串(`'2024-01-02'` 為 true);判斷 Date 實例要用 `isDate(v, { onlyCheckDateObject: true })`(1.9.10 起).
 - **`isp0int`** 接受整數字串(`'1'`);`Infinity` 預設會通過,加 `{ useLimitSafe: true }` 才排除.
 - **`downloadExcelFileFromData`** 寫檔器拒絕時以 resolve 回 `{ error }`;觸發下載(Blob、createObjectURL)或 Node 寫檔之例外則使 async 函數 reject,所以 `.then` 檢查 `{ error }` 與 `.catch` 兩者都要(2026-10-07 更正:原載「.catch 幾乎是死碼」不成立).分頁名不合法、欄數超限要到 hucre 寫檔時才失敗,所以要在呼叫前同步檢查.
-- **`isstr`／`isestr` 以 `Object.prototype.toString` 判斷**,`new String('x')` 亦為 true;hucre 要求 `typeof === 'string'`,傳給它的字串要以 typeof 判斷.
+- **`isstr`／`isestr` 只收原始值**(wsemi 1.9.69 起,判斷函數一律只收原始值;1.9.68 以前以 `Object.prototype.toString` 判斷,`new String('x')` 亦為 true):包裝物件為 false.hucre 要求 `typeof === 'string'`,本套件仍以 typeof 判斷(兩者現已一致,不依賴 wsemi 之行為).wsemi `getExcelWorkbookFromData` 之 `sheetName` 以 `isestr` 守門,`new String(...)` 與 `5`、`{}`、`null` 同樣視為未給而用 `'data'`(2026-11-19 以 1.9.69 實測,修前放行至 hucre 才報錯).本套件 `descInvalid` 以 `isstr`／`isnum` 決定提示中顯示原值或型態,故 `new String('boxed')` 於提示中由 `boxed` 變為 `[object String]`(升 wsemi 後以「包裝物件」字面盤點測試,會找到此類期望字串).
 - **`domShowInputAndGetFilesU8Arrs`**:取消選檔以空陣列 resolve;檔案超過 1000 MB 以「索引→訊息」物件 reject;每次呼叫先移除前一個隱藏 input.
 - **讀檔器 `getDataFromExcelFileU8Arr`**:首列為表頭,空表頭之欄略過,重複表頭後者覆蓋前者,不 trim;整列皆 null 之列略過,含空字串儲存格之列保留;值預設讀成字串.**1.9.9 把日期讀成 `''`**(2026-08-17 改用 hucre 時之退化),**1.9.10 起讀為 `'YYYY-MM-DDTHH:mm:ss.SSS'`**(UTC 分量,與時區無關),日期表頭亦同.
 - **寫檔器**以 Date 之 UTC 瞬間換算序號:在 +08:00 以本地午夜建立之 Date 會寫成前一天 16:00.

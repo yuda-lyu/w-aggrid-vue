@@ -335,7 +335,7 @@ function downloadCore(vo, name, keys, rows, opt) {
     }
 
     //sheetName, 須符合Excel分頁名稱規則(同wsemi寫檔器hucre之validateSheetName: 字串原始值, 長度以UTF-16碼元計1至31, 不含[ ] : * ? / \, 首尾非單引號, 非History), 否則寫檔時才失敗且無法回報, 故改用預設'data'
-    //長度不可用lodash size(計Unicode碼位), 表情符號與擴充B區漢字各佔2個碼元; wsemi isestr對new String()亦為true, 故以typeof判斷
+    //長度不可用lodash size(計Unicode碼位), 表情符號與擴充B區漢字各佔2個碼元; 字串原始值以typeof判斷(wsemi 1.9.69起isestr對new String()為false, 與此判準一致, 非字串與包裝字串皆視為未給而用預設)
     let bSheetName = typeof sheetName === 'string' && sheetName.length > 0 && sheetName.length <= 31 && !/[[\]:*?/\\]/.test(sheetName) && !sheetName.startsWith(`'`) && !sheetName.endsWith(`'`) && sheetName.toLowerCase() !== 'history'
     if (!bSheetName) {
         if (isGiven(sheetName)) {
