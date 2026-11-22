@@ -191,6 +191,7 @@
 - **隔離**:每位審查者一個 `git worktree`(以 HEAD 建立,**不含未提交之改動**;使用者可能在派工前剛提交,先看 `git log -1`),`node_modules` 以 junction 指向主 repo.
 - **複製檔案會保留修改時間**:`fs.copyFileSync` 保留 mtime,git 可能不顯示為已修改;要確認內容以 `git hash-object` 比對.
 - **限制句要點名暫存資料夾**:只寫「worktree 以外」擋不住寫入 `%TEMP%`、scratchpad(2026-10-06 兩位 Opus 皆犯);須寫明下載、暫存一律放 worktree 之 `tmp/`.收回後核對主 repo `git status` 與 `ls -A node_modules | wc -l`.
+- **點名禁用仍擋不住第三方工具,須以環境變數導向**(2026-10-07 規則帳本修正之 2+1 審查,提示詞已點名禁用 `%TEMP%`,opusB 首輪 Playwright 仍於 `%TEMP%` 留下 `playwright-artifacts-*`、`playwright_chromiumdev_profile-*` 各 1 個,自承;之後改導向):Playwright 之瀏覽器 profile 與下載暫存預設寫 `os.tmpdir()`,且於模組載入時即決定,故跑測試前就要設好環境變數.派審提示詞除限制句外附現成寫法:所有 node 與 Playwright 一律經 `TEMP=<worktree>/tmp/systmp TMP=<同> node ...` 執行(第一次就要設,不是發現後才改).收回後另查系統暫存區有無當日之 playwright 目錄;事後要刪時,Claude Code 之安全檢查會擋含變數路徑之 `rm -rf`,只能留給使用者手動刪.
 - **探測**:以與正式派工逐字相同之限制句,驗讀檔 canary、寫檔落地、能跑 node 與 Playwright;Sol 之探測順便確認額度.
 - **清理 junction**:本 repo 路徑含中文,自 Git Bash 執行 `cmd //c rmdir` 會失敗(找不到路徑);改用 node 以 `lstatSync(p).isSymbolicLink()` 確認後 `rmdirSync(p)`(非遞迴,只移除連結).**不可 `rm -rf`**,會沿 junction 刪掉主 repo 之 node_modules.之後 `git worktree remove --force`、`git worktree prune`.
 - **採納**:每條發現都對照原始碼或實測核對後才採納;審查者意見分歧時,以有原型實測之一方為重(例:列判準 `isobj` 與 `iseobj`).
