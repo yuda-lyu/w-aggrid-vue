@@ -71,9 +71,9 @@ describe('e2e-display-slots:slot 路徑與自訂表頭', function() {
         assertNoErrors(ctx)
     })
 
-    //removedWarns, 已移除之 4 個鍵之警告各幾則
+    //removedWarns, 已移除之 4 個鍵之警告各幾則(R28: 診斷輸出改經 wsemi getDiag 單一出口, 等級為 console.log, 不再是 console.warn)
     function removedWarns(logs) {
-        let warns = logs.filter((m) => m.type === 'warning').map((m) => m.text)
+        let warns = logs.filter((m) => m.type === 'log').map((m) => m.text)
         let n = (k, slot) => warns.filter((v) => v === `[w-aggrid-vue] opt.${k} was removed in 2.0.56, use scoped slot '${slot}' instead`).length
         return { kpCellRender: n('kpCellRender', 'cell-render'), kpCellTooltip: n('kpCellTooltip', 'cell-tooltip'), kpHeadRender: n('kpHeadRender', 'head-render'), kpHeadTooltip: n('kpHeadTooltip', 'head-tooltip') }
     }

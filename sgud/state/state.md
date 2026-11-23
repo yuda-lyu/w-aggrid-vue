@@ -2,9 +2,9 @@
 
 本檔只記**現況**:各功能做到哪裡、對應之規則帳本條目與測試檔、已知缺口與待辦、最近一次驗證之版本.過程寫入 `sgud/exp/experience.md`,藍圖(規則、盤點指令、站點)在 `sgud/rule/rulebook.md`.接續工作先讀本檔.
 
-- 套件:w-aggrid-vue(ag-grid-community 31.3.4 之 Vue2 封裝);`package.json` version 2.1.18(HEAD `18058b4`,2026-11-02;agg31、ag268、ag284 不改 version)
+- 套件:w-aggrid-vue(ag-grid-community 31.3.4 之 Vue2 封裝);`package.json` version 2.1.47(HEAD `cc0e8b3`,2026-11-24;歷輪 agg31、ag268、ag284、agv430、agv492i、tag1 皆不改 version,由主控發布時定版)
 - 建置:`node toolg/gDistRollupComps.mjs`(改 src 後測試前必先建置);測試:`npm test`(單檔、單格見規則帳本 7.1;「改動範圍 → e2e 檔」對照表亦在 7.1)
-- 最近一次驗證:2026-11-02 ag284(Gitea #54:捲軸寬 0 時橫向隱形捲軸疊在資料區底部蓋住最後一列;樣式區加占位排列規則並重建 dist,R27;直向同型問題實測後不改,限制 #26);全套 `npm test --lock` 532 綠(517 + 新增 e2e-invisibleScrollbar 15 格),結果見下「最近一次驗證」
+- 最近一次驗證:2026-11-24 tag1(排程第 605 項:診斷輸出 console 改依跨套件規格〈診斷輸出與遮罩〉,R28);全套 `npm test --lock` **607 passing、0 failing**(532 + 新增 unit-diagSites 8、api-consoleNoValues 63、e2e-consoleNoValues 4),結果見下「最近一次驗證」
 
 ## 功能現況
 
@@ -21,6 +21,7 @@
 | 空表/過濾 0 筆覆蓋層 | 數據為空→`noRowsToShow`;`opt.rows` 非空而表頭過濾或 filterall 使顯示列為 0→`noRowsToShowFiltered`(**預設開啟**,`opt.showOverlayWhenFilteredEmpty=false` 關閉並完全回到舊行為);顯示列回到 >0 即隱藏;不蓋掉宿主經 `getApi().showLoadingOverlay()` 顯示之載入中;opt 執行中變更(localeText、language、選項)即時更新或隱藏;經 w-table-vue `WTableEdit` 原樣轉交(讀碼確認,未改他套件) | R25 | e2e-overlay(OV1–OV31)、api-localeText(AL5) |
 | 淡入與根節點 `state` | 根節點 `state` 屬性(`showing` → `shown`,單向):淡入(外層 div 0.5 秒 opacity)結束且外層 div 已無進行中之 CSS 過場後落定;淡入期間根節點尺寸(寬或高)與淡入開始時差 > 1px 者,於淡入結束且尺寸穩定(`dbcFade` 350ms)後 `api.refreshCells({ force: true })` 恰 1 次再落定(淡入結束時再量一次尺寸,免漏同幀之變化;尺寸持續變動時自淡入結束起至多再等 3 秒即強制補繪);淡入期間無尺寸變化者不補繪、立即落定;過場事件遺失由後備輪詢(就緒 0.8 秒起每 50ms,至多再等 3 秒)判定;元件或 ag-grid 銷毀後略過.JSDoc `@vue-data state`;範例頁 `state`(選單群組 `dom`) | R26;第 6 節 #25 | e2e-fadeState(FD1–FD17)、e2e-examples-state(EXS1–EXS2)、unit-appExamples(AX6) |
 | 隱形捲軸(捲軸寬 0) | 橫向隱形捲軸改占位排列(樣式區 `position: relative; bottom: auto !important`,不限平台):資料區讓出 16px,捲到最下時最後一列按鈕不被蓋住;置底列時捲軸排在置底列區之下;捲動同步、固定欄、無橫向捲動之版面不變.**直向隱形捲軸仍疊在資料區右緣 16px(實測後不改:占位會使橫向捲動範圍短 16px,最後一欄右緣被裁切,限制 #26)** | R27;6 節 #26 | e2e-invisibleScrollbar(IS1–IS15) |
+| 診斷輸出(console) | **一切 console 輸出經單一出口 `diagOf`(wsemi getDiag)**:預設只印固定詞彙、鍵名與值之形狀(`{ valueShape }`)或錯誤摘要(`{ errType, errCode }`),不印使用端給之值、錯誤訊息原文與堆疊;元件 `opt.logDetail`(true: console 改印遮罩後細節)、`opt.funLog`(函數: 全部輸出只交給它,`() => {}` 即關閉;拋錯或 rejected Promise 不影響方法);opt 於每次輸出時才讀取.元件碼 console 站點 12 → 0,輸出呼叫點 25(logUseDefault 12、logUseDefaultOpt 3、logErr 6、logFixed 4).已移除鍵警告原 `console.warn` 改為 `console.log`.**限制**:wsemi `downloadExcelFileFromData`(1.9.72)於寫檔器失敗時自行 `console.log` 錯誤本體,不經本出口,無從關閉(第 6 節 #27,待對 wsemi 提報) | R28;R01、R03、R10、R22;第 6 節 #27 | unit-diagSites(DS0–DS7)、api-consoleNoValues、e2e-consoleNoValues;既有斷言隨之改寫:api-localeText、e2e-overlay、e2e-display-slots、e2e-download-extended、e2e-pasteEditable、e2e-showKeys、e2e-upload-matrix |
 | 範例即文件 | src 80 個範例(docs/examples 80,已於 2026-11-02 發布重產;範例頁引用形:本套件 dist 為相對路徑 `../dist/`、w-jsonview-tree 為 gh-pages 網址、w-demores 與 vue 等第三方為 jsDelivr,測試之 `EXTERNAL` 對照表與產製器 `exampleBuild.mjs`〔直接呼叫 genDocsExams〕已與之同形,EXT1/EXT2 守護);新增 `localeText`、`showOverlayWhenFilteredEmpty`(選單群組 `text`,2026-10-30 agv-run02)、`state`(選單群組 `dom`,2026-11-01 agg31),破壞性變更(過濾 0 筆覆蓋層預設開啟)之說明寫在兩頁之說明文字與 `opt.showOverlayWhenFilteredEmpty` 之 JSDoc;**README 不改**(R18,run01 之新增已撤回);範例說明文字不可含字面 `WAggridVue`(產製管線會改寫) | R18、R24、R25、R26 | e2e-examples-*、unit-appExamples(AX1–AX6、BLD1、EXT1–EXT2)、e2e-examples-overlay(EXO1–EXO4)、e2e-examples-state(EXS1–EXS2) |
 
 ## 已知缺口與待辦
@@ -34,6 +35,8 @@
 - **已知限制(新,規則帳本第 6 節 #25)**:淡入補繪只涵蓋淡入期間(含等待尺寸穩定)內之尺寸改變,`shown` 之後才發生者不補繪;淡入期間尺寸有改變時自訂 cell-render slot 之儲存格被重建一次;`state` 只反映淡入與補繪,不代表數據已載入;淡入落定依 `getAnimations()`;補繪後畫面與 `tr=0` 相同僅在 Chromium(Playwright 1.63)逐 byte 驗證.
 - **待裁示(agg31)**:①`state` 取名/值(showing/shown)是否需再加過渡態(如 `resizing`);②〔已解除:`docs/examples` 於 2026-11-02 發布重產,ex-state 頁已在〕;③w-component-vue ≥ 2.5.35 之 `createTransitionState` 日後若成為本套件相依,可否改引用(目前自寫,常數與作法已比照).
 - **已知限制(新,規則帳本第 6 節 #26,2026-11-02 ag284)**:直向隱形捲軸(捲軸寬 0 之環境)仍疊在資料區右緣 16px,最右欄距右緣 16px 內之互動內容(如填滿儲存格之按鈕之右側)點不到;改占位會使橫向捲軸範圍短 16px 而裁切最後一欄,故不改(IS14 記錄現況、IS15 為對照);**待裁示**:是否接受維持,或由呼叫端於最右欄留 16px 以上右內距.
+- **待裁示(tag1,R28,2026-11-24)**:①wsemi `downloadExcelFileFromData` 於寫檔器失敗時自行 `console.log` 錯誤本體(第 6 節 #27,已列回饋):本套件不得改他套件,建議由主控對 wsemi 提報;②新公開選項 `opt.logDetail`、`opt.funLog` 是否保留(建議保留;現載於元件 JSDoc `@vue-prop`;README 依 R18 不改,範例頁未新增);③已移除鍵警告之等級由 `warn` 降為 `log`(wsemi getDiag 無 warn,已列回饋)是否接受;④無效選項之提示不再印使用端給之值(原 R01 以顯示原值為誤植訊號)是否接受為最嚴解釋(`logDetail`／`funLog` 可還原);⑤經 w-table-vue 之使用端須自行把 `funLog`／`logDetail` 放進傳給 `WTableEdit` 之 opt 才能關閉(讀碼確認其原樣轉交,未實測,未改他套件).
+- **升版影響(R28)**:依賴本套件 console 文字之使用端日誌過濾須調整(輸出字樣改變表見 tag1 報告);版本號宜 minor 以上(新增公開選項、可見輸出改變).
 - **升版影響(R27)**:捲軸寬為 0 之環境下,有橫向捲動之表格資料區少 16px;使用端以無頭瀏覽器產製之 e2e 標準圖拍到有橫向捲軸之表格者須重產;本套件無 `test/pics`.
 - **未驗**:pasteText 之固定欄(pinned)貼上規則;列拖曳於置頂置底列、回呼內銷毀表格;e2e 於 Linux CI 未實測;R20 第 3 項時序、R03 之兩個 catch 以程式碼核對.
 - 既有限制見規則帳本第 6 節(25 項;#25 為淡入補繪與 state 之限制;#24 為過濾 0 筆覆蓋層之限制;#18 已修正、#19 編輯器開啟中 Ctrl+V 先提交原生文字、#20 貼上既有邊界六項、#21 filterall 時列拖曳僅寫回顯示子集、#22 rowDragChange 回呼內同步 pasteText 會把 opt.rows 覆寫回舊序、#23 置頂置底列不隨列拖曳重算)。
@@ -41,6 +44,7 @@
 
 ## 最近一次驗證
 
+- 2026-11-24 tag1(排程第 605 項,主控派工;跨套件規格〈診斷輸出與遮罩〉D1、D2、D4,R28;改 `src/components/WAggridVue.vue`、重建 dist〔1963402 → 1966655 位元組,+3253〕、新增 3 個測試檔與宿主頁、改寫 7 個既有測試檔之 console 期望字串,規則帳本、state、經驗、回饋同步;不改 `package.json`、`script.txt`、README〔R18〕、標準圖〔本套件無〕、`docs/`):**修前實測**(HEAD dist)12 個 console 站點皆印使用端之值或錯誤本體,8 組候選選項(silent、quiet、verbose:false、debug:false、log:false、logDetail:false、funLog:()=>{} 等)皆無法關閉;**修前紅**:新測試與改寫斷言共 93 格紅(既有斷言改寫 39、e2e-consoleNoValues 4、api-consoleNoValues 54〔6 格為對照而綠〕;後補之 write_reject 2 格、X1 1 格於修前碼亦紅),`unit-diagSites` 6 紅 2 綠;**修後**全套 `npm test --lock` **607 passing、0 failing**(7 分,凍結碼上);新三檔另連跑 3 次各 75 passing;**變異 55／55 擊殺**(content 19、wiring 24、static 12;首輪存活 3 項皆為測試缺口〔寫檔 catch 站未造、掃描器之正規式不處理 CRLF 而空轉、建置設定斷言過鬆〕,補測試後擊殺);eslint 變更檔僅餘既有 2 個 `vue/no-unused-components`;報告 `C:\opensrcOper\dnow\20261124035600\agent-out\tag1-修正報告.md`.
 - 2026-10-28 agv-run01:新增 e2e-pasteEditable;全套 432 綠(報告 `C:\opensrcOper\dnow\20261028024402\agent-out\agv-run01-修正報告.md`).
 - 2026-10-28 agv-run02:依 role-coder-for-test-e2e 逐項比對後,e2e-pasteEditable 改寫為全走真滑鼠 + 真鍵盤 Ctrl+V(14 格);修前(HEAD dist)11 紅 3 綠,修後 14 綠,同檔連跑 5 次皆綠;六處同時變異恰被 6 格偵測;全套結果見 `…\agent-out\agv-run02-修正報告.md`.
 - 2026-10-28 agv-run03:列拖曳寫回保留全欄(R23,缺陷修正)、e2e-pasteText 改真實操作並拆出 api-pasteText、新增 e2e-rowDrag(9 格);全套 444 綠;外審 terra 11 條(屬實 9、誤報 2);報告 `C:\opensrcOper\dnow\20261028054319\agent-out\agv-run03-修正報告.md`.

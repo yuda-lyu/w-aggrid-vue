@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8" />
+    <title>console no values</title>
+    <script src="../../node_modules/vue/dist/vue.min.js"></script>
+    <script src="../../dist/w-aggrid-vue.umd.js"></script>
+</head>
+<body style="margin:0; padding:10px;">
+    <!--
+        診斷輸出(console)不印資料值之宿主頁(R28): 以宿主按鈕呼叫元件方法, 各案例以 CANARY 字樣之值觸發各 console 站點, 測試端於 console 之全部引數中找該字樣.
+        查詢字串: ld=1 → opt.logDetail 為 true; fl=collect|noop|throw|reject → opt.funLog 為收集器、空函數、同步拋錯、回傳 rejected Promise
+        window.__funLogs 為收集器之紀錄(label、safe、引數個數、細節之文字)
+    -->
+    <div id="app">
+        <button id="btnRun" @click="run">run</button>
+        <w-aggrid-vue id="t1" ref="t1" style="width:600px;" :height="120" :opt="opt1"></w-aggrid-vue>
+        <w-aggrid-vue id="tp" ref="tp" style="width:600px;" :height="150" :opt="optP"></w-aggrid-vue>
+        <div id="dyn"></div>
+    </div>
+    <script>
+        Vue.component('w-aggrid-vue', window['w-aggrid-vue'])
+        let q = new URLSearchParams(location.search)
+
+        //describe, 細節之文字(Error 取 name 與 message, 其餘 JSON)
+        let describe = function(d) {
+            if (d && d.message !== undefined && d.name !== undefined) {
+                return d.name + ': ' + d.message
+            }
+            try {
+                return JSON.stringify(d)
+            }
+            catch (e) {
+                return String(d)
+            }
+        }
+        window.__funLogs = []
+        let funLogs = {
+            collect: function(label, safe, detail) {
+                window.__funLogs.push({ label: label, safe: JSON.parse(JSON.stringify(safe === undefined ? null : safe)), n: arguments.length, detail: arguments.length >= 3 ? describe(detail) : null })
+            },
+            noop: function() {},
+            throw: function() {
+                throw new Error('CANARY-FUNLOG-THROW')
+            },
+            reject: function() {
+                return Promise.reject(new Error('CANARY-FUNLOG-REJECT'))
+            },
+        }
+        //withDiag, 依查詢字串併入 opt.logDetail 與 opt.funLog; extra 為 JSON 物件, 併入 opt 之其他鍵(探測使用端是否有其他方法關閉輸出, 例如 silent: true)
+        let withDiag = function(opt) {
+            let o = Object.assign({}, opt)
+            if (q.get('ld') === '1') {
+                o.logDetail = true
+            }
+            if (q.get('fl') && funLogs[q.get('fl')]) {
+                o.funLog = funLogs[q.get('fl')]
+            }
+            if (q.get('extra')) {
+                Object.assign(o, JSON.parse(q.get('extra')))
+            }
+            return o
+        }
+
+        let rowsAB = function() {
+            return [{ a: 'a0', b: 'b0' }, { a: 'a1', b: 'b1' }]
+        }
+        //mountDyn, 動態掛載一個元件(opt 原樣給 prop, 不併入診斷選項; 需要者由案例自行 withDiag)
+        function mountDyn(opt) {
+            let el = document.createElement('div')
+            document.getElementById('dyn').appendChild(el)
+            let vm = new Vue({ render: function(h) { return h('w-aggrid-vue', { ref: 'x', props: { opt: opt }, style: 'width:500px;' }) } }).$mount(el)
+            return vm.$refs.x
+        }
+        //boom, editable 函數: boom 為 true 之列拋出(錯誤訊息含 CANARY 與該列之值), 其餘列可編輯(同 pasteEditable.html 之 e5; 使用者單擊起點格時不會呼叫到 boom 列)
+        let boom = function(p) {
+            if (p.data.boom === true) {
+                throw new Error('CANARY-EDIT ' + p.data.a)
+            }
+            return true
+        }
+
+        //各案例: 回傳值或 Promise; 方法之回傳不序列化, 只記錄是否同步拋錯與 reject
+        let t1 = function() { return window.__vm.$refs.t1 }
+        window.__cases = {
+            //R01 logUseDefault 之各站: 值皆為使用者給之值(字串、數字), 預設輸出不得含之
+            dl_opt: function() { return t1().downloadData('CANARY-DL-OPT') },
+            dl_hook: function() { return t1().downloadData({ funGetKeysHook: 'CANARY-DL-HOOK' }) },
+            dl_useHead: function() { return t1().downloadData({ useHead: 'CANARY-DL-USEHEAD' }) },
+            dl_useFormat: function() { return t1().downloadData({ useFormat: 'CANARY-DL-USEFORMAT' }) },
+            dl_fileName: function() { return t1().downloadData({ fileName: 987654321 }) },
+            dl_sheetName: function() { return t1().downloadData({ sheetName: 'CANARY/SHEET' }) },
+            dd_opt: function() { return t1().downloadDisplayData('CANARY-DD-OPT') },
+            //uploadData 於選檔前即提示, 其後開選檔視窗(測試不選檔, 視窗被取消或不處理, 故不 await; 取消之 reject 為預期, 吞掉免成為 pageerror)
+            up_opt: function() { t1().uploadData('CANARY-UP-OPT').catch(function() {}); return null },
+            up_hook: function() { t1().uploadData({ beforeUpload: 'CANARY-UP-HOOK' }).catch(function() {}); return null },
+            up_mode: function() { t1().uploadData({ uploadMode: 'CANARY-UP-MODE' }).catch(function() {}); return null },
+            up_ind: function() { t1().uploadData({ parseSheetInd: 'CANARY-UP-IND' }).catch(function() {}); return null },
+            sk_opt: function() { return t1().showKeys(['a', 'b'], 'CANARY-SK-OPT') },
+            sk_apply: function() { return t1().showKeys(['a', 'b'], { applyOrder: 'CANARY-SK-APPLY' }) },
+            //元件 prop opt 之選項(logUseDefaultOpt): 需 opt 為物件才有 funLog, 故併入診斷選項
+            mt_localeText: function() { return mountDyn(withDiag({ keys: ['a', 'b'], rows: rowsAB(), localeText: 'CANARY-MT-LT', showOverlayWhenFilteredEmpty: 'CANARY-MT-SO' })) },
+            mt_localeEntry: function() { return mountDyn(withDiag({ keys: ['a', 'b'], rows: rowsAB(), localeText: { noRowsToShow: 987654321, noRowsToShowFiltered: ['CANARY-MT-ARR'], filterOoo: 'CANARY-MT-OK' } })) },
+            //changeOpt 之固定詞彙站
+            mt_optStr: function() { return mountDyn('CANARY-MT-OPTSTR') },
+            mt_keysBad: function() { return mountDyn(withDiag({ keys: 'CANARY-MT-KEYS', rows: [] })) },
+            mt_rowsBad: function() { return mountDyn(withDiag({ keys: ['a'], rows: 'CANARY-MT-ROWS' })) },
+            mt_removed: function() { return mountDyn(withDiag({ keys: ['a'], rows: [{ a: 1 }], kpCellRender: { a: 'CANARY-MT-RENDER' } })) },
+            //寫檔失敗: mat 掛鉤之儲存格為寫檔器無法寫出之物件(值與 style 皆為 CANARY)
+            write_fail: function() {
+                return t1().downloadData({ funGetMatHook: function(mat) { mat[1][0] = { value: 'CANARY-CELL', style: 'CANARY-STYLE' }; return mat } })
+            },
+            //觸發下載時之例外(wsemi downloadExcelFileFromData 之 async 函數 reject): 替換 URL.createObjectURL 使其拋錯
+            write_reject: function() {
+                window.URL.createObjectURL = function() { throw new Error('CANARY-OBJURL') }
+                return t1().downloadData({})
+            },
+            //表格可用時不拋錯之 catch(R03: 無法以操作觸發), 以替換該實例 api 之方法造成: fitColumns、triggerFilterChange、finishFade
+            fit_throw: function() {
+                let c = t1()
+                c.getApi().sizeColumnsToFit = function() { throw new Error('CANARY-FIT-ERR') }
+                return c.fitColumns(false)
+            },
+            filter_throw: function() {
+                let c = t1()
+                c.getApi().getFilterModel = function() { throw new Error('CANARY-FILTER-ERR') }
+                return c.triggerFilterChange('t')
+            },
+            fade_throw: function() {
+                let c = t1()
+                c.getApi().refreshCells = function() { throw new Error('CANARY-FADE-ERR') }
+                let hd = { el: document.createElement('div'), fn: null, timer: null, timerCap: null, w: 0, h: 0, done: true, resized: true }
+                c.hdFade = hd
+                c.finishFade(hd, true)
+                return c.state
+            },
+            //貼上: kpCellEditable 函數拋錯(R22)
+            paste_throw: function() { return window.__vm.$refs.tp.pasteText('x0\ty0\nx1\ty1', 0, 'a') },
+        }
+        let errStr = function(e) {
+            if (e && e.message) {
+                return (e.name || 'Error') + ': ' + e.message
+            }
+            return String(e)
+        }
+        //__setDiag, 執行中變更 t1 之 opt.funLog 與 opt.logDetail(R28: 於每次輸出時才讀取, 即時生效); fl 為 funLogs 之名稱或 null(移除), ld 為布林或 undefined(不動)
+        window.__setDiag = function(fl, ld) {
+            let o = window.__vm.opt1
+            if (fl === null) {
+                delete o.funLog
+            }
+            else if (fl) {
+                o.funLog = funLogs[fl]
+            }
+            if (ld !== undefined) {
+                o.logDetail = ld
+            }
+        }
+        window.__case = null
+        window.__out = null
+        window.__vm = new Vue({
+            el: '#app',
+            data: function() {
+                return {
+                    opt1: withDiag({ keys: ['a', 'b'], rows: rowsAB() }),
+                    optP: withDiag({ keys: ['a', 'b'], rows: [{ a: 'a0', b: 'b0' }, { a: 'a1', b: 'b1', boom: true }], kpCellEditable: { a: true, b: boom } }),
+                }
+            },
+            methods: {
+                run: async function() {
+                    //宿主之按鈕處理函數: 呼叫元件方法; 回傳 Promise 者等其結束, 分別記錄同步拋錯與 reject
+                    let c = window.__cases[window.__case]
+                    let out = { threw: false, rejected: false }
+                    try {
+                        let r = c()
+                        if (r && typeof r.then === 'function') {
+                            try {
+                                r = await r
+                            }
+                            catch (e) {
+                                out.rejected = true
+                                out.err = errStr(e)
+                            }
+                        }
+                    }
+                    catch (e) {
+                        out.threw = true
+                        out.err = errStr(e)
+                    }
+                    //等掛載時排定之非同步工作執行完畢(triggerFilterChange、淡入等), 其 console 訊息才會被收集
+                    await new Promise(function(res) { setTimeout(res, 400) })
+                    window.__out = out
+                },
+            },
+        })
+    </script>
+</body>
+</html>

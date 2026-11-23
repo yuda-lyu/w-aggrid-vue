@@ -513,8 +513,9 @@ describe('e2e-overlay:空表與過濾 0 筆之覆蓋層、localeText', function(
             ctx = await open('o10')
             const { page } = ctx
             const texts = ctx.logs.map((m) => m.text)
-            assert.ok(texts.includes('[w-aggrid-vue] opt.localeText is invalid[abc], use default {}'), JSON.stringify(texts))
-            assert.ok(texts.includes('[w-aggrid-vue] opt.showOverlayWhenFilteredEmpty is invalid[no], use default true'), JSON.stringify(texts))
+            //R28: 預設只印固定詞彙與形狀, 不印使用者給之值('abc'、'no')
+            assert.ok(texts.includes('[w-aggrid-vue] opt.localeText is invalid, use default {} {valueShape: (string)}'), JSON.stringify(texts))
+            assert.ok(texts.includes('[w-aggrid-vue] opt.showOverlayWhenFilteredEmpty is invalid, use default true {valueShape: (string)}'), JSON.stringify(texts))
             await typeIntoFloatingFilter(page, '#o10', 1, 'zzz')
             await waitOverlay(page, '#o10', T_FILTERED['zh-tw'])
             assertNoErrors(ctx)
@@ -524,9 +525,10 @@ describe('e2e-overlay:空表與過濾 0 筆之覆蓋層、localeText', function(
             ctx = await open('o11')
             const { page } = ctx
             const texts = ctx.logs.map((m) => m.text)
-            assert.ok(texts.includes('[w-aggrid-vue] opt.localeText[noRowsToShow] is invalid[123], use default text'), JSON.stringify(texts))
-            assert.ok(texts.includes('[w-aggrid-vue] opt.localeText[noRowsToShowFiltered] is invalid[[object Array]], use default text'), JSON.stringify(texts))
-            assert.ok(!texts.some((t) => t.includes('localeText[filterOoo]') || t.includes('localeText[loadingOoo]')), '有效鍵不應提示')
+            //R28: 預設只印固定詞彙、字典鍵名(結構)與值之形狀, 不印值(123、['x'])
+            assert.ok(texts.includes('[w-aggrid-vue] opt.localeText[<key>] is invalid, use default text {localeKey: noRowsToShow, valueShape: (number)}'), JSON.stringify(texts))
+            assert.ok(texts.includes('[w-aggrid-vue] opt.localeText[<key>] is invalid, use default text {localeKey: noRowsToShowFiltered, valueShape: (array, length=1)}'), JSON.stringify(texts))
+            assert.ok(!texts.some((t) => t.includes('localeKey: filterOoo') || t.includes('localeKey: loadingOoo')), '有效鍵不應提示')
             //無效之 noRowsToShowFiltered 被略過 → 內建過濾 0 筆文字
             await typeIntoFloatingFilter(page, '#o11', 1, 'zzz')
             await waitOverlay(page, '#o11', T_FILTERED['zh-tw'])

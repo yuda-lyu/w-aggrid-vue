@@ -102,9 +102,12 @@ let cases = [
         check: async (page, ctx) => {
             let msgs = pasteLogs(ctx)
             assert.strictEqual(msgs.length, 1, `console 說明應恰 1 次: ${JSON.stringify(msgs)}`)
-            assert.match(msgs[0], /kpCellEditable\[b\] threw/, '說明含欄位 key')
+            //R28: 預設只印固定詞彙、欄位 key(結構)與錯誤類別, 不印使用者函數所拋出之錯誤訊息原文('boom a1'); 原文只經 logDetail 或 funLog 取得(api-consoleNoValues)
+            assert.match(msgs[0], /kpCellEditable threw/, '說明含處置之主體')
+            assert.match(msgs[0], /colKey: b/, '說明含欄位 key')
+            assert.match(msgs[0], /errType: Error/, '說明含錯誤類別')
             assert.match(msgs[0], /not editable/, '說明含處置')
-            assert.match(msgs[0], /boom a1/, '說明含首個錯誤訊息(判斷時 a 仍為貼上前之值)')
+            assert.doesNotMatch(msgs[0], /boom/, 'R28: 不印錯誤訊息原文')
         }
     },
     //R22.1 EditableCallbackParams; R22.4 判斷於寫入前
@@ -218,7 +221,9 @@ let cases = [
         check: async (page, ctx) => {
             let msgs = pasteLogs(ctx)
             assert.strictEqual(msgs.length, 1, `console 說明應恰 1 次: ${JSON.stringify(msgs)}`)
-            assert.match(msgs[0], /kpCellEditable\[b\] threw/, '說明含欄位 key')
+            assert.match(msgs[0], /kpCellEditable threw/, '說明含處置之主體')
+            assert.match(msgs[0], /colKey: b/, '說明含欄位 key')
+            assert.match(msgs[0], /errType: object/, '拋出非 Error 之值時說明含型別(R28)')
         }
     },
 ]

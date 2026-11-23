@@ -129,6 +129,19 @@
 - **看不見之捲軸無法拖曳**:隱形捲軸沒有可拖曳之桿(`--hide-scrollbars`),「使用者拖捲軸 → 資料區同步」無真實操作路徑;以程式設定捲軸之 `scrollLeft` 代之並於案內標「未走 UI」,使用者之捲動路徑以真滾輪(`mouse.wheel`)驗.
 - **全套測試等鎖**:本輪 3 個鎖位長時間被他套件占滿(其中兩個自 21:01 起),見 2.7 末條之作法——把需鎖之作業(變異、穩定性重跑、範例頁查核)各寫成一支腳本、每支一次排鎖、排隊期間做文件.
 
+### 2.9 診斷輸出(console)不印資料值(R28,2026-11-24 tag1,排程第 605 項)
+
+- **現況要實測,不憑讀碼**:修前以宿主頁(`test/pages/consoleNoValues.html`)逐站觸發,實測 12 個 console 站點皆含使用端之值或錯誤本體(錯誤本體含堆疊與頁面網址、檔案路徑);另實測 `silent`、`quiet`、`verbose: false`、`debug: false`、`log: false`、`logDetail: false`、`funLog: () => {}` 等候選選項皆無法關閉(8 組 × 2 案各仍 1 則輸出).
+- **單一出口之作法**:`getDiag(元件 opt, DIAG_CFG)` 於**每次輸出時**才建立(`getDiag` 於建構時取 opt 快照,故逐次建構才使 opt 執行中變更即時生效;X1 守護);呼叫端以薄函數 `logUseDefault`、`logUseDefaultOpt`、`logErr`、`logFixed` 帶 `vo`,不在各站內聯 `getDiag`.規則只留一處:不另寫 mask、brief、shape.`diag.shape`(wsemi `getDiagShape`)給值之形狀,`diag.brief`(`getDiagBriefErr`)給錯誤類別與白名單內代碼.
+- **safe 之鍵名須宣告於 `safeKeys`**,白名單外之鍵被丟棄且不報錯(漏宣告時輸出少一個鍵而不是失敗;C14–C16 以變異守護).safe 之字串值不做控制字元替換,但以物件屬性印出(Node 與 devtools 皆轉義),故結構性鍵名(欄位 key、字典鍵名)可放 safe;使用端之值只能經 `diag.shape`.
+- **getDiag 之 level 只有 `error` 與其餘(`log`)**:已移除鍵之警告原為 `console.warn`,改後為 `console.log`(e2e-display-slots S5、S7 之 type 篩選由 `warning` 改 `log`);已列回饋建議 wsemi 增 `warn`.
+- **相依套件之輸出不歸本規則,且無從關閉**:寫檔器失敗時 wsemi `downloadExcelFileFromData` 自行 `console.log(u8a.error)`(錯誤本體含堆疊),`funLog` 不影響;D_write_fail 第一次跑時以「全部 console 輸出不含堆疊」失敗才發現.判斷是否本套件之輸出看**第一引數是否為 `[w-aggrid-vue]` 前綴字串**(`test/tools/consoleCapture.mjs` 之 `own`);canary 掃描仍涵蓋全部輸出.新增 console 站點之測試前,先以 `tmp` 探測腳本印出該案全部 console 項目(含非本套件者).
+- **Playwright 擷取 console**:`m.text()` 對物件引數只給預覽(`{errType: Error}`,鍵序依物件、字串無引號),對 Error 之 `jsonValue()` 為 `{}`;驗「不含值」同時掃 `text()` 與各引數 `JSON.stringify`,驗「恰為」用各引數之 `jsonValue()` 陣列.
+- **catch 站點之觸發**(R03 記載之「無法以操作觸發」三處):替換該實例 `getApi()` 回傳物件之方法(`sizeColumnsToFit`、`getFilterModel`、`refreshCells`;`getApi()` 每次回同一物件)再呼叫 `fitColumns(false)`、`triggerFilterChange('t')`、`finishFade(hd, true)`(hd 為自建物件,須含 `el`、`fn`、`timer`、`timerCap` 供 `unwatchFade`);寫檔 reject 以 `window.URL.createObjectURL = () => { throw ... }` 造成(wsemi `downloadFileFromBlob` 取該函數).首輪變異 W17(寫檔 catch 站)存活即因只造了 `{ error }` 路徑,補 `write_reject` 後擊殺.
+- **靜態鎖測試之掃描器須有正向對照,且正規式要處理 CRLF**:`src/components/WAggridVue.vue` 為 CRLF,以 `\)\n` 結尾之正規式於 CRLF 下恆不命中,迴圈 0 次而測試空轉(首輪 S06 變異存活因此);鎖測試對「命中數」本身下斷言(label 10 個)並將 F 正規化為 LF.對建置設定之守護斷言須是整行相等,不是子字串(S09 之 `xx: 1` 變異存活因 `fns: 'WAggridVue.vue'` 子字串仍命中).
+- **dist 壓縮後函式名被改寫**(`diagOf`→`EL`、`logFixed`→`SL`、`logErr`→`xL`、`logUseDefault`→`DL`、`logUseDefaultOpt`→`RL`,每次建置固定,內容相同則位元組相同):變異以字串取代 dist,錨點用呼叫形(含字面之 label 與參數),每項須恰出現 1 次;改 src 重建後名稱可能改變,變異腳本之錨點須重核.
+- **範例碼之 console 不屬套件輸出**:`src/App*.vue` 去註解行後 69 處,不在 dist(`toolg/gDistRollupComps.mjs` 只打包 `src/components/WAggridVue.vue`),`unit-diagSites` DS5 守護此事實.
+
 ## 3. 相依套件之非顯而易見行為
 
 ### wsemi
@@ -142,7 +155,7 @@
 - **`isDate`** 預設會解析字串(`'2024-01-02'` 為 true);判斷 Date 實例要用 `isDate(v, { onlyCheckDateObject: true })`(1.9.10 起).
 - **`isp0int`** 接受整數字串(`'1'`);`Infinity` 預設會通過,加 `{ useLimitSafe: true }` 才排除.
 - **`downloadExcelFileFromData`** 寫檔器拒絕時以 resolve 回 `{ error }`;觸發下載(Blob、createObjectURL)或 Node 寫檔之例外則使 async 函數 reject,所以 `.then` 檢查 `{ error }` 與 `.catch` 兩者都要(2026-10-07 更正:原載「.catch 幾乎是死碼」不成立).分頁名不合法、欄數超限要到 hucre 寫檔時才失敗,所以要在呼叫前同步檢查.
-- **`isstr`／`isestr` 只收原始值**(wsemi 1.9.69 起,判斷函數一律只收原始值;1.9.68 以前以 `Object.prototype.toString` 判斷,`new String('x')` 亦為 true):包裝物件為 false.hucre 要求 `typeof === 'string'`,本套件仍以 typeof 判斷(兩者現已一致,不依賴 wsemi 之行為).wsemi `getExcelWorkbookFromData` 之 `sheetName` 以 `isestr` 守門,`new String(...)` 與 `5`、`{}`、`null` 同樣視為未給而用 `'data'`(2026-11-19 以 1.9.69 實測,修前放行至 hucre 才報錯).本套件 `descInvalid` 以 `isstr`／`isnum` 決定提示中顯示原值或型態,故 `new String('boxed')` 於提示中由 `boxed` 變為 `[object String]`(升 wsemi 後以「包裝物件」字面盤點測試,會找到此類期望字串).
+- **`isstr`／`isestr` 只收原始值**(wsemi 1.9.69 起,判斷函數一律只收原始值;1.9.68 以前以 `Object.prototype.toString` 判斷,`new String('x')` 亦為 true):包裝物件為 false.hucre 要求 `typeof === 'string'`,本套件仍以 typeof 判斷(兩者現已一致,不依賴 wsemi 之行為).wsemi `getExcelWorkbookFromData` 之 `sheetName` 以 `isestr` 守門,`new String(...)` 與 `5`、`{}`、`null` 同樣視為未給而用 `'data'`(2026-11-19 以 1.9.69 實測,修前放行至 hucre 才報錯).本套件原 `descInvalid` 以 `isstr`／`isnum` 決定提示中顯示原值或型態,故 `new String('boxed')` 於提示中由 `boxed` 變為 `[object String]`(升 wsemi 後以「包裝物件」字面盤點測試,會找到此類期望字串;2026-11-24 R28 起 `descInvalid` 已刪,提示只印 `diag.shape` 之形狀,包裝字串為 `(boxed)`).
 - **`domShowInputAndGetFilesU8Arrs`**:取消選檔以空陣列 resolve;檔案超過 1000 MB 以「索引→訊息」物件 reject;每次呼叫先移除前一個隱藏 input.
 - **讀檔器 `getDataFromExcelFileU8Arr`**:首列為表頭,空表頭之欄略過,重複表頭後者覆蓋前者,不 trim;整列皆 null 之列略過,含空字串儲存格之列保留;值預設讀成字串.**1.9.9 把日期讀成 `''`**(2026-08-17 改用 hucre 時之退化),**1.9.10 起讀為 `'YYYY-MM-DDTHH:mm:ss.SSS'`**(UTC 分量,與時區無關),日期表頭亦同.
 - **寫檔器**以 Date 之 UTC 瞬間換算序號:在 +08:00 以本地午夜建立之 Date 會寫成前一天 16:00.

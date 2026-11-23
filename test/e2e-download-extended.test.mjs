@@ -23,7 +23,8 @@ let rowsOver = (name) => new RegExp(`^\\[w-aggrid-vue\\] ${name}: too many rows,
 //writeFail: 寫檔才失敗(mat 掛鉤之儲存格物件由寫檔器解讀而失敗)時, 以方法前綴記錄於 console
 let writeFail = (name) => new RegExp(`^\\[w-aggrid-vue\\] ${name}: can not write excel file`)
 //分頁名稱長度依 UTF-16 單位計(同 Excel 與 hucre 之 name.length), 表情符號與擴充 B 區漢字各佔 2 單位
-let logSheet = (re) => new RegExp(`invalid sheetName\\[${re}\\], use default sheetName 'data'`)
+//R28: 無效選項之提示預設只印固定詞彙與值之形狀(shape), 不印使用者給之值; 值本身另由 sheet 欄(實際採用之分頁名)驗證行為
+let logSheet = (shape) => new RegExp(`invalid sheetName, use default sheetName 'data' \\{valueShape: ${shape}\\}`)
 //VT: 各型別之值於下載檔之文字表示(wsemi 1.9.61 起之 ltdtkeys2mat: NaN、±Infinity 為同名字串, Date 為不帶引號之 ISO 字串; null 與 undefined 於本套件先轉為空白, R14)
 let VT = [['id', 'v'], ['null', ''], ['undef', ''], ['nan', 'NaN'], ['inf', 'Infinity'], ['ninf', '-Infinity'], ['bool', 'true'], ['obj', '{"a":1}'], ['arr', '[1,2]'], ['date', '2026-01-02T00:00:00.000Z'], ['empty', ''], ['zero', '0']]
 let CK = [['MAKE(改)', 'model'], ['Toyota', 'Celica'], ['Ford', 'Mondeo']]
@@ -76,19 +77,19 @@ let custom = {
 let cases = [
     ['V_types_raw', 'raw 各型別之值:null 與 undefined 為空白,NaN、±Infinity 為同名字串,Date 為不帶引號之 ISO 字串,其餘依 wsemi 轉換(R14、第 6 節 #2)', { file: VT, retSame: false }],
     ['V_types_disp', 'disp 各型別之值:同上(R14)', { file: VT, retSame: false }],
-    ['S_sheetSlash', 'sheetName 含 /:改用 data 並提示(R01、R16)', { file: F4, sheet: 'data', log: /invalid sheetName\[2026\/10\], use default sheetName 'data'/ }],
-    ['S_sheet32', 'sheetName 32 字:改用 data 並提示(R16)', { file: F4, sheet: 'data', log: /invalid sheetName\[x{32}\], use default sheetName 'data'/ }],
-    ['S_sheetApos', 'sheetName 首字為單引號:改用 data 並提示(R16)', { file: F4, sheet: 'data', log: /invalid sheetName\['q3\], use default sheetName 'data'/ }],
-    ['S_sheetHistory', 'sheetName 為保留名 History:改用 data 並提示(R16)', { file: F4, sheet: 'data', log: /invalid sheetName\[History\], use default sheetName 'data'/ }],
+    ['S_sheetSlash', 'sheetName 含 /:改用 data 並提示(R01、R16、R28)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /2026\/10/ }],
+    ['S_sheet32', 'sheetName 32 字:改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /x{32}/ }],
+    ['S_sheetApos', 'sheetName 首字為單引號:改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /q3/ }],
+    ['S_sheetHistory', 'sheetName 為保留名 History:改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /History/ }],
     ['S_sheetValid', 'sheetName 中文與數字:照用且無提示(R16)', { file: F4, sheet: '報表2026-10', nolog: /invalid sheetName/ }],
-    ['S_sheetEmpty', 'sheetName 空字串:改用 data 並提示(R01)', { file: F4, sheet: 'data', log: /invalid sheetName\[\], use default sheetName 'data'/ }],
-    ['S_sheetEmoji16', 'sheetName 為 16 個表情符號(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('(😀){16}') }],
-    ['S_sheetEmoji16_disp', 'disp 同上(R16)', { file: F4, sheet: 'data', log: logSheet('(😀){16}') }],
+    ['S_sheetEmpty', 'sheetName 空字串:改用 data 並提示(R01)', { file: F4, sheet: 'data', log: logSheet('\\(string, empty\\)') }],
+    ['S_sheetEmoji16', 'sheetName 為 16 個表情符號(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /😀/ }],
+    ['S_sheetEmoji16_disp', 'disp 同上(R16)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /😀/ }],
     ['S_sheetEmoji15', 'sheetName 為 15 個表情符號(30 單位):照用且無提示(R16)', { file: F4, sheet: '😀'.repeat(15), nolog: /invalid sheetName/ }],
-    ['S_sheetExtB16', 'sheetName 為 16 個擴充 B 區漢字(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('(𠀀){16}') }],
+    ['S_sheetExtB16', 'sheetName 為 16 個擴充 B 區漢字(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /𠀀/ }],
     ['S_sheetUnits31', 'sheetName 29 字加 1 表情符號(31 單位,上限):照用且無提示(R16)', { file: F4, sheet: 'x'.repeat(29) + '😀', nolog: /invalid sheetName/ }],
-    ['S_sheetUnits32', 'sheetName 30 字加 1 表情符號(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('x{30}😀') }],
-    ['S_sheetBoxed', 'sheetName 為 new String 包裝之字串(非字串原始值):改用 data 並提示,提示依型態表示(與陣列、布林等非原始值同,R16;wsemi 1.9.69 起判斷函數只收原始值)', { file: F4, sheet: 'data', log: logSheet('\\[object String\\]') }],
+    ['S_sheetUnits32', 'sheetName 30 字加 1 表情符號(32 單位):改用 data 並提示(R16)', { file: F4, sheet: 'data', log: logSheet('\\(string\\)'), nolog: /x{30}/ }],
+    ['S_sheetBoxed', 'sheetName 為 new String 包裝之字串(非字串原始值):改用 data 並提示,提示依形狀表示(boxed,與字串之 string 有別,R16、R28;wsemi 1.9.69 起判斷函數只收原始值)', { file: F4, sheet: 'data', log: logSheet('\\(boxed\\)') }],
     ['C_keys16384', 'keys 掛鉤回 16384 欄(Excel 上限):照常產檔(R15)', { file: WIDE(16384) }],
     ['C_keys16385', 'keys 掛鉤回 16385 欄:同步拋錯且不產檔(R15)', { throw: colsAt('downloadData', 0) }],
     ['C_keys16385_disp', 'disp 同上(R15)', { throw: colsAt('downloadDisplayData', 0) }],
@@ -131,10 +132,10 @@ let cases = [
     ['F_throw_raw', '格式化函數於下載時拋錯:原樣拋出(R02)', { throw: /^fmt boom$/ }],
     ['K_dupFmt', 'keys 掛鉤回重複鍵且格式化非冪等:不重複格式化(R07)', { file: [['price', 'price'], ['35001', '35001'], ['32001', '32001']] }],
     ['L_addRowsNoSource', '無數據列而 ltdt 掛鉤補列:新增之列不再格式化(R07)', { file: [H4, ['new', 'X', 'Y', '5']] }],
-    ['O_keysHookArray', 'funGetKeysHook 給陣列:視為未給予並提示(R01)', { file: F4, log: /invalid funGetKeysHook\[\[object Array\]\], use default funGetKeysHook null/ }],
+    ['O_keysHookArray', 'funGetKeysHook 給陣列:視為未給予並提示(R01、R28:只印形狀)', { file: F4, log: /invalid funGetKeysHook, use default funGetKeysHook null \{valueShape: \(array, length=\d+\)\}/ }],
     ['O_optNull', 'opt 為 null:視為 {} 且不提示(R01)', { file: F4, nolog: /invalid opt/ }],
-    ['O_useHeadStr', 'useHead 給字串:用預設 false 並提示(R01)', { file: F4, log: /invalid useHead\[true\], use default useHead false/ }],
-    ['O_hookFalse', 'funGetLtdtHook 給 false:視為未給予並提示(R01)', { file: F4, log: /invalid funGetLtdtHook\[\[object Boolean\]\], use default funGetLtdtHook null/ }],
+    ['O_useHeadStr', 'useHead 給字串:用預設 false 並提示(R01、R28:只印形狀)', { file: F4, log: /invalid useHead, use default useHead false \{valueShape: \(string\)\}/ }],
+    ['O_hookFalse', 'funGetLtdtHook 給 false:視為未給予並提示(R01、R28:只印形狀)', { file: F4, log: /invalid funGetLtdtHook, use default funGetLtdtHook null \{valueShape: \(boolean\)\}/ }],
     ['K_unknownHead', 'keys 掛鉤回未知鍵加 useHead:表頭退回鍵名,該欄空白(R14)', { file: [['製造商', 'foo'], ['Toyota', ''], ['Ford', '']] }],
     ['K_asyncKeys', 'keys 掛鉤為 async:拋須同步回傳(R15)', { throw: /funGetKeysHook must return synchronously, Promise is not supported/ }],
     ['K_permute_disp', 'disp 之 keys 掛鉤反轉加 useHead:表頭與數據對齊(R14)', { file: [['價格', '型號', '製造商', '主鍵'], ['35000', 'Celica', 'Toyota', 'r1'], ['32000', 'Mondeo', 'Ford', 'r2']] }],

@@ -7,7 +7,8 @@ import { waitGridIdle } from './tools/e2eLib.mjs'
 
 let ALL = ['a', 'b', 'c', 'd', 'e']
 let NOLOG = { nolog: /invalid (applyOrder|opt)/ }
-let logApply = (s) => ({ log: new RegExp(`^\\[w-aggrid-vue\\] showKeys: invalid applyOrder\\[${s}\\], use default applyOrder true$`) })
+//R28: 無效選項之提示預設只印固定詞彙與值之形狀(shape), 不印使用者給之值
+let logApply = (shape) => ({ log: new RegExp(`^\\[w-aggrid-vue\\] showKeys: invalid applyOrder, use default applyOrder true \\{valueShape: ${shape}\\}$`) })
 let KEYS_THROW = { throw: /^\[w-aggrid-vue\] showKeys: keys must be an array of non-empty strings$/ }
 
 //前置狀態(setup 例外)
@@ -32,12 +33,12 @@ let cases = [
     ['SK4', 'applyOrder 為 false:忽略 keys_new 之順序', 'g1', ALL],
     ['SK5', 'applyOrder 為 false:保留使用者拖曳後之順序', 'g1', ['d', 'a', 'b', 'c', 'e']],
     ['SK5b', '預設:依 keys_new 覆蓋拖曳序(既有行為)', 'g1', ALL],
-    ['SK6_str', 'applyOrder 為字串 false:視為 true 並提示(R01)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, logApply('false')],
-    ['SK6_zero', 'applyOrder 為 0:視為 true 並提示(R01)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, logApply('0')],
+    ['SK6_str', 'applyOrder 為字串 false:視為 true 並提示(R01、R28:只印形狀)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, logApply('\\(string\\)')],
+    ['SK6_zero', 'applyOrder 為 0:視為 true 並提示(R01、R28:只印形狀)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, logApply('\\(number\\)')],
     ['SK6_null', 'applyOrder 為 null:視為未給予,用 true 且不提示(R01)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, NOLOG],
-    ['SK6_x', 'applyOrder 為 x:視為 true 並提示(R01)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, logApply('x')],
+    ['SK6_x', 'applyOrder 為 x:視為 true 並提示(R01、R28:只印形狀)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, logApply('\\(string\\)')],
     ['SK7', 'opt 為 undefined:不拋錯、視為 true 且不提示(R01)', 'g1', ALL, null, NOLOG],
-    ['SK12_optStr', 'opt 為字串:視為 {} 並提示(R01)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, { log: /^\[w-aggrid-vue\] showKeys: invalid opt\[x\], use default opt \{\}$/ }],
+    ['SK12_optStr', 'opt 為字串:視為 {} 並提示(R01)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, { log: /^\[w-aggrid-vue\] showKeys: invalid opt, use default opt \{\} \{valueShape: \(string\)\}$/ }],
     ['SK12_optNull', 'opt 為 null:視為 {} 且不提示(R01)', 'g1', ['e', 'a', 'b', 'c', 'd'], null, NOLOG],
     ['SK13_keysStr', 'keys 為字串:拋錯且欄位不變(資料契約)', 'g1', ALL, null, KEYS_THROW],
     ['SK14_keysUndef', 'keys 未給予:拋錯且欄位不變(資料契約)', 'g1', ALL, null, KEYS_THROW],

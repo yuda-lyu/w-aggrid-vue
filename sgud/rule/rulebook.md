@@ -41,17 +41,18 @@
 | R25 | 數據列數大於 0 而顯示列數為 0(過濾使然)時顯示覆蓋層,預設開啟;與 ag-grid 原生覆蓋層互不干擾 | 無(宿主 hideOverlay 後不自動重現,第 6 節 #24) |
 | R26 | 根節點 `state` 屬性(showing → shown)表示淡入是否結束;淡入期間根節點尺寸改變者,於淡入結束且尺寸穩定後 `refreshCells({ force: true })` 一次再落定 | 無(淡入結束後才發生之尺寸變化不補繪,第 6 節 #25) |
 | R27 | 隱形捲軸(瀏覽器捲軸寬為 0)時橫向捲軸改占位排列,不疊在資料列之上 | 無(直向隱形捲軸仍疊在資料區右緣 16px,實測後不改,第 6 節 #26) |
+| R28 | 診斷輸出(console)一律經單一出口 `diagOf`(wsemi getDiag):預設只印固定詞彙、鍵名、值之形狀與錯誤摘要,不印資料值、錯誤訊息原文與堆疊;`opt.logDetail`、`opt.funLog` 供使用端還原細節或關閉 | 無(範例碼 `src/App*.vue` 之 console 屬宿主端示範,不在 dist,刻意不套) |
 
 ## 1. 共通規則
 
 ### R01 選項無效即預設,有給予時於 console 提示
 
-- **規則**:公開方法之 `opt` 及其各鍵為額外傳入.未給予(null、undefined)時用預設且不提示;有給予但非指定之值或型態時亦用預設,並呼叫 `logUseDefault(方法名, 鍵, 值, 預設)`,印出 `[w-aggrid-vue] <方法名>: invalid <鍵>[<值>], use default <鍵> <預設>`(字串與數值顯示原值,其餘顯示型態).不拋錯、不 reject.掛鉤類之鍵非函數時視為未給予.
+- **規則**:公開方法之 `opt` 及其各鍵為額外傳入.未給予(null、undefined)時用預設且不提示;有給予但非指定之值或型態時亦用預設,並呼叫 `logUseDefault(vo, 方法名, 鍵, 值, 預設)`,**預設**印出 `[w-aggrid-vue] <方法名>: invalid <鍵>, use default <鍵> <預設>` 與 `{ valueShape: '<形狀>' }`(形狀:`(string)`、`(number)`、`(boolean)`、`(array, length=N)`、`(keys: a,b)` 等,由 wsemi `getDiagShape` 產生),**不印使用端給予之值**(R28;2026-11-24 起,原為字串與數值顯示原值、其餘顯示型態);值只隨 `opt.logDetail`、`opt.funLog` 之細節交出.不拋錯、不 reject.掛鉤類之鍵非函數時視為未給予.
 - **不適用**:資料內容之契約(掛鉤或 beforeUpload 之回傳值、無可寫入之列)不屬選項,依 R02、R15、R17 拋錯或 reject.
-- **單一擁有者**:F 模組層 `isGiven`、`logUseDefault`(176–185).
+- **單一擁有者**:F 模組層 `isGiven`、`logUseDefault`(輸出經 R28 之 `diagOf`).
 - **盤點**:
   - 帶 opt 之公開方法:`git grep -nE '^ {8}[A-Za-z]+: (async )?function\(.*opt' -- src/components/WAggridVue.vue`(4 筆:showKeys、downloadDisplayData、downloadData、uploadData)
-  - 提示站點:`git grep -n 'logUseDefault(' -- src/components/WAggridVue.vue`(13 筆:定義 1、downloadCore 6、showKeys 2、uploadData 4)
+  - 提示站點:`git grep -n 'logUseDefault(' -- src/components/WAggridVue.vue`(13 筆:定義 1、downloadCore 6、showKeys 2、uploadData 4;元件 prop 另有 `logUseDefaultOpt(` 3 筆,R28 之 `unit-diagSites` DS3 鎖定)
 - **站點**:
 
 | 方法 | 鍵 | 有效判準 | 預設 | 狀態 |
@@ -121,19 +122,22 @@
 ### R03 訊息前綴
 
 - **規則**:套件產生之錯誤訊息與 console 提示以 `[w-aggrid-vue] <方法名>: ` 開頭;元件 prop opt 之訊息(prop 無方法名)為 `[w-aggrid-vue] opt ...` 或 `[w-aggrid-vue] opt.<鍵> ...`(已移除鍵之警告、opt 與其 keys、rows 無效),使呼叫端只記錄錯誤內容時仍可辨識來源.內部方法(changeOpt)之名稱不出現在 prop 之訊息中.
-- **盤點**:錯誤見 R02;console:`git grep -nE '^[[:space:]]*console\.(log|warn|error)\(' -- src/components/WAggridVue.vue`(2026-11-01 為 12 筆:下表 9 筆〔行號為 2026-10-07 之值,其後有位移〕,另 pasteText 之 kpCellEditable 函數拋錯提示〔R22,`pasteText: kpCellEditable[<欄>] threw`〕與 finishFade 之 catch〔R26,見下表末列〕)
+- **盤點**:錯誤見 R02;console:**2026-11-24 起元件碼不再直接呼叫 console**(R28):`git grep -nE '\bconsole\b' -- src/components` 去註解後為 0 筆(`unit-diagSites` DS1 鎖定);輸出站點改以其出口函數盤點:`git grep -nE '\b(logUseDefault|logUseDefaultOpt|logErr|logFixed)\(vo,' -- src/components/WAggridVue.vue`(29 筆:25 個呼叫點加 4 個函式定義,DS3 鎖定呼叫點數).下表之行號為 2026-10-07 之值已不適用,以函式名定位;訊息前綴與文字 2026-11-24 起依 R28(預設輸出為固定詞彙加安全摘要物件,見 R28 站點表)
 - **站點**(console):
 
-| 行 | 位置 | 狀態 |
-|---|---|---|
-| 184 | logUseDefault | 已套 |
-| 412、416 | downloadCore 寫檔之 `.then`({ error })與 `.catch`(觸發下載時之例外):`<方法名>: can not write excel file` | 已套(2026-10-07) |
-| 2019 | changeOpt:`opt is invalid, it must be an object with keys and rows, the table is not updated` | 已套(2026-10-07) |
-| 2035 | changeOpt 已移除鍵警告 | 已套 |
-| 2043、2050 | changeOpt:`opt.keys is invalid, it must be a non-empty array of keys, ...`、`opt.rows is invalid, it must be an array, ...` | 已套(2026-10-07) |
-| 2748 | fitColumns 之 catch:`fitColumns:` | 已套(2026-10-07);表格不可用時已先靜默略過(R19),此 catch 只收非預期之錯誤,未能以操作觸發 |
-| 3068 | triggerFilterChange 之 catch:表格可用而取得過濾狀態失敗時 `triggerFilterChange:` | 已套(2026-10-07);未能以操作觸發(getFilterModel 於表格可用時不拋錯) |
-| 1691(2026-11-01) | finishFade 之 catch:表格可用而 `refreshCells` 拋錯時 `finishFade:`(表格不可用時已先靜默略過,R19) | 已套(R26);未能以操作觸發(refreshCells 於表格可用時不拋錯),state 於 catch 後仍落定為 shown |
+| 位置 | 狀態 |
+|---|---|
+| logUseDefault(R01) | 已套 |
+| downloadCore 寫檔之 `.then`({ error })與 `.catch`(觸發下載時之例外):`<方法名>: can not write excel file` | 已套(2026-10-07);R28 起預設只印固定詞彙與 `{ errType, errCode? }` |
+| changeOpt:`opt is invalid, it must be an object with keys and rows, the table is not updated` | 已套(2026-10-07) |
+| changeOpt 已移除鍵警告 | 已套;R28 起經 diagOf 為 console.log(原 console.warn) |
+| changeOpt:`opt.keys is invalid, it must be a non-empty array of keys, ...`、`opt.rows is invalid, it must be an array, ...` | 已套(2026-10-07) |
+| fitColumns 之 catch:`fitColumns:` | 已套(2026-10-07);表格不可用時已先靜默略過(R19),此 catch 只收非預期之錯誤,未能以操作觸發 |
+| triggerFilterChange 之 catch:表格可用而取得過濾狀態失敗時 `triggerFilterChange:` | 已套(2026-10-07);未能以操作觸發(getFilterModel 於表格可用時不拋錯) |
+| finishFade 之 catch:表格可用而 `refreshCells` 拋錯時 `finishFade:`(表格不可用時已先靜默略過,R19) | 已套(R26);未能以操作觸發(refreshCells 於表格可用時不拋錯),state 於 catch 後仍落定為 shown |
+| pasteText 之 kpCellEditable 函數拋錯提示(R22) | 已套;R28 起 label 不含欄位 key 與錯誤訊息,key 於 `{ colKey }`、類別於 `{ errType }` |
+
+(以上 catch 三處與 `write_fail` 於 R28 之 `api-consoleNoValues` 以替換該實例 api 之方法〔setup 例外〕造成並驗輸出.)
 
 - **測試**:R01、R02 之訊息比對(log 與 err 皆含前綴);O1–O4(prop 之訊息);M_cellStyleBad(寫檔失敗之記錄).
 - **來源**:2026-10-06 下載複審 R18、上傳複審 R7;2026-10-07 規則帳本盤點缺陷之修正(三方複審).
@@ -193,6 +197,31 @@
 
 - **測試**:`test/e2e-lifecycle.test.mjs` 之 E01–E17(元件銷毀後)、X01–X14(ag-grid 已銷毀、元件仍在)、W1、W2(await 期間銷毀)、PB1(使用者編輯後宿主於 cellChange 回呼內移除表格,置底列不得出錯);各格並斷言 console 無原生 TypeError 與 ag-grid 已銷毀之警告;N_destroyed_disp、N_destroyed_raw(下載).
 - **來源**:2026-10-06 盤點之候選規則;2026-10-07 規則帳本盤點缺陷之修正(三方複審:isDestroyed、await 後重取、內部路徑、固定列回呼).
+
+### R28 診斷輸出(console)一律經單一出口 diagOf:預設只印固定詞彙、鍵名、值之形狀與錯誤摘要,不印資料值
+
+- **規則**(跨套件規格〈診斷輸出與遮罩〉D1 單一實作、D2 預設不輸出資料值、D4 永不拋錯;2026-11-24,排程第 605 項,主控派工;修前實測見 state.md):
+  1. 元件碼(`src/components/*`)**不直接呼叫 `console`**;一切輸出經模組層 `diagOf(vo)`(wsemi `getDiag(元件 opt, DIAG_CFG)`,不自寫遮罩、摘要或形狀函數;`DIAG_CFG.safeKeys` 為 `valueShape`、`localeKey`、`colKey`),經四個薄函數:`logUseDefault`(R01,12 站)、`logUseDefaultOpt`(元件 prop,3 站)、`logErr`(錯誤,6 站)、`logFixed`(固定詞彙,4 站);呼叫皆以元件實例 `vo` 為第一引數(opt 於**輸出時**才讀,執行中變更即時生效).
+  2. **預設輸出**只含:label(固定詞彙,不內插使用端給之值或錯誤訊息)與 safe 物件:`valueShape`(`diag.shape(值)` ⇒ `(string)`、`(number)`、`(boolean)`、`(array, length=N)`、`(keys: a,b)`、`(boxed)`…,**永不輸出值**)、`localeKey`(opt.localeText 之字典鍵名)、`colKey`(欄位 key)——鍵名為結構,非資料值——與 `errType`、`errCode`(`diag.brief(錯誤)` ⇒ 類別與白名單內代碼,**不含訊息原文與堆疊**).
+  3. **使用端選項**(元件 `opt` 之鍵,JSDoc `@vue-prop`):`opt.logDetail === true` ⇒ console 改印遮罩後之細節(使用端給之值、錯誤本體);`opt.funLog` 為函數 ⇒ 本套件**全部**診斷輸出(含固定詞彙)只交給 `funLog(label, safe, detail)`(固定詞彙之站無第 3 引數),不寫 console,`() => {}` 即關閉;`funLog` 自身拋錯或回傳 rejected Promise 不影響方法、不外洩(D4).`opt` 本身無效(非物件,如 `'abc'`)時無從攜帶選項,依預設輸出(此時只有固定詞彙之 `opt is invalid...`).預設行為即不印資料值,**不需使用端改碼才安全**.
+  4. 行為不變:無效選項仍用預設(R01)、error 值與 reject 值(R02:`{ msg, err }`、`throw Error`)為對呼叫端之 API 值,不在本規則(非 console);範例碼 `src/App*.vue` 之 console 為宿主端示範(`toolg/gDistRollupComps.mjs` 只打包 `src/components/WAggridVue.vue`,不在 dist),不屬套件輸出.
+- **單一擁有者**:F 模組層 `diagOf`(`getDiag` 於本檔只呼叫一次).
+- **盤點**:`git grep -nE '\bconsole\b' -- src/components`(去註解後 0 筆);`git grep -nE '\b(logUseDefault|logUseDefaultOpt|logErr|logFixed)\(vo,' -- src/components/WAggridVue.vue`(29 筆:25 個呼叫點〔12+3+6+4〕加 4 個函式定義之參數列).
+- **站點**(預設輸出;`[w-aggrid-vue]` 前綴為 R03,表中省略):
+
+| 站點 | label(固定詞彙) | safe | 修前(2026-11-24 實測)印出 |
+|---|---|---|---|
+| downloadCore 之 opt、三掛鉤、useHead、useFormat、fileName、sheetName;showKeys 之 opt、applyOrder;uploadData 之 opt、beforeUpload、uploadMode、parseSheetInd(logUseDefault 12 站) | `<方法名>: invalid <鍵>, use default <鍵> <預設>` | `{ valueShape }` | `invalid <鍵>[<使用端給之值>]`(字串與數值顯示原值) |
+| changeOpt 之 localeText、showOverlayWhenFilteredEmpty、localeText 各鍵(logUseDefaultOpt 3 站) | `opt.localeText is invalid, use default {}`、`opt.showOverlayWhenFilteredEmpty is invalid, use default true`、`opt.localeText[<key>] is invalid, use default text` | `{ valueShape }`(各鍵另有 `localeKey`) | `…is invalid[<值>]…`(鍵名在 label 內) |
+| downloadCore 寫檔之 `{ error }` 與 `.catch`(2 站) | `<方法名>: can not write excel file` | `{ errType, errCode? }` | 印出錯誤本體(訊息原文與堆疊,可能含儲存格內容) |
+| fitColumns、triggerFilterChange、finishFade 之 catch(3 站) | `fitColumns:`、`triggerFilterChange:`、`finishFade:` | `{ errType, errCode? }` | 印出錯誤本體(含堆疊與頁面網址、路徑) |
+| pasteText 之 kpCellEditable 拋錯(1 站,同欄同次貼上一次) | `pasteText: kpCellEditable threw, the cell is treated as not editable` | `{ colKey, errType, errCode? }` | `kpCellEditable[<欄>] threw…: <使用者函數所拋出之訊息原文>`(含該列之值) |
+| changeOpt 之 opt、opt.keys、opt.rows 無效與已移除鍵警告(logFixed 4 站) | 原文不變(固定詞彙) | 無 | 同左(已移除鍵警告原為 `console.warn`,改為 `console.log`) |
+
+- **刻意不套/範圍外**:①error 值與 reject 值(R02)非 console;②範例碼之 console(`src/App*.vue`,2026-11-24 實測去註解行後 69 處 `console.log`、分布於 28 檔,印宿主端自己呼叫元件方法之結果、回呼參數與 catch 到之錯誤〔宿主之 `console.log(err)`〕,為示範宿主寫法之用途,不是套件輸出);③ag-grid、w-component-vue 等相依套件自身之輸出;④wsemi `getDiag` 之 level 只有 `log`、`error`,已移除鍵警告原 `console.warn` 之等級降為 `log`(已列回饋,建議 wsemi 增 `warn`).
+- **測試**:`test/api-consoleNoValues.test.mjs`(各站預設輸出恰為預期、不含 CANARY 值與堆疊;`funLog` 逐站接線;`logDetail` 代表站;空函數、拋錯、rejected Promise 之容錯)、`test/e2e-consoleNoValues.test.mjs`(使用者真滑鼠加真鍵盤 Ctrl+V 之貼上路徑)、`test/unit-diagSites.test.mjs`(DS0–DS7:站點全集與單一出口之靜態鎖);既有之 R01、R03、R10、R22 斷言之期望字串隨之改為新格式(api-localeText AL6;e2e-overlay OV23、OV24;e2e-display-slots S5、S7;e2e-download-extended 之 S_*、O_*;e2e-pasteEditable PT9、PT18;e2e-showKeys SK6*、SK12;e2e-upload-matrix 之 U9*、U10、U12、R_*).
+- **已知限制**:相依套件(wsemi `downloadExcelFileFromData`)自身之 console 輸出不經本出口,見第 6 節 #27.
+- **來源**:排程第 605 項(主控 2026-11-24 派工);跨套件規格〈診斷輸出與遮罩〉D1、D2、D4、§2(`getDiagShape`、`getDiagBriefErr`、`getDiag`);同項 w-converhp 2.1.43 之作法(單一出口、`logDetail`／`funLog`).
 
 ## 2. 畫面呈現
 
@@ -567,7 +596,7 @@
 
 - **升版時**:wsemi 或 hucre 升版即重跑上列 hucre 盤點並逐條比對,並跑 `npx mocha test/unit-hucre-limits.test.mjs`(1.1.0 → 1.2.0 未變,2026-10-06).
 - **測試**:S_sheetSlash、S_sheet32、S_sheetApos、S_sheetHistory、S_sheetEmpty、S_sheetEmoji16、S_sheetEmoji16_disp、S_sheetExtB16、S_sheetUnits32、S_sheetBoxed(皆為 'data' 並提示)、S_sheetValid、S_sheetEmoji15、S_sheetUnits31(照用、無提示);unit-hucre-limits 之分頁名 21 格(20 格為 hucre 之接受/拒絕條件;另 1 格為 wsemi 1.9.69 起 `new String(...)` 與 `5`、`{}`、`null` 同樣視為未給、以預設 `'data'` 寫出,不再到達 hucre,2026-11-19 由原「拒絕」改).
-- **非字串與包裝字串之處置一致**:downloadCore 以 typeof 擋下非字串原始值(含 `new String(...)`、`5`、`{}`、`null`)並依 R01 用 'data'(非 null/undefined 者提示);wsemi 1.9.69 之 `getExcelWorkbookFromData` 對同批輸入亦用 'data'.兩層一致,無包裝物件專用之分支.console 提示中之無效值依 `descInvalid`(`isstr`／`isnum` 顯示原值,其餘顯示型態):1.9.69 起 `new String('boxed')` 顯示為 `[object String]`(原顯示 `boxed`),與陣列、布林等非原始值同(S_sheetBoxed 之期望依此).
+- **非字串與包裝字串之處置一致**:downloadCore 以 typeof 擋下非字串原始值(含 `new String(...)`、`5`、`{}`、`null`)並依 R01 用 'data'(非 null/undefined 者提示);wsemi 1.9.69 之 `getExcelWorkbookFromData` 對同批輸入亦用 'data'.兩層一致,無包裝物件專用之分支.console 提示(R28,2026-11-24 起)只印值之形狀:`new String('boxed')` 為 `{ valueShape: '(boxed)' }`,與字串之 `(string)`、陣列之 `(array, length=N)` 有別,不印值本身(S_sheetBoxed 之期望依此;原依 `descInvalid` 顯示原值或型態,該函數已刪).
 - **來源**:2026-10-06 下載複審 R3;使用者裁示改為預設並提示;2026-10-07 三方複審(boxed String).
 
 ## 4. 上傳
@@ -636,6 +665,7 @@
 | 24 | 過濾 0 筆覆蓋層(R25)之限制:①呼叫端經 `getApi().hideOverlay()` 隱藏後,過濾狀態未改變前不會自動重現(下一次 `modelUpdated`,即過濾、數據更新或排序,才重新判斷);②載入中/noRows 種類以 DOM 類名判斷(`.ag-overlay`、`ag-hidden`、`.ag-overlay-loading-wrapper`、`.ag-overlay-no-rows-wrapper`;ag-grid 31.3.4 無公開之覆蓋層狀態查詢),ag-grid 升版時須重驗(e2e-overlay OV16、OV17、OV29;主控 2026-10-30 裁定接受此限制並維持文件);③ag-grid 之 NoRowsOverlay 於 `setTimeout` 內才取文字,故 `noRowsToShow` 之文字取決於「取文字當下」之表格狀態(狀態在顯示與取文字之間改變,以取文字當下為準);呼叫端自行 `api.showNoRowsOverlay()` 且資料非空而顯示列為 0 時,文字亦為過濾 0 筆文字;④`localeText` 字串不代入 `${variable}` 佔位(內建字典亦同);⑤`modelUpdated` 經 ag-grid-vue 非同步送達(`setTimeout(0)`):表頭過濾使然之 0 列且宿主以 `applyTransaction`/`setGridOption('rowData')` 換數據時,ag-grid 於 `rowDataUpdated` 先隱藏,覆蓋層要到下一個 macrotask 才補顯示(經 opt 換數據者於同一 flush 後之 microtask 補顯示,實測列數、覆蓋層無中間態;外審讀碼推論前者可能閃一幀,未實測);⑥外審 sonnet(讀碼推論)另指出 `bOwnOverlay` 語意為「曾顯示過」而非「現在仍是我們的」:ag-grid 於 `rowDataUpdated` 隱藏我們之覆蓋層而我們尚未同步之一個 macrotask 內,若宿主恰好手動 `showNoRowsOverlay()`,會被誤隱藏,機率極低,未處理 | e2e-overlay OV16、OV17、api-localeText AL5;讀碼(ag-grid-community.js:19454–19463 NoRowsOverlayComponent、49782–49846 OverlayService) | ag-grid 31.3.4 + 呼叫端;範圍外未修 |
 | 25 | 淡入補繪與 `state`(R26)之限制:①只涵蓋表格建立後淡入期間(含淡入結束後等待尺寸穩定)內發生之根節點尺寸改變;淡入結束(state 為 shown)之後才發生之尺寸變化不補繪(issue #31 之觸發條件須在淡入進行中,`delay=1500` 組穩定);②淡入期間尺寸有改變時自訂 cell-render slot 之儲存格因 `refreshCells({ force: true })` 被重建一次(JSDoc 已載);③`state` 只反映淡入與補繪,不代表數據已載入完成;④淡入落定之判斷依賴 `Element.getAnimations()`,不支援者(舊瀏覽器)視為無進行中之過場,以外層 div 自身任一過場事件即結束(可能早於 opacity 淡入結束);⑤`refreshCells` 重繪後之畫面與「容器不帶過場」相同係以 Chromium(Playwright 1.63,確定性旗標與預設旗標)逐 byte 驗證,其他瀏覽器之字形光柵未驗 | e2e-fadeState FD7、FD12;最小重現(證據夾 `batch-*.tsv`) | 設計限制;範圍外未修 |
 | 26 | 直向隱形捲軸(捲軸寬為 0 之環境,如浮動捲軸、無頭瀏覽器)仍以 `position:absolute; right:0; z-index:10` 疊在資料區右緣 16px(`ag-grid.css:1447-1451`、`1476-1482`),其容器攔截滑鼠:最右欄之儲存格距右緣 16px 內之部分(含填滿儲存格寬度之按鈕之右側)點不到,事件由直向捲軸容器接走.**實測**(2026-11-02 ag284,e2e-invisibleScrollbar IS14):欄寬 60px 之最右欄、按鈕填滿儲存格內容區(儲存格右內距 12px),捲到最右時按鈕右緣距資料區右緣 12px,其右側 4px 落在直向捲軸(793~809)內,按鈕中央可點(最上層為按鈕)、右緣 2px 處最上層為 `div.ag-body-vertical-scroll-container`,真滑鼠點該處不觸發按鈕.**不改之原因**(IS15 與探測 `probe3`/`probe4` 之實測):直向改為占位(`position:relative`)可讓出 16px(資料區 782px、直向捲軸 793~809、表頭與資料欄左緣仍對齊),但橫向捲軸(全寬 798px)之捲動範圍不變:最大可捲量 722 對資料區之 738,橫向捲軸捲到最右時最後一欄右緣超出資料區右緣 16px 被裁切(按鈕右側 4px 被裁掉,比原本「看得到點不到」更差);ag-grid 對實體捲軸以橫向捲軸右側間隔加直向捲軸寬度補償(`setFakeHScrollSpacerWidths`,同檔 47797-47813),隱形時 `getScrollbarWidth()` 為 0 故無補償;以 `:has()` 對橫向捲軸補 16px 右內距(`.ag-root:has(.ag-body-vertical-scroll.ag-scrollbar-invisible:not(.ag-hidden)) .ag-body-horizontal-scroll{padding-right:16px}`)使兩者範圍數值相等(738),但捲到最右時仍夾在 722(ag-grid 另有以全寬計之上限,未再追查)且依賴 `:has()`(舊瀏覽器不支援),故不採用.**影響面**:只在「最右欄距右緣 16px 內有互動內容」且「有垂直捲動量」時發生(無垂直捲動量時直向捲軸 `ag-hidden`,IS14 前置);本專案(使用端)未觀察到受影響之按鈕.**替代作法(未採用,待裁示)**:①呼叫端於最右欄加 16px 以上之右內距或留一欄空白欄;②日後若 ag-grid 升版提供隱形直向捲軸之占位排列(含橫向範圍補償),再比照 R27 處理並改 IS14、IS15 | e2e-invisibleScrollbar IS14、IS15;探測 `tmp/ag284/probe2.mjs`~`probe5.mjs`(結案已清,數值載於本欄與報告) | ag-grid 31.3.4;範圍外未修,維持文件 |
+| 27 | **相依套件之 console 輸出不歸 R28 管**:寫檔器失敗時(例如 mat 掛鉤之儲存格物件為寫檔器無法寫出者,#10),wsemi `downloadExcelFileFromData`(安裝版 1.9.72,2026-11-24 `npm view wsemi version` 為最新)於回傳 `{ error }` 前自行 `console.log(u8a.error)`(`node_modules/wsemi/src/downloadExcelFileFromData.mjs:80、89`)印出寫檔器之錯誤本體(訊息原文與堆疊):該輸出不經本套件之診斷出口,`opt.funLog` 與 `opt.logDetail` 皆不影響,使用端無法以本套件之選項關閉;本套件自己之紀錄(`can not write excel file`)仍只印 `{ errType }`.wsemi 之其他 console 呼叫(`domDetect` 2 處、`getDataFromExcelFileU8Arr` 2 處)為固定詞彙,不含值 | 修後實測 `api-consoleNoValues` D_write_fail(2026-11-24):console 另有一則非本套件前綴之錯誤本體(`TypeError: Invalid value used as weak map key` 加堆疊,不含儲存格值);wsemi 原始碼;本套件不得改他套件,不自寫寫檔流程(L0e) | wsemi;範圍外,已列回饋與待裁示(建議對 wsemi 發 issue) |
 
 ## 7. 測試帳本
 
@@ -651,6 +681,7 @@
 | 樣式區 `<style>`(版面、捲軸、焦點框) | e2e-invisibleScrollbar(R27)、e2e-headerscroll(R21)、e2e-focus(R09)、e2e-display-*、e2e-overlay、e2e-rowDrag、e2e-pasteText、e2e-pasteEditable、e2e-examples-*;幾何有共用變動時全套 |
 | 下載、上傳方法 | e2e-download-*、e2e-upload-matrix、e2e-lifecycle、e2e-showKeys、unit-hucre-limits、e2e-examples-download、e2e-examples-upload |
 | 過濾、覆蓋層、localeText | e2e-filters、e2e-overlay、api-localeText、unit-getLangText、e2e-examples-overlay |
+| 診斷輸出(console;任何 `logUseDefault`、`logUseDefaultOpt`、`logErr`、`logFixed`、`diagOf` 之改動;新增或改動任一 console 站點) | unit-diagSites、api-consoleNoValues、e2e-consoleNoValues,另依站點所在功能跑其既有格:e2e-showKeys、e2e-upload-matrix、e2e-download-extended(R01 之 log 斷言)、e2e-overlay、api-localeText(R24、R25)、e2e-display-slots(R10)、e2e-pasteEditable(R22)、e2e-fadeState(R26)、e2e-filters(R20)、e2e-lifecycle(R19);改 `test/pages/consoleNoValues.html` 或 `test/tools/consoleCapture.mjs` 者跑前三者 |
 | 淡入、`state` | e2e-fadeState、e2e-examples-state |
 | 貼上、列拖曳 | e2e-pasteText、api-pasteText、e2e-pasteEditable、e2e-rowDrag |
 | 範例(`src/App*.vue`)、`docs/examples`、`test/tools/exampleBuild.mjs` | unit-appExamples、e2e-examples-* |
@@ -689,8 +720,11 @@
 | e2e-fadeState | e2e | 17 | fade.html(置中容器內 7 欄 6 列表格,表格建立後容器以 CSS 過場改寬;`window.__log` 記錄 state 屬性、外層 div 之 opacity 與過場、尺寸變化與 `api.refreshCells` 之呼叫;網址參數造情境) | R26 |
 | e2e-examples-state | e2e | 2 | 自 src 當場產製之 ex-state(`test/tools/exampleBuild.mjs`) | R18、R26 |
 | e2e-invisibleScrollbar | e2e | 15 | invisibleScrollbar.html(30 列、欄寬總和大於表格寬之表;含按鈕之欄 act、最右欄 actR;查詢字串造列數、寬高、固定欄、置底列) | R27;第 6 節 #26 |
+| unit-diagSites | unit | 8 | `src/components/*`、`toolg/gDistRollupComps.mjs`、`dist/`(node 讀檔,不起瀏覽器):DS0 去註解掃描器之正向對照、DS1 元件碼 console 站點為 0、DS2 單一出口(getDiag 一處)、DS3 站點全集 25(12+3+6+4)與 vo 第一引數、DS4 label 固定詞彙(內插限 name、k、slotName)與 safe 形狀、DS5 範例不在 dist、DS6 JSDoc 載 logDetail 與 funLog、DS7 dist 含 R28 鍵名 | R28 |
+| api-consoleNoValues | api | 63 | consoleNoValues.html(宿主按鈕呼叫元件公開方法;查詢字串 `fl`、`ld`、`extra` 造 opt.funLog、opt.logDetail 與其他鍵;fitColumns、triggerFilterChange、finishFade、寫檔 reject 之 catch 以替換該實例 api 或 `URL.createObjectURL` 之方法造成,屬 setup 例外):D_ 25 站預設輸出恰為預期且不含 CANARY 值與堆疊(本套件輸出)、F_ 24 站 funLog 接線(label、safe 同預設,附細節;console 無)、L_ 5 站 logDetail、N_ 4 空函數關閉、T_ 4 funLog 拋錯或回傳 rejected Promise 之容錯、X1 執行中變更 opt 即時生效 | R28;R01、R03 |
+| e2e-consoleNoValues | e2e | 4 | consoleNoValues.html(表 tp;真滑鼠單擊起點格加真鍵盤 Ctrl+V 之貼上,其中一欄之 editable 函數拋含 CANARY 之錯誤):CNV-001 預設只印固定詞彙加 `{ colKey, errType }`、CNV-002 funLog、CNV-003 空函數、CNV-004 logDetail | R28;R22 |
 
-合計 532 格(2026-11-02 ag284 新增 e2e-invisibleScrollbar 15 格,全套 `npm test --lock` 實測 532 passing、0 failing,既有 517 格皆未改動且全綠,見 state.md;前:517 格(2026-11-02 ag268 新增 unit-appExamples EXT1、EXT2 共 2 格,全套實測見 state.md);再前:515 格(2026-11-01 agg31 新增 e2e-fadeState 17、e2e-examples-state 2、unit-appExamples AX6 1 格,全套實測見 state.md);再前:495 格(2026-10-28 agv-run03 全套實測 444 passing;2026-10-30 agv-run01 新增 unit-getLangText 3、api-localeText 7、e2e-overlay 31,合計 41 格,全套實測 485 passing;同日 agv-run02 新增 unit-appExamples 6、e2e-examples-overlay 4,合計 10 格,全套實測 495 passing,見 state.md)).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
+合計 607 格(2026-11-24 tag1 新增 unit-diagSites 8、api-consoleNoValues 63、e2e-consoleNoValues 4 共 75 格,既有 532 格之 console 期望字串依 R28 改寫但格數不變,全套 `npm test --lock` 實測 607 passing、0 failing,見 state.md;前:532 格(2026-11-02 ag284 新增 e2e-invisibleScrollbar 15 格,全套 `npm test --lock` 實測 532 passing、0 failing,既有 517 格皆未改動且全綠,見 state.md;前:517 格(2026-11-02 ag268 新增 unit-appExamples EXT1、EXT2 共 2 格,全套實測見 state.md);再前:515 格(2026-11-01 agg31 新增 e2e-fadeState 17、e2e-examples-state 2、unit-appExamples AX6 1 格,全套實測見 state.md);再前:495 格(2026-10-28 agv-run03 全套實測 444 passing;2026-10-30 agv-run01 新增 unit-getLangText 3、api-localeText 7、e2e-overlay 31,合計 41 格,全套實測 485 passing;同日 agv-run02 新增 unit-appExamples 6、e2e-examples-overlay 4,合計 10 格,全套實測 495 passing,見 state.md))).格之代號為 `it()` 標題開頭(以代號 Grep 即得輸入與應然);同一代號只出現在一個檔.
 
 ### 7.3 舊 tmp 驗收腳本之遷移(2026-10-06~07)
 
@@ -802,6 +836,7 @@ npm 最新為 2.1.5(2026-10-06 查).版本欄為該提交時 package.json 之值
 | 工作樹(未提交,2026-11-01 agg31) | 元件根節點新增 DOM 屬性 `state`(`showing` → `shown`,淡入 0.5 秒結束後為 shown;不改外觀與淡入時間、既有 API 與事件);**可見行為**:表格建立後淡入期間若根節點尺寸改變(寬或高差 > 1px),淡入結束且尺寸穩定(0.2 秒)後自動 `api.refreshCells({ force: true })` 一次(使淡入期間補繪之儲存格字形像素固定;自訂 cell-render slot 之儲存格被重建一次);淡入期間尺寸未改變者不重繪.新增範例頁 `state`(選單群組 `dom`) | 新增、可見行為 | R26 |
 | 工作樹(未提交,2026-11-02 ag284) | **可見行為(版面)**:捲軸寬為 0 之環境(無頭瀏覽器、浮動捲軸之瀏覽器)下,有橫向捲動之表格,橫向隱形捲軸由疊在資料區底部 16px 之上改為占位排列,**資料區高度少 16px**(同有實體捲軸時之版面);捲到最下時最後一列不再被橫向捲軸蓋住,儲存格內按鈕可點.無橫向捲動者、有實體捲軸之瀏覽器、直向隱形捲軸(仍疊在資料區右緣 16px,第 6 節 #26)不變.使用端以無頭瀏覽器產製之 e2e 標準圖,凡拍到有橫向捲軸之表格者,底部列位置改變,升版後須重產(本套件無標準圖) | 修正、可見行為 | R27 |
 | 工作樹(未提交,2026-11-19 agv492i) | 相依 wsemi 升為 ^1.9.69(判斷函數只收原始值,包裝物件判為 false):下載 `sheetName` 為 `new String(...)` 時仍改用 'data' 並於 console 提示(不變),**提示中之無效值由 `boxed` 改為 `[object String]`**(依型態表示,同陣列、布林等非原始值);非字串原始值(`5`、`{}`、`null`)之處置不變 | 可見行為(相依) | R01、R16 |
+| 工作樹(未提交,2026-11-24 tag1) | **可見行為(console 輸出,R28)**:①本套件於 console 輸出之診斷訊息預設不再印使用端給予之值與錯誤訊息原文、堆疊:無效選項之提示由 `invalid <鍵>[<值>]` 改為 `invalid <鍵>` 加 `{ valueShape: '(string)' }`(型別、長度、鍵名之形狀),寫檔失敗與 fitColumns、triggerFilterChange、finishFade 之 catch 由印出錯誤本體改為 `{ errType, errCode? }`,貼上時 kpCellEditable 函數拋錯由 `kpCellEditable[<欄>] threw…: <訊息原文>` 改為 `kpCellEditable threw…` 加 `{ colKey, errType }`;②新增公開選項 `opt.logDetail`(true 時 console 改印遮罩後之細節)與 `opt.funLog`(函數時全部輸出只交給它,`() => {}` 即關閉);③已移除鍵之警告由 `console.warn` 改為 `console.log`(經 wsemi getDiag 之單一出口,其 level 無 warn);功能、畫面、無效選項之處置(用預設)、error 與 reject 值皆不變;依賴 console 文字之使用端日誌過濾須隨之調整(列表見報告) | 可見行為、新增 | R28、R01、R03、R10、R22 |
 
 ## 9. 候選規則與待裁示(未裁示,僅記錄)
 
