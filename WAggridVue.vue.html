@@ -144,6 +144,7 @@ import replace from 'wsemi/src/replace.mjs'
 import debounce from 'wsemi/src/debounce.mjs'
 import domDetect from 'wsemi/src/domDetect.mjs'
 import domTooltip from 'wsemi/src/domTooltip.mjs'
+import getDiag from 'wsemi/src/getDiag.mjs'
 import * as agv from 'ag-grid-vue' //會再引用vue-class-component與vue-property-decorator, 已能被rollup打包進dist, 故不再需要由外部引入cdn
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-balham.css'
@@ -219,6 +220,32 @@ function cvCellTextByParams(params) {
 }
 
 
+//診斷輸出(R28): 本檔一切console輸出皆經單一出口diagOf(vo)(wsemi getDiag, 跨套件規格〈診斷輸出與遮罩〉D1), 不直接呼叫console
+//預設只輸出固定詞彙、鍵名(結構)與值之形狀或錯誤之摘要(類別與代碼), 不輸出使用者給之值、錯誤訊息原文與堆疊(D2); 細節(遮罩後)只隨元件opt.logDetail(true: console改印細節)、opt.funLog(函數: 全部輸出只交給它, 空函數即關閉)交出
+//opt於每次輸出時才讀取, 執行中變更即時生效; opt本身無效(非物件)時無從攜帶選項, 依預設輸出
+//safeKeys為本檔safe所用之鍵名: valueShape(值之形狀, 由diag.shape產生)、localeKey(opt.localeText之字典鍵名)、colKey(欄位key); 鍵名為結構, 非資料值
+const DIAG_CFG = { safeKeys: ['valueShape', 'localeKey', 'colKey'] }
+
+
+//diagOf, 診斷輸出之單一出口(元件實例vo之opt提供logDetail與funLog)
+function diagOf(vo) {
+    return getDiag(get(vo, 'opt'), DIAG_CFG)
+}
+
+
+//logFixed, 固定詞彙之診斷(label不含任何外來值)
+function logFixed(vo, label) {
+    diagOf(vo)(label)
+}
+
+
+//logErr, 錯誤之診斷: 預設只輸出label與錯誤摘要(類別與白名單內之代碼), 錯誤本體(含訊息原文與堆疊)只隨logDetail、funLog之細節交出; extra為並列之結構性鍵名(如colKey)
+function logErr(vo, label, err, extra) {
+    let diag = diagOf(vo)
+    diag(label, Object.assign({}, extra, diag.brief(err)), () => err)
+}
+
+
 //方法之opt與其各鍵為額外傳入: 未給予(null、undefined)時使用預設; 有給予但非指定之值或型態時亦使用預設, 並以logUseDefault於console提示
 
 
@@ -228,21 +255,17 @@ function isGiven(v) {
 }
 
 
-//descInvalid, 無效之值於提示中之表示: 字串與數值顯示原值, 其餘顯示型態
-function descInvalid(v) {
-    return (isstr(v) || isnum(v)) ? `${v}` : Object.prototype.toString.call(v)
+//logUseDefault, 選項有給予但非指定之值或型態時, 於console提示改用預設; 預設只輸出固定詞彙與值之形狀(valueShape: 型別、長度、鍵名), 不輸出值(使用端給之值), 值只隨logDetail、funLog之細節交出(R01、R28)
+function logUseDefault(vo, name, key, v, def) {
+    let diag = diagOf(vo)
+    diag(`[w-aggrid-vue] ${name}: invalid ${key}, use default ${key} ${def}`, { valueShape: diag.shape(v) }, () => v)
 }
 
 
-//logUseDefault, 選項有給予但非指定之值或型態時, 於console提示改用預設; 無效之值為字串與數值時顯示原值, 其餘顯示型態
-function logUseDefault(name, key, v, def) {
-    console.log(`[w-aggrid-vue] ${name}: invalid ${key}[${descInvalid(v)}], use default ${key} ${def}`)
-}
-
-
-//logUseDefaultOpt, 元件prop opt之選項有給予但非指定之值或型態時, 於console提示改用預設(prop無方法名, 前綴為opt.&lt;鍵>, R03)
-function logUseDefaultOpt(key, v, def) {
-    console.log(`[w-aggrid-vue] opt.${key} is invalid[${descInvalid(v)}], use default ${def}`)
+//logUseDefaultOpt, 元件prop opt之選項有給予但非指定之值或型態時, 於console提示改用預設(prop無方法名, 前綴為opt.&lt;鍵>, R03); 輸出同logUseDefault, extra為並列之結構性鍵名(如localeKey)
+function logUseDefaultOpt(vo, key, v, def, extra) {
+    let diag = diagOf(vo)
+    diag(`[w-aggrid-vue] opt.${key} is invalid, use default ${def}`, Object.assign({}, extra, { valueShape: diag.shape(v) }), () => v)
 }
 
 
@@ -331,7 +354,7 @@ function downloadCore(vo, name, keys, rows, opt) {
     //opt
     if (!isobj(opt)) {
         if (isGiven(opt)) {
-            logUseDefault(name, 'opt', opt, '{}')
+            logUseDefault(vo, name, 'opt', opt, '{}')
         }
         opt = {}
     }
@@ -350,14 +373,14 @@ function downloadCore(vo, name, keys, rows, opt) {
     //hooks, 須為函數, 否則視為未給予(其後以isfun判斷是否呼叫)
     each({ funGetKeysHook, funGetLtdtHook, funGetMatHook }, (fun, key) => {
         if (!isfun(fun) &amp;&amp; isGiven(fun)) {
-            logUseDefault(name, key, fun, 'null')
+            logUseDefault(vo, name, key, fun, 'null')
         }
     })
 
     //useHead
     if (!isbol(useHead)) {
         if (isGiven(useHead)) {
-            logUseDefault(name, 'useHead', useHead, 'false')
+            logUseDefault(vo, name, 'useHead', useHead, 'false')
         }
         useHead = false
     }
@@ -365,7 +388,7 @@ function downloadCore(vo, name, keys, rows, opt) {
     //useFormat, 預設依kpCellFormat格式化使下載與畫面一致, 給false則下載原值
     if (!isbol(useFormat)) {
         if (isGiven(useFormat)) {
-            logUseDefault(name, 'useFormat', useFormat, 'true')
+            logUseDefault(vo, name, 'useFormat', useFormat, 'true')
         }
         useFormat = true
     }
@@ -373,7 +396,7 @@ function downloadCore(vo, name, keys, rows, opt) {
     //fileName, 無副檔名時補.xlsx(同ag-grid匯出), 否則瀏覽器會依無型別之Blob另給副檔名
     if (!isestr(fileName)) {
         if (isGiven(fileName)) {
-            logUseDefault(name, 'fileName', fileName, `'data.xlsx'`)
+            logUseDefault(vo, name, 'fileName', fileName, `'data.xlsx'`)
         }
         fileName = 'data.xlsx'
     }
@@ -386,7 +409,7 @@ function downloadCore(vo, name, keys, rows, opt) {
     let bSheetName = typeof sheetName === 'string' &amp;&amp; sheetName.length > 0 &amp;&amp; sheetName.length &lt;= 31 &amp;&amp; !/[[\]:*?/\\]/.test(sheetName) &amp;&amp; !sheetName.startsWith(`'`) &amp;&amp; !sheetName.endsWith(`'`) &amp;&amp; sheetName.toLowerCase() !== 'history'
     if (!bSheetName) {
         if (isGiven(sheetName)) {
-            logUseDefault(name, 'sheetName', sheetName, `'data'`)
+            logUseDefault(vo, name, 'sheetName', sheetName, `'data'`)
         }
         sheetName = 'data'
     }
@@ -499,14 +522,15 @@ function downloadCore(vo, name, keys, rows, opt) {
     }
 
     //downloadExcelFileFromData, 非同步寫檔, 無法回報呼叫端; 寫檔器拒絕時wsemi以resolve回傳{ error }(例如funGetMatHook回傳寫檔器無法寫出之儲存格物件), 觸發下載時之例外則reject, 皆以前綴記錄於console
+    //錯誤本體(訊息原文與堆疊, 可能含儲存格內容)預設不輸出, 只輸出錯誤摘要(R28)
     downloadExcelFileFromData(fileName, sheetName, mat)
         .then((r) => {
             if (haskey(r, 'error')) {
-                console.log(`[w-aggrid-vue] ${name}: can not write excel file`, r.error)
+                logErr(vo, `[w-aggrid-vue] ${name}: can not write excel file`, r.error)
             }
         })
         .catch((err) => {
-            console.log(`[w-aggrid-vue] ${name}: can not write excel file`, err)
+            logErr(vo, `[w-aggrid-vue] ${name}: can not write excel file`, err)
         })
 
     return mat
@@ -814,6 +838,8 @@ let HeaderSlotRenderer = {
  * @vue-prop {String} [opt.language='en'] 輸入指定語系字串，可選'en'、'zh-tw'、'zh-cn'，預設為'en'
  * @vue-prop {Object} [opt.localeText={}] 輸入覆寫表格文字之字典物件，鍵同ag-grid之locale鍵(例如'noRowsToShow'、'loadingOoo'、'filterOoo'，另有本套件新增之'noRowsToShowFiltered')，值為字串(可為空字串)；查找順序為先查本字典，查無再用opt.language之內建字典，故未給予時行為不變；字串原樣使用，不代入ag-grid之${variable}佔位；非物件時於console提示並視為未給予，值非字串之鍵略過並於console提示；opt變更後ag-grid新取得之文字採用新值，已顯示中之空表/過濾0筆覆蓋層文字會同步更新(其餘已渲染之元件是否重繪取決於ag-grid)。空表提示('noRowsToShow')內建文字為en'No Rows To Show'、zh-tw'無資料可顯示'、zh-cn'无数据可显示'；過濾0筆提示('noRowsToShowFiltered')內建文字為en'No Rows Match The Filter'、zh-tw'無符合過濾條件之資料'、zh-cn'无符合过滤条件的数据'
  * @vue-prop {Boolean} [opt.showOverlayWhenFilteredEmpty=true] 輸入是否於「數據列數大於0而過濾(表頭過濾或filterall)使顯示列數為0」時顯示提示覆蓋層，提示文字為localeText之'noRowsToShowFiltered'，顯示列數回到大於0時隱藏；數據本身為空(opt.rows為空陣列)時維持顯示'noRowsToShow'。【破壞性變更】本提示預設開啟：以往表頭過濾使顯示列數為0時表格只剩表頭與空白而無提示，filterall使數據為空時顯示的是'noRowsToShow'(與數據本身為空無法區分)，現在兩者皆改為顯示'noRowsToShowFiltered'，故截圖或測試若拍到過濾成0筆之表畫面會改變，欲恢復舊行為請設為false(範例見localeText、showOverlayWhenFilteredEmpty)。ag-grid 31.3.4之覆蓋層只在數據更新時判斷，表頭過濾使顯示列數為0時表格只剩表頭與空白，本選項補上提示。設為false則恢復舊行為(表頭過濾0筆不提示、filterall使數據為空時顯示'noRowsToShow')；顯示時不會蓋掉呼叫端經getApi().showLoadingOverlay()顯示之載入中覆蓋層；非布林值時於console提示並使用預設true
+ * @vue-prop {Boolean} [opt.logDetail=false] 輸入是否於console輸出遮罩後之細節，預設false。本套件於console輸出之診斷訊息(無效選項之提示、寫檔失敗、貼上時kpCellEditable函數拋錯、非預期之內部錯誤等)預設只輸出固定詞彙、鍵名(欄位key等結構)、值之形狀(例如'(string)'、'(array, length=3)'、'(keys: a,b)')與錯誤之類別及代碼，不輸出使用端給予之值、錯誤訊息原文與堆疊；設為true時改輸出細節(使用端給予之值或錯誤本體，經wsemi遮罩)，供除錯。其值須恰為true才生效；opt本身無效(非物件)時無從攜帶選項，依預設輸出；於每次輸出時才讀取，執行中變更即時生效
+ * @vue-prop {Function} [opt.funLog=null] 輸入診斷輸出函數，格式為(label, safe, detail)=>{}，預設null。給予函數時，本套件全部之診斷輸出(含固定詞彙之提示)皆只交給它而不寫console(logDetail不作用)，故給予空函數()=>{}即可關閉本套件全部console輸出；label為固定詞彙之訊息，safe為安全摘要物件(例如{ valueShape: '(string)' }、{ errType: 'Error', errCode: 'ENOENT' })，detail為遮罩後之細節(有細節之訊息才有第3個引數，如使用端給予之無效值或錯誤本體)，函數自身拋錯或回傳rejected之Promise不影響本套件(吞下)。例如：funLog: (label, safe, detail) => { 使用端之日誌 }
  * @vue-prop {Number} [height=300] 表格高度，單位為px，預設300
  * @vue-prop {String} [filterall=''] 輸入對全表數據進行過濾之字串，預設為''
  * @vue-data {String} [state='showing'] 元件根節點(class為CompCssWAggridVue)之DOM屬性state，表示表格是否已完成淡入，供使用端(例如e2e截圖、量測)以[state="shown"]等待，取值只有'showing'與'shown'，單向轉換(showing→shown，之後不再回到showing)。'showing'：初值，表格未就緒(ag-grid尚未建立完成)，或表格已就緒而外層容器(class為CompCssWAggridVue之第一層div)0.5秒之opacity淡入尚在進行，亦含淡入結束後等待尺寸穩定及補繪之期間；'shown'：淡入已結束(以該div自身已無進行中之CSS過場為準，主要依其transitionend或transitioncancel事件；事件未到達時於表格就緒0.8秒後每50ms重查，至多再等3秒後強制結束)，且淡入期間若元件根節點之尺寸曾改變(例如表格建立後0.5秒內，所在容器以CSS過場移動並改寬)，則已待尺寸穩定(最後一次尺寸變化後0.35秒無再變化，大於autoFitColumn之欄寬重排去抖動0.3秒，故欄寬重排先於補繪；尺寸持續變動時自淡入結束起至多再等3秒即強制補繪)並自動以api.refreshCells({ force: true })重繪一次儲存格(淡入期間因尺寸變化而補繪之儲存格，其字形像素在不同次建立間會有次像素差異且不自行收斂，重繪後即固定)；淡入期間尺寸未改變者不做補繪。淡入期間尺寸有改變時，自訂cell-render slot之儲存格會被重建一次。state只反映淡入與補繪，不代表數據已載入完成；表格建立後根節點尺寸再改變(淡入結束後)不會再補繪，state亦維持'shown'
@@ -1748,7 +1774,7 @@ export default {
                         api.refreshCells({ force: true })
                     }
                     catch (err) {
-                        console.log('[w-aggrid-vue] finishFade:', err)
+                        logErr(vo, '[w-aggrid-vue] finishFade:', err)
                     }
                 }
             }
@@ -2125,20 +2151,13 @@ export default {
             //console.log('kpColumn', kpColumn)
 
             //onEditableError, editable函數拋錯時視為不可編輯, 同一次貼上同一欄只於console說明一次, 避免大量列時洗版
+            //預設只輸出固定詞彙、欄位key(結構)與錯誤類別, 不輸出使用者函數所拋出之訊息原文(可能含該列之值)與堆疊(R28); 原文只隨logDetail、funLog之細節交出; 拋出之值為無原型物件等亦由diag.brief處理, 不再轉字串
             let kpEditableError = {}
             let onEditableError = (colKey) => {
                 return (err) => {
                     if (!kpEditableError[colKey]) {
                         kpEditableError[colKey] = true
-                        //msg, 拋出之值可能無法轉字串(無原型物件等), 退為物件型態字串
-                        let msg = ''
-                        try {
-                            msg = String(get(err, 'message', err))
-                        }
-                        catch (errMsg) {
-                            msg = Object.prototype.toString.call(err)
-                        }
-                        console.log(`[w-aggrid-vue] pasteText: kpCellEditable[${colKey}] threw, the cell is treated as not editable: ${msg}`)
+                        logErr(vo, '[w-aggrid-vue] pasteText: kpCellEditable threw, the cell is treated as not editable', err, { colKey })
                     }
                 }
             }
@@ -2611,7 +2630,7 @@ export default {
             //check, 未給予(null、undefined)時不提示; 有給予但非非空物件時提示表格不更新(R01、R03)
             if (!iseobj(vo.opt)) {
                 if (isGiven(vo.opt)) {
-                    console.log('[w-aggrid-vue] opt is invalid, it must be an object with keys and rows, the table is not updated')
+                    logFixed(vo, '[w-aggrid-vue] opt is invalid, it must be an object with keys and rows, the table is not updated')
                 }
                 return
             }
@@ -2627,7 +2646,7 @@ export default {
                 each(kpRemoved, (slotName, k) => {
                     if (haskey(vo.opt, k)) {
                         vo.bWarnedRemovedKeys = true
-                        console.warn(`[w-aggrid-vue] opt.${k} was removed in 2.0.56, use scoped slot '${slotName}' instead`)
+                        logFixed(vo, `[w-aggrid-vue] opt.${k} was removed in 2.0.56, use scoped slot '${slotName}' instead`)
                     }
                 })
             }
@@ -2635,14 +2654,14 @@ export default {
             //check keys
             let tKeys = get(vo, 'opt.keys')
             if (!isearr(tKeys)) {
-                console.log('[w-aggrid-vue] opt.keys is invalid, it must be a non-empty array of keys, the table is not updated')
+                logFixed(vo, '[w-aggrid-vue] opt.keys is invalid, it must be a non-empty array of keys, the table is not updated')
                 return
             }
 
             //check rows
             let tRows = get(vo, 'opt.rows')
             if (!isarr(tRows)) {
-                console.log('[w-aggrid-vue] opt.rows is invalid, it must be an array, the table is not updated')
+                logFixed(vo, '[w-aggrid-vue] opt.rows is invalid, it must be an array, the table is not updated')
                 return
             }
 
@@ -3015,12 +3034,12 @@ export default {
                             localeText[k] = v
                         }
                         else {
-                            logUseDefaultOpt(`localeText[${k}]`, v, 'text')
+                            logUseDefaultOpt(vo, 'localeText[&lt;key>]', v, 'text', { localeKey: k })
                         }
                     })
                 }
                 else {
-                    logUseDefaultOpt('localeText', vo.opt.localeText, '{}')
+                    logUseDefaultOpt(vo, 'localeText', vo.opt.localeText, '{}')
                 }
             }
             vo.localeText = localeText
@@ -3031,7 +3050,7 @@ export default {
                 showOverlayWhenFilteredEmpty = vo.opt.showOverlayWhenFilteredEmpty
             }
             else if (isGiven(vo.opt.showOverlayWhenFilteredEmpty)) {
-                logUseDefaultOpt('showOverlayWhenFilteredEmpty', vo.opt.showOverlayWhenFilteredEmpty, 'true')
+                logUseDefaultOpt(vo, 'showOverlayWhenFilteredEmpty', vo.opt.showOverlayWhenFilteredEmpty, 'true')
             }
             vo.showOverlayWhenFilteredEmpty = showOverlayWhenFilteredEmpty
 
@@ -3116,7 +3135,7 @@ export default {
             //opt
             if (!isobj(opt)) {
                 if (isGiven(opt)) {
-                    logUseDefault('showKeys', 'opt', opt, '{}')
+                    logUseDefault(vo, 'showKeys', 'opt', opt, '{}')
                 }
                 opt = {}
             }
@@ -3125,7 +3144,7 @@ export default {
             let applyOrder = get(opt, 'applyOrder', null)
             if (!isbol(applyOrder)) {
                 if (isGiven(applyOrder)) {
-                    logUseDefault('showKeys', 'applyOrder', applyOrder, 'true')
+                    logUseDefault(vo, 'showKeys', 'applyOrder', applyOrder, 'true')
                 }
                 applyOrder = true
             }
@@ -3374,7 +3393,7 @@ export default {
 
                 }
                 catch (err) {
-                    console.log('[w-aggrid-vue] fitColumns:', err)
+                    logErr(vo, '[w-aggrid-vue] fitColumns:', err)
                 }
             }
 
@@ -3490,7 +3509,7 @@ export default {
             //opt
             if (!isobj(opt)) {
                 if (isGiven(opt)) {
-                    logUseDefault('uploadData', 'opt', opt, '{}')
+                    logUseDefault(vo, 'uploadData', 'opt', opt, '{}')
                 }
                 opt = {}
             }
@@ -3501,7 +3520,7 @@ export default {
             //beforeUpload, 須為函數, 否則視為未給予(不處理數據)
             if (!isfun(beforeUpload)) {
                 if (isGiven(beforeUpload)) {
-                    logUseDefault('uploadData', 'beforeUpload', beforeUpload, 'null')
+                    logUseDefault(vo, 'uploadData', 'beforeUpload', beforeUpload, 'null')
                 }
                 beforeUpload = null
             }
@@ -3509,7 +3528,7 @@ export default {
             //uploadMode, 'replace'(取代)或'append'(附加), 否則為'replace'
             if (uploadMode !== 'replace' &amp;&amp; uploadMode !== 'append') {
                 if (isGiven(uploadMode)) {
-                    logUseDefault('uploadData', 'uploadMode', uploadMode, `'replace'`)
+                    logUseDefault(vo, 'uploadData', 'uploadMode', uploadMode, `'replace'`)
                 }
                 uploadMode = 'replace'
             }
@@ -3517,7 +3536,7 @@ export default {
             //parseSheetInd, 非負整數(含整數字串, 例如select所綁定之'1'), 否則為0; useLimitSafe使Infinity亦視為無效
             if (!isp0int(parseSheetInd, { useLimitSafe: true })) {
                 if (isGiven(parseSheetInd)) {
-                    logUseDefault('uploadData', 'parseSheetInd', parseSheetInd, '0')
+                    logUseDefault(vo, 'uploadData', 'parseSheetInd', parseSheetInd, '0')
                 }
                 parseSheetInd = 0
             }
@@ -3694,7 +3713,7 @@ export default {
             catch (err) {
                 //表格不可用(元件或ag-grid已銷毀)時不發事件; 其餘錯誤記錄後亦不發事件, 避免以錯誤之過濾狀態通知呼叫端
                 if (isGridAvailable(vo.getApi())) {
-                    console.log('[w-aggrid-vue] triggerFilterChange:', err)
+                    logErr(vo, '[w-aggrid-vue] triggerFilterChange:', err)
                 }
                 return
             }
@@ -3766,7 +3785,7 @@ export default {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 23 2026 22:36:44 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 24 2026 06:13:18 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
