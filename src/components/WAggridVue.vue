@@ -476,10 +476,19 @@ function downloadCore(vo, name, keys, rows, opt) {
 
     //downloadExcelFileFromData, 非同步寫檔, 無法回報呼叫端; 寫檔器拒絕時wsemi以resolve回傳{ error }(例如funGetMatHook回傳寫檔器無法寫出之儲存格物件), 觸發下載時之例外則reject, 皆以前綴記錄於console
     //錯誤本體(訊息原文與堆疊, 可能含儲存格內容)預設不輸出, 只輸出錯誤摘要(R28)
-    downloadExcelFileFromData(fileName, sheetName, mat)
+    //wsemi 1.9.79起{ error }為固定詞彙字串(不帶寫檔器之原生錯誤), 原生錯誤只經其診斷出口opt.funLog(label, safe, detail)交出, 且未給funLog時wsemi預設自行console.log一則: 故給本地funLog取回原生錯誤(遮罩後之副本)
+    //本地funLog不給logDetail(免wsemi自行寫console, 使輸出恆只有本套件一則)、不轉交使用端opt.funLog(使用端之funLog只收logErr那一則); 有取回者以之為logErr之err(型別即原生錯誤之型別, 細節含原因), 未取回者(wsemi於診斷出口之前即拒絕, 如fileName含NUL字元)才用固定詞彙字串
+    //以旗標判斷有無取回, 不以cause===null(取回之值可為任意值)
+    let hasCause = false
+    let cause = null
+    let funLogWsemi = (label, safe, detail) => {
+        hasCause = true
+        cause = detail
+    }
+    downloadExcelFileFromData(fileName, sheetName, mat, { funLog: funLogWsemi })
         .then((r) => {
             if (haskey(r, 'error')) {
-                logErr(vo, `[w-aggrid-vue] ${name}: can not write excel file`, r.error)
+                logErr(vo, `[w-aggrid-vue] ${name}: can not write excel file`, hasCause ? cause : r.error)
             }
         })
         .catch((err) => {

@@ -173,11 +173,39 @@ describe('unit-diagSites:診斷輸出之站點全集鎖(R28)', function() {
         assert.ok(/@vue-prop \{Function\} \[opt\.funLog=null\]/.test(vueFull))
     })
 
-    it('DS7 dist 已依現行 src 建置(防止未重建而以舊 dist 測試): 含 R28 之 safe 鍵名', function() {
+    it('DS7 dist 已依現行 src 建置(防止未重建而以舊 dist 測試): 含 R28 之 safe 鍵名與規則 5 之本地 funLog(funLogWsemi)', function() {
         let d = read('dist/w-aggrid-vue.umd.js')
-        for (let k of ['valueShape', 'localeKey', 'colKey', 'localeText[<key>]']) {
+        for (let k of ['valueShape', 'localeKey', 'colKey', 'localeText[<key>]', 'funLogWsemi']) {
             assert.ok(d.includes(k), `dist 缺 ${k}, 須 node toolg/gDistRollupComps.mjs`)
         }
+    })
+
+    it('DS8 R28 規則 5 相依之固定詞彙函數: 元件碼匯入者只有 downloadExcelFileFromData, 其唯一呼叫點給本地 funLog 取回原生錯誤; 不給 logDetail、不轉交使用端 opt.funLog', function() {
+        //wsemi 1.9.79 起「失敗之 { error } 為固定詞彙字串、原生錯誤只經診斷出口(opt.funLog、opt.logDetail)交出」之函數全集(規則帳本 R28 之盤點式; 升版後依 wsemi 之破壞性變更紀錄補)
+        //(名稱以正規式比對, 與規則帳本 R28 之盤點式一致: getExcelU8Arr*、obj2*、exec*、fsEnsureBins* 等整族)
+        let FIXED = /^(downloadExcelFileFromData|getExcelU8Arr\w*|o2j|obj2\w+|fsReadJson|fsEnsureBins\w*|exec\w+|getObjSize)$/
+        let imported = [...F.matchAll(/^import \w+ from ['"]wsemi\/src\/(\w+)\.mjs['"];?$/gm)].map((m) => m[1])
+        assert.ok(imported.length > 20 && imported.includes('getDiag'), `匯入掃描失效: ${imported.length}`)
+        //所有指向 wsemi 之匯入皆為上列單檔形式(無具名匯入、整包匯入或動態匯入而掃不到者)
+        assert.strictEqual(count(F, /\bfrom ['"]wsemi/g), imported.length, '元件碼對 wsemi 之匯入皆須為 wsemi/src/<函數>.mjs 之單檔形式')
+        assert.strictEqual(count(F, /\bimport\s*\(\s*['"`]wsemi/g), 0, '不得動態匯入 wsemi')
+        assert.deepStrictEqual(imported.filter((n) => FIXED.test(n)), ['downloadExcelFileFromData'])
+        //唯一呼叫點: 第 4 引數為只含本地 funLog 之物件
+        let calls = [...F.matchAll(/\bdownloadExcelFileFromData\(([^)]*)\)/g)].map((m) => m[1])
+        assert.deepStrictEqual(calls, ['fileName, sheetName, mat, { funLog: funLogWsemi }'])
+        //本地 funLog 只賦值取回(旗標加值); 有取回者以之為 logErr 之 err, 未取回者用 wsemi 之固定詞彙字串
+        let m = F.match(/let funLogWsemi = \(label, safe, detail\) => \{([\s\S]*?)\n {4}\}/)
+        assert.ok(m && /hasCause = true/.test(m[1]) && /cause = detail/.test(m[1]), '本地 funLog 須取回 detail 並設旗標')
+        assert.ok(/hasCause \? cause : r\.error/.test(F), 'logErr 之 err 須依旗標取回之原生錯誤, 否則 wsemi 之固定詞彙')
+        //不給 logDetail(給了 wsemi 自行寫 console, 輸出變兩則); 不轉交使用端之 funLog(其只收 logErr 那一則)
+        //以「鍵 : 或 = 」之形狀計(屬性或指定), 不計字串內之字樣(如日後之提示詞彙)
+        assert.strictEqual(count(F, /\blogDetail\s*[:=]/g), 0, '元件碼不得給 logDetail(使用端選項由 getDiag 讀取, 不經本檔)')
+        assert.strictEqual(count(F, /\bfunLog\s*[:=]/g), 1, 'funLog 之鍵只出現於上列呼叫之本地 funLog')
+        assert.strictEqual(count(F, /\.\s*funLog\b|opt\.funLog|\[\s*['"]funLog['"]\s*\]/g), 0, '不得轉交使用端 opt.funLog')
+        //取回之狀態為 downloadCore 之區域變數(每次下載各自一份, 不跨次殘留): 宣告在 downloadCore 內
+        let dc = F.slice(F.indexOf('function downloadCore('))
+        assert.ok(dc.indexOf('let hasCause = false') > 0 && dc.indexOf('let cause = null') > 0 && dc.indexOf('let hasCause = false') < dc.indexOf('downloadExcelFileFromData('), '取回之旗標與值須宣告於 downloadCore 內、呼叫之前')
+        assert.strictEqual(count(F, /\blet hasCause = false/g), 1)
     })
 
 })

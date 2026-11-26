@@ -1,20 +1,27 @@
 //hucre 寫檔之拒絕條件(規則帳本 R16 之單一擁有者; 經 wsemi getExcelWorkbookFromData → getExcelU8ArrFromWorkbook 呼叫, 與 downloadCore 寫檔之路徑相同)
 //downloadCore 於寫檔前照抄這些條件做事前檢查(寫檔失敗時 wsemi 以 resolve 回 { error }, 同步介面無從得知);
 //wsemi 或 hucre 升版後本檔失敗, 即須回頭比對 R16 之逐項條件與 downloadCore 之判準
+//寫檔器拒絕之原因(是哪一條限制): wsemi 1.9.79 起 { error } 為固定詞彙字串(不帶寫檔器之 Error, 其訊息含分頁名稱等輸入內容), 原生錯誤只經該函數之診斷出口 opt.funLog(label, safe, detail) 交出;
+//故本檔以本地 funLog 取回原生錯誤(遮罩後之副本, 同類別、訊息保留), 逐拒絕條件斷言其原因(reason), 不只斷言 { error } 有值
 import assert from 'assert'
 import getExcelWorkbookFromData from 'wsemi/src/getExcelWorkbookFromData.mjs'
 import getExcelU8ArrFromWorkbook from 'wsemi/src/getExcelU8ArrFromWorkbook.mjs'
 import getDataFromExcelFileU8Arr from 'wsemi/src/getDataFromExcelFileU8Arr.mjs'
 
-//write, 以與 downloadCore 相同之 wsemi 路徑寫出 xlsx, 回傳 { ok, u8a } 或 { error }
+//write, 以與 downloadCore 相同之 wsemi 路徑寫出 xlsx, 回傳 { ok, u8a } 或 { error, reason }
+//error 為 wsemi 回傳之固定詞彙; reason 為診斷出口取回之原生錯誤之 `名稱: 訊息`(未取回為 '')
 async function write(mat, sheetName = 'data') {
     let wb = getExcelWorkbookFromData(mat, sheetName)
     if (wb && wb.error) {
-        return { error: String(wb.error) }
+        return { error: String(wb.error), reason: '' }
     }
-    let r = await getExcelU8ArrFromWorkbook(wb)
+    let reason = ''
+    let funLog = (label, safe, detail) => {
+        reason = detail && detail.message !== undefined ? `${detail.name}: ${detail.message}` : String(detail)
+    }
+    let r = await getExcelU8ArrFromWorkbook(wb, { funLog })
     if (r && r.error) {
-        return { error: String(r.error && r.error.message ? r.error.message : r.error) }
+        return { error: r.error, reason }
     }
     return { ok: r instanceof Uint8Array, u8a: r }
 }
@@ -30,40 +37,56 @@ let H = [['a'], ['v']]
 describe('unit-hucre-limits:寫檔器之拒絕條件', function() {
 
     describe('分頁名(長度以 UTF-16 碼元計)', function() {
+        //第 4 項為拒絕時之原因(hucre validateSheetName 之該條訊息片段, 經 wsemi 診斷出口取得): 每個拒絕條件各有不同之片段, 以辨別是哪一條限制
         let cases = [
             ['ASCII 31 字', 'x'.repeat(31), true],
-            ['ASCII 32 字', 'x'.repeat(32), false],
+            ['ASCII 32 字', 'x'.repeat(32), false, 'is 32 characters'],
             ['CJK 31 字(BMP 內,每字 1 碼元)', '報'.repeat(31), true],
             ['表情符號 15 個(碼元 30)', '😀'.repeat(15), true],
-            ['表情符號 16 個(碼位 16、碼元 32)', '😀'.repeat(16), false],
-            ['擴充 B 漢字 16 個(碼元 32)', '𠀀'.repeat(16), false],
-            ['含 /', 'a/b', false],
-            ['含 \\', 'a\\b', false],
-            ['含 [', 'a[b', false],
-            ['含 ]', 'a]b', false],
-            ['含 :', 'a:b', false],
-            ['含 *', 'a*b', false],
-            ['含 ?', 'a?b', false],
-            ['首字單引號', "'ab", false],
-            ['尾字單引號', "ab'", false],
+            ['表情符號 16 個(碼位 16、碼元 32)', '😀'.repeat(16), false, 'is 32 characters'],
+            ['擴充 B 漢字 16 個(碼元 32)', '𠀀'.repeat(16), false, 'is 32 characters'],
+            ['含 /', 'a/b', false, 'contains "/"'],
+            ['含 \\', 'a\\b', false, 'contains "\\\\"'],
+            ['含 [', 'a[b', false, 'contains "["'],
+            ['含 ]', 'a]b', false, 'contains "]"'],
+            ['含 :', 'a:b', false, 'contains ":"'],
+            ['含 *', 'a*b', false, 'contains "*"'],
+            ['含 ?', 'a?b', false, 'contains "?"'],
+            ['首字單引號', "'ab", false, 'starts or ends with an apostrophe'],
+            ['尾字單引號', "ab'", false, 'starts or ends with an apostrophe'],
             ['中間單引號', "a'b", true],
-            ['保留名 History', 'History', false],
-            ['保留名 history', 'history', false],
-            ['保留名 HISTORY', 'HISTORY', false],
+            ['保留名 History', 'History', false, 'reserved by Excel for change tracking'],
+            ['保留名 history', 'history', false, 'reserved by Excel for change tracking'],
+            ['保留名 HISTORY', 'HISTORY', false, 'reserved by Excel for change tracking'],
             ['中文與數字', '報表2026-10', true],
         ]
-        for (let [title, name, accept] of cases) {
+        for (let [title, name, accept, reason] of cases) {
             it(`${title}:${accept ? '接受' : '拒絕'}`, async function() {
                 let r = await write(H, name)
                 if (accept) {
-                    assert.ok(r.ok, `應接受, 實際 ${r.error}`)
+                    assert.ok(r.ok, `應接受, 實際 ${r.error}(${r.reason})`)
                 }
                 else {
                     assert.ok(r.error, '應拒絕')
-                    assert.match(r.error, /Sheet name/)
+                    //wsemi 回傳之 { error } 為固定詞彙字串, 不含分頁名稱等輸入內容
+                    assert.strictEqual(typeof r.error, 'string', 'error 為固定詞彙字串')
+                    assert.ok(!r.error.includes(name), `error 不得含分頁名稱: ${r.error}`)
+                    //原因須由診斷出口取得, 且為該拒絕條件之訊息(分辨是哪一條限制), 不只是任一寫檔失敗
+                    assert.ok(r.reason.startsWith('InvalidArgumentError: Sheet name'), `應取得寫檔器之原因, 實際 ${JSON.stringify(r.reason)}`)
+                    assert.ok(r.reason.includes(reason), `原因應含 ${reason}, 實際 ${r.reason}`)
                 }
             })
         }
+        //各拒絕條件之原因彼此可分辨: 長度、禁用字元、首尾單引號、保留名四類之原因片段互不相同(防止全部拒絕條件共用同一訊息而失去鑑別力)
+        it('四類拒絕條件(長度、禁用字元、首尾單引號、保留名)之原因互異', async function() {
+            let rs = []
+            for (let name of ['x'.repeat(32), 'a/b', '\'ab', 'History']) {
+                let r = await write(H, name)
+                assert.ok(r.reason, `應取得原因: ${name}`)
+                rs.push(r.reason.replace(/Sheet name "[^"]*"/, 'Sheet name "?"').replace(/\(sheet \d+\)/, '(sheet ?)'))
+            }
+            assert.strictEqual(new Set(rs).size, 4, JSON.stringify(rs))
+        })
 
         //wsemi 1.9.69 起判斷函數只收原始值: new String 包裝之字串與非字串(5、{}、null)同樣視為未給, 以預設 'data' 寫出, 不會到達 hucre 之檢查(downloadCore 事前即以 typeof 擋下並提示, 見 R16)
         it('new String 包裝之字串(非字串原始值):視為未給, 與 5、{}、null 同樣改用預設 data 並接受', async function() {
@@ -83,7 +106,11 @@ describe('unit-hucre-limits:寫檔器之拒絕條件', function() {
         })
         it('16385 欄:拒絕', async function() {
             let r = await write([Array.from({ length: 16385 }, (v, i) => `c${i}`)])
-            assert.match(String(r.error), /Column index 16384/)
+            assert.ok(r.error, '應拒絕')
+            assert.strictEqual(typeof r.error, 'string', 'error 為固定詞彙字串')
+            //原因經診斷出口取得: 欄索引上限(與分頁名條件之原因不同)
+            assert.match(r.reason, /Column index 16384/)
+            assert.ok(!r.reason.includes('Sheet name'), `原因不應為分頁名條件: ${r.reason}`)
         })
     })
 
@@ -135,6 +162,8 @@ describe('unit-hucre-limits:寫檔器之拒絕條件', function() {
         it('style 不合格式之物件:寫檔失敗(downloadCore 只能記錄於 console)', async function() {
             let w = await write([['a'], [{ value: 'x', style: 'bold' }]])
             assert.ok(w.error, '應寫檔失敗')
+            //原因經診斷出口取得: 寫檔器內部之 TypeError(非分頁名、欄數之條件)
+            assert.ok(w.reason.startsWith('TypeError: '), `應取得寫檔器之 TypeError, 實際 ${JSON.stringify(w.reason)}`)
         })
     })
 

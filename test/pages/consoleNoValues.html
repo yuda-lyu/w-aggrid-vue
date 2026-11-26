@@ -110,6 +110,10 @@
             write_fail: function() {
                 return t1().downloadData({ funGetMatHook: function(mat) { mat[1][0] = { value: 'CANARY-CELL', style: 'CANARY-STYLE' }; return mat } })
             },
+            //寫檔前即被 wsemi 拒絕: fileName 含 NUL 字元(wsemi 於其診斷出口之前即回 { error }, 無原生錯誤可取回; fileName 之內容 CANARY 不得出現在任何輸出)
+            write_fileNul: function() {
+                return t1().downloadData({ fileName: 'CANARY-NUL\u0000.xlsx' })
+            },
             //觸發下載時之例外(wsemi downloadExcelFileFromData 之 async 函數 reject): 替換 URL.createObjectURL 使其拋錯
             write_reject: function() {
                 window.URL.createObjectURL = function() { throw new Error('CANARY-OBJURL') }

@@ -10,6 +10,10 @@ const P = PREFIX
 let V = (shape) => ({ valueShape: shape })
 let CANARIES = ['CANARY', '987654321']
 
+//wsemiOut, 相依之 wsemi 自行寫出之診斷輸出(第 1 引數以 '[wsemi ' 起首, 為其診斷出口 label 之格式)
+//wsemi 之 downloadExcelFileFromData 於寫檔器拒絕時, 未給 funLog 即預設自行 console.log 一則(固定詞彙加 { errType }); 本套件以本地 funLog 取回原生錯誤並只輸出本套件一則(R28 規則 5), 故任何情形下皆為 0 則
+let wsemiOut = (items) => items.filter((m) => typeof m.args[0] === 'string' && m.args[0].startsWith('[wsemi '))
+
 //CASES: 案例 → { desc, items: 預設(未給 funLog、logDetail)時本套件之 console 輸出, 各項為 [label, safe(可省)]; detail: 交 funLog 之細節文字須含之字串(省略者該站無細節); noOpt: opt 本身無效、無法攜帶 funLog }
 let CASES = {
     //R01 logUseDefault 之各站(downloadCore 6、showKeys 2、uploadData 4)
@@ -43,7 +47,10 @@ let CASES = {
     mt_rowsBad: { desc: 'prop opt.rows 無效', items: [[`${P} opt.rows is invalid, it must be an array, the table is not updated`]] },
     mt_removed: { desc: 'prop opt 含已移除之鍵 kpCellRender', items: [[`${P} opt.kpCellRender was removed in 2.0.56, use scoped slot 'cell-render' instead`]] },
     //錯誤類(摘要只含類別與代碼, 不含訊息原文)
+    //寫檔失敗: wsemi 1.9.79 起 { error } 為固定詞彙字串, 寫檔器之原生錯誤只經其診斷出口(opt.funLog)交出; 本套件以本地 funLog 取回並作 logErr 之 err, 故 errType 為原生錯誤之型別(TypeError), 細節含原因
     write_fail: { desc: '寫檔失敗(mat 掛鉤之儲存格為寫檔器無法寫出之物件)', items: [[`${P} downloadData: can not write excel file`, { errType: 'TypeError' }]], detail: ['TypeError'] },
+    //wsemi 於診斷出口之前即拒絕(fileName 含 NUL 字元): 無原生錯誤可取回, logErr 之 err 為 wsemi 之固定詞彙字串(errType 為 string); fileName 之內容(CANARY)不得出現在任何輸出
+    write_fileNul: { desc: '寫檔前即被 wsemi 拒絕(fileName 含 NUL 字元, 不經 wsemi 之診斷出口)', items: [[`${P} downloadData: can not write excel file`, { errType: 'string' }]], detail: ['invalid fileName: must not contain a NUL character'] },
     write_reject: { desc: '觸發下載時之例外(URL.createObjectURL 拋錯, 寫檔之 Promise reject)', items: [[`${P} downloadData: can not write excel file`, { errType: 'Error' }]], detail: ['CANARY-OBJURL'] },
     fit_throw: { desc: 'fitColumns 之 catch(api.sizeColumnsToFit 拋錯)', items: [[`${P} fitColumns:`, { errType: 'Error' }]], detail: ['CANARY-FIT-ERR'] },
     filter_throw: { desc: 'triggerFilterChange 之 catch(api.getFilterModel 拋錯)', items: [[`${P} triggerFilterChange:`, { errType: 'Error' }]], detail: ['CANARY-FILTER-ERR'] },
@@ -82,13 +89,30 @@ describe('api-consoleNoValues:診斷輸出(console)不印資料值(R28)', functi
                 assert.deepStrictEqual(o.r.pageErrors, [], 'pageerror')
                 //spec D2: 逐項為 [label, safe]; label 為固定詞彙, safe 只有鍵名、型別、形狀
                 assert.deepStrictEqual(own(o.items).map((m) => m.args), c.items)
+                //R28 規則 5: 相依之 wsemi 不自行輸出(寫檔失敗時其預設會自行 console.log 一則; 本套件以本地 funLog 接走, 輸出只有本套件一則)
+                assert.deepStrictEqual(wsemiOut(o.items).map((m) => m.args), [], '相依之 wsemi 不得自行輸出')
                 //spec D2: 全部 console 輸出(含非本套件前綴者)之 text 與各引數皆不含使用者給之值、錯誤訊息原文
                 for (let s of CANARIES) {
                     assert.ok(!hasText(o.items, s), `console 輸出不得含 ${s}: ${JSON.stringify(o.items.map((m) => m.text))}`)
                 }
-                //錯誤類不得帶堆疊(堆疊含路徑與使用者函數所在位置)
-                //限本套件之輸出: 寫檔器失敗時 wsemi 之 downloadExcelFileFromData(1.9.72, 最新版)自身會 console.log(錯誤本體含堆疊), 非本套件輸出且本套件無從關閉(規則帳本第 6 節 #27, 已列回饋); 上列 CANARY 掃描仍涵蓋全部輸出
-                assert.ok(!own(o.items).some((m) => m.text.includes('\n    at ')), '本套件輸出不得含堆疊')
+                //錯誤類不得帶堆疊(堆疊含路徑與使用者函數所在位置); 全部 console 輸出(含 wsemi 等非本套件前綴者)皆不得帶堆疊
+                assert.ok(!o.items.some((m) => m.text.includes('\n    at ')), 'console 輸出不得含堆疊')
+            })
+        }
+
+        //D2: 預設輸出不含寫檔器原生錯誤之訊息原文; 原文取自同案例以 funLog 取得之細節(不寫死 V8 之訊息文字, 升版後仍有鑑別力)
+        for (let name of ['write_fail', 'write_reject']) {
+            it(`D2_${name} ${CASES[name].desc}:預設輸出不含原生錯誤之訊息原文(原文取自同案例 funLog 之細節), 而細節確含之`, async function() {
+                let a = await run(name, '?fl=collect')
+                await a.ctx.close()
+                assert.strictEqual(a.funLogs.length, 1, JSON.stringify(a.funLogs))
+                //細節為 `<name>: <message>`, 取 message
+                let detail = a.funLogs[0].detail
+                let msg = detail.slice(detail.indexOf(': ') + 2)
+                assert.ok(msg.length >= 8, `原生錯誤之訊息原文應可辨識: ${JSON.stringify(detail)}`)
+                let o = await run(name)
+                ctx = o.ctx
+                assert.ok(!hasText(o.items, msg), `預設輸出不得含原生錯誤之訊息原文 ${JSON.stringify(msg)}: ${JSON.stringify(o.items.map((m) => m.text))}`)
             })
         }
     })
@@ -103,6 +127,8 @@ describe('api-consoleNoValues:診斷輸出(console)不印資料值(R28)', functi
                 assert.deepStrictEqual(o.r.pageErrors, [], 'pageerror')
                 //spec D2: funLog 給予時診斷輸出只交給它
                 assert.deepStrictEqual(own(o.items).map((m) => m.args), [], '給 funLog 後 console 不應再有本套件輸出')
+                //R28 規則 5: wsemi 之診斷輸出亦不寫 console(本套件以本地 funLog 取回, 不轉交使用端之 funLog, 故 funLog 只收本套件之一則)
+                assert.deepStrictEqual(wsemiOut(o.items).map((m) => m.args), [], '相依之 wsemi 不得自行輸出')
                 assert.deepStrictEqual(o.funLogs.map((v) => (v.safe === null ? [v.label] : [v.label, v.safe])), c.items)
                 //有細節之站: 引數 3 個且細節含該站之值(使用端藉此還原); 固定詞彙之站無細節(2 個引數)
                 if (c.detail) {
@@ -120,7 +146,7 @@ describe('api-consoleNoValues:診斷輸出(console)不印資料值(R28)', functi
 
     describe('opt.logDetail 為 true:console 改印遮罩後之細節(使用端自行開啟以還原除錯資訊)', function() {
         //逐站之細節函數由 funLog 組(F_)驗; 此處驗 console 路徑之代表(logUseDefault、錯誤類、貼上)
-        let reps = { dl_useHead: ['CANARY-DL-USEHEAD'], mt_localeEntry: ['987654321', 'CANARY-MT-ARR'], fit_throw: ['CANARY-FIT-ERR'], paste_throw: ['CANARY-EDIT a1'], write_fail: ['TypeError'] }
+        let reps = { dl_useHead: ['CANARY-DL-USEHEAD'], mt_localeEntry: ['987654321', 'CANARY-MT-ARR'], fit_throw: ['CANARY-FIT-ERR'], paste_throw: ['CANARY-EDIT a1'], write_fail: ['TypeError'], write_fileNul: ['invalid fileName'] }
         for (let [name, ss] of Object.entries(reps)) {
             it(`L_${name} ${CASES[name].desc}:console 之引數為細節, 含 ${ss.join('、')}`, async function() {
                 let o = await run(name, '?ld=1')
@@ -128,6 +154,8 @@ describe('api-consoleNoValues:診斷輸出(console)不印資料值(R28)', functi
                 assert.deepStrictEqual(o.r.pageErrors, [], 'pageerror')
                 let mine = own(o.items)
                 assert.strictEqual(mine.length, CASES[name].items.length, JSON.stringify(mine.map((m) => m.text)))
+                //R28 規則 5: logDetail 只作用於本套件之輸出, 不傳給 wsemi(傳了則 wsemi 自行再印一則細節, 輸出變兩則)
+                assert.deepStrictEqual(wsemiOut(o.items).map((m) => m.args), [], '相依之 wsemi 不得自行輸出')
                 //label 不變, 第 2 引數為細節(不是 safe)
                 assert.deepStrictEqual(mine.map((m) => m.args[0]), CASES[name].items.map((v) => v[0]))
                 for (let s of ss) {
@@ -175,20 +203,38 @@ describe('api-consoleNoValues:診斷輸出(console)不印資料值(R28)', functi
             assert.ok(mine[0].text.includes('CANARY-FIT-ERR'), mine[0].text)
             assert.deepStrictEqual(ctx.pageErrors, [], 'pageerror')
         })
+
+        //R28 規則 5: 取回之原生錯誤為每次下載各自之狀態, 不跨次殘留(防止狀態外提至模組層或實例層: 第二次未取回時沿用第一次之原因)
+        it('X2 同一頁連續兩次寫檔失敗: 先寫檔器拒絕(errType TypeError)、再 fileName 含 NUL(errType string)、再寫檔器拒絕(TypeError); 每次恰一則, 取回之原因不跨次殘留', async function() {
+            ctx = await openPage(pageUrl('consoleNoValues.html'))
+            let cap = captureConsole(ctx.page)
+            let L = `${P} downloadData: can not write excel file`
+            let seq = [['write_fail', 'TypeError'], ['write_fileNul', 'string'], ['write_fail', 'TypeError']]
+            for (let [name, errType] of seq) {
+                cap.clear()
+                await runHostCase(ctx, name, { expectDownloads: 0, noDownloadMs: 300, readFile: false })
+                let items = await cap.items()
+                assert.deepStrictEqual(own(items).map((m) => m.args), [[L, { errType }]], `${name} 之輸出`)
+                assert.deepStrictEqual(wsemiOut(items).map((m) => m.args), [], '相依之 wsemi 不得自行輸出')
+            }
+            assert.deepStrictEqual(ctx.pageErrors, [], 'pageerror')
+        })
     })
 
     describe('funLog 之容錯(D4: 診斷本身之失敗不影響被測功能)', function() {
-        for (let name of ['dl_useHead', 'mt_localeText', 'fit_throw', 'paste_throw']) {
+        for (let name of ['dl_useHead', 'mt_localeText', 'fit_throw', 'paste_throw', 'write_fail', 'write_fileNul']) {
             it(`N_${name} funLog 為空函數:本套件全部輸出關閉(使用端 funLog: () => {} 即可關閉)`, async function() {
                 let o = await run(name, '?fl=noop')
                 ctx = o.ctx
                 assert.ok(!o.r.out.threw && !o.r.out.rejected, JSON.stringify(o.r.out))
                 assert.deepStrictEqual(o.r.pageErrors, [], 'pageerror')
                 assert.deepStrictEqual(own(o.items), [], '本套件 console 輸出應為 0')
+                //寫檔類之站點另含 wsemi 之輸出: 使用端以空函數關閉本套件輸出時, 相依之 wsemi 亦不得自行輸出(console 無本套件與 wsemi 輸出)
+                assert.deepStrictEqual(wsemiOut(o.items).map((m) => m.args), [], '相依之 wsemi 不得自行輸出')
             })
         }
         for (let fl of ['throw', 'reject']) {
-            for (let name of ['dl_useHead', 'fit_throw']) {
+            for (let name of ['dl_useHead', 'fit_throw', 'write_fail']) {
                 it(`T_${name}_${fl} funLog 同步拋錯或回傳 rejected Promise:不使方法失敗、無未處理之 rejection、不外洩至 console`, async function() {
                     let o = await run(name, `?fl=${fl}`)
                     ctx = o.ctx

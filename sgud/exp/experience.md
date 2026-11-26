@@ -51,7 +51,7 @@
 - **標頭可捲範圍可能比資料區大 4px**(7 欄×150px、表寬 950 時 hv 最大 106、cv 最大 102):資料區已在最右時對末欄做 `scrollIntoView({ inline: 'center' })`,hv=106、cv=102 且資料區不再有 scroll 事件可觸發 ag-grid 同步,故補償須有第二階段(標頭還原為資料區位置).
 - **ag-grid 水平捲動只認一個來源(`isControllingScroll`)**:使用者拖曳橫向捲軸(`.ag-body-horizontal-scroll-viewport`)後 500ms 內只認捲軸,其餘認資料區;被拒之寫入不更新捲軸位置、頂/底釘選列 translateX、欄虛擬化(實測 fake=300、cv=276、最右欄未渲染,但標頭與資料區 scrollLeft 相等,只比 hv/cv 或欄名/資料左緣量不出來).程式要移動水平位置時,資料區與捲軸元件兩處都寫,當下掌控者會走完整同步.
 - **Playwright headless 以 `--hide-scrollbars` 啟動,無法用真滑鼠拖曳原生捲軸**(thumb 拖曳後 scrollLeft 不動);測捲軸路徑以程式捲動捲軸元件模擬(L5,登錄為偏離).
-- **外審副本放在 repo 之 `./tmp/` 內時,審查者會沿父目錄找到 node_modules、dist、Playwright 而自行跑真瀏覽器**(2026-10-20 sol 與 minimax 皆如此,產出有實測價值但未持有 web 測試鎖);提示詞要明寫是否允許,或把副本放到無法上溯至 repo 之位置(不得放 `C:\opensrcOper` 下建立指向 node_modules 之連接點).
+- **外審副本放在 repo 之 `./tmp/` 內時,審查者會沿父目錄找到 node_modules、dist、Playwright 而自行跑真瀏覽器**(2026-10-20 sol 與 minimax 皆如此,產出有實測價值但未持有 web 測試鎖);提示詞要明寫是否允許,或把副本放到無法上溯至 repo 之位置(不得放主控資料夾下建立指向 node_modules 之連接點).
 - **審查者之離線模型結論不等於真瀏覽器結論**:sol 以離線模型推演「拿掉 guard 仍綠」(F05),真瀏覽器變異則 M4→HS23、M5→HS24 皆轉紅;以變異實測為準.
 - **src 與 `Edit` 之行尾**:`src/components/WAggridVue.vue` 為 CRLF;以腳本改 src 或比對字串時 `\n` 要換成 `\r\n`(變異腳本 `includes` 找不到變異點即此因).`grep -c $'\r'` 在 Git Bash 回 0 不可信,以 node 讀檔數 `\r\n` 為準.
 - **變異測試作法**:腳本備份 src → 套用單點變異 → `node toolg/gDistRollupComps.mjs`(約 30 秒)→ 經 `quiet-run --lock` 跑單檔 → `finally` 還原 src 並重建 dist,結尾比對 src 與備份相同.變異執行期間不得改 src、dist、被測試檔.
@@ -135,12 +135,22 @@
 - **單一出口之作法**:`getDiag(元件 opt, DIAG_CFG)` 於**每次輸出時**才建立(`getDiag` 於建構時取 opt 快照,故逐次建構才使 opt 執行中變更即時生效;X1 守護);呼叫端以薄函數 `logUseDefault`、`logUseDefaultOpt`、`logErr`、`logFixed` 帶 `vo`,不在各站內聯 `getDiag`.規則只留一處:不另寫 mask、brief、shape.`diag.shape`(wsemi `getDiagShape`)給值之形狀,`diag.brief`(`getDiagBriefErr`)給錯誤類別與白名單內代碼.
 - **safe 之鍵名須宣告於 `safeKeys`**,白名單外之鍵被丟棄且不報錯(漏宣告時輸出少一個鍵而不是失敗;C14–C16 以變異守護).safe 之字串值不做控制字元替換,但以物件屬性印出(Node 與 devtools 皆轉義),故結構性鍵名(欄位 key、字典鍵名)可放 safe;使用端之值只能經 `diag.shape`.
 - **getDiag 之 level 只有 `error` 與其餘(`log`)**:已移除鍵之警告原為 `console.warn`,改後為 `console.log`(e2e-display-slots S5、S7 之 type 篩選由 `warning` 改 `log`);已列回饋建議 wsemi 增 `warn`.
-- **相依套件之輸出不歸本規則,且無從關閉**:寫檔器失敗時 wsemi `downloadExcelFileFromData` 自行 `console.log(u8a.error)`(錯誤本體含堆疊),`funLog` 不影響;D_write_fail 第一次跑時以「全部 console 輸出不含堆疊」失敗才發現.判斷是否本套件之輸出看**第一引數是否為 `[w-aggrid-vue]` 前綴字串**(`test/tools/consoleCapture.mjs` 之 `own`);canary 掃描仍涵蓋全部輸出.新增 console 站點之測試前,先以 `tmp` 探測腳本印出該案全部 console 項目(含非本套件者).
+- **相依套件之輸出不歸本規則,且無從關閉**(**`downloadExcelFileFromData` 之部分已於 2026-11-26 解除:wsemi 1.9.79 起提供診斷出口,本套件以本地 funLog 接走,見 2.10**):寫檔器失敗時 wsemi `downloadExcelFileFromData` 自行 `console.log(u8a.error)`(錯誤本體含堆疊),`funLog` 不影響;D_write_fail 第一次跑時以「全部 console 輸出不含堆疊」失敗才發現.判斷是否本套件之輸出看**第一引數是否為 `[w-aggrid-vue]` 前綴字串**(`test/tools/consoleCapture.mjs` 之 `own`);canary 掃描仍涵蓋全部輸出.新增 console 站點之測試前,先以 `tmp` 探測腳本印出該案全部 console 項目(含非本套件者).
 - **Playwright 擷取 console**:`m.text()` 對物件引數只給預覽(`{errType: Error}`,鍵序依物件、字串無引號),對 Error 之 `jsonValue()` 為 `{}`;驗「不含值」同時掃 `text()` 與各引數 `JSON.stringify`,驗「恰為」用各引數之 `jsonValue()` 陣列.
 - **catch 站點之觸發**(R03 記載之「無法以操作觸發」三處):替換該實例 `getApi()` 回傳物件之方法(`sizeColumnsToFit`、`getFilterModel`、`refreshCells`;`getApi()` 每次回同一物件)再呼叫 `fitColumns(false)`、`triggerFilterChange('t')`、`finishFade(hd, true)`(hd 為自建物件,須含 `el`、`fn`、`timer`、`timerCap` 供 `unwatchFade`);寫檔 reject 以 `window.URL.createObjectURL = () => { throw ... }` 造成(wsemi `downloadFileFromBlob` 取該函數).首輪變異 W17(寫檔 catch 站)存活即因只造了 `{ error }` 路徑,補 `write_reject` 後擊殺.
 - **靜態鎖測試之掃描器須有正向對照,且正規式要處理 CRLF**:`src/components/WAggridVue.vue` 為 CRLF,以 `\)\n` 結尾之正規式於 CRLF 下恆不命中,迴圈 0 次而測試空轉(首輪 S06 變異存活因此);鎖測試對「命中數」本身下斷言(label 10 個)並將 F 正規化為 LF.對建置設定之守護斷言須是整行相等,不是子字串(S09 之 `xx: 1` 變異存活因 `fns: 'WAggridVue.vue'` 子字串仍命中).
 - **dist 壓縮後函式名被改寫**(`diagOf`→`EL`、`logFixed`→`SL`、`logErr`→`xL`、`logUseDefault`→`DL`、`logUseDefaultOpt`→`RL`,每次建置固定,內容相同則位元組相同):變異以字串取代 dist,錨點用呼叫形(含字面之 label 與參數),每項須恰出現 1 次;改 src 重建後名稱可能改變,變異腳本之錨點須重核.
 - **範例碼之 console 不屬套件輸出**:`src/App*.vue` 去註解行後 69 處,不在 dist(`toolg/gDistRollupComps.mjs` 只打包 `src/components/WAggridVue.vue`),`unit-diagSites` DS5 守護此事實.
+
+### 2.10 相依之固定詞彙函數:取回原生原因而輸出仍為本套件一則(R28 規則 5,2026-11-26 oag492k,排程第 492 項批 10 之連動)
+
+- **起因**:wsemi 1.9.79 起寫 Excel 之函數(`downloadExcelFileFromData`、`getExcelU8ArrFromWorkbook`、`getExcelU8ArrFromData`)於寫檔器拒絕時回傳之 `{ error }` 由寫檔器之 `Error`(訊息帶分頁名稱等輸入內容)改為固定詞彙字串(`can not convert data to Excel`、`can not convert wb to Excel`),原生錯誤改只經其診斷出口(`opt.funLog`、`opt.logDetail`).連動紅 19 格:`api-consoleNoValues` 之 D/F/L_write_fail 3 格(`errType` 由 `TypeError` 變 `string`、細節不含 `TypeError`)與 `unit-hucre-limits` 16 格(以 `/Sheet name/`、`/Column index 16384/` 比對 `r.error.message`).
+- **先實跑再接線**(探測腳本一次印全 5 種呼叫形):①未給 opt,寫檔器拒絕 → wsemi **自行 `console.log` 一則**(`[wsemi downloadExcelFileFromData] can not convert workbook to Excel` 加 `{ errType }`;`_writeXlsxSafe` 於本函數傳 `bAlways=true`;`getExcelU8Arr*` 預設靜默,兩者不對稱);②給 `funLog` → 呼叫一次、第 3 引數為遮罩後之錯誤副本(內建類別同類別、訊息保留與堆疊;hucre 自訂類別為 `Error` 外殼加自有 `name`)、不寫 console;③`funLog` 與 `logDetail` 並給 → `funLog` 優先、不寫 console(行為等價,故「不給 logDetail」只能靠靜態鎖 DS8 擋);④成功路徑不呼叫;⑤`fileName` 含 NUL 等於診斷出口之前即回 `{ error }` 者**不呼叫 funLog**.
+- **作法**:`downloadCore` 給 wsemi 本地 `funLog`(旗標加值,不以 `cause === null` 判斷有無取回)、不給 `logDetail`、不轉交使用端 `opt.funLog`;**有取回者直接以取回之錯誤作 `logErr` 之 err**——不包 `Error.cause`(同批 w-sync-webdata 因要外拋事件而接 `cause`;本庫錯誤只入 `logErr`,包一層會使 `diag.brief` 之 `errType` 變 `Error`,M7 變異證其被擊殺);未取回者用 wsemi 之固定詞彙字串(`errType` 為 `string`).
+- **測試之寫法**:`wsemiOut`(第 1 引數以 `[wsemi ` 起首之 console 項)於 D/F/L/N 各格斷言為 0——修前只靠 `own()` 過濾,wsemi 之輸出被排除在斷言外而不被發現;`D2_` 之訊息原文取自同案例 `?fl=collect` 之細節(不寫死 V8 之訊息);`X2` 於同一頁連續觸發三次(拒絕 → NUL → 拒絕),擋「取回之狀態外提至模組層」之變異(單頁單案之格測不到);`write_fileNul` 專驗未取回之分支.
+- **`unit-hucre-limits` 之原因斷言**:以 `getExcelU8ArrFromWorkbook(wb, { funLog })` 取回 `名稱: 訊息`,逐條件斷言 hucre `_validate.mjs` 之訊息片段(`is 32 characters`、`contains "<c>"`、`starts or ends with an apostrophe`、`reserved by Excel for change tracking`、`Column index 16384`),另 1 格斷言四類條件之原因互異;原因壓平為單一訊息(U1)、不取回(U2)、只留通用前綴(U3,即舊斷言 `/Sheet name/` 之等級)各被 15、18、18 格擊殺.hucre 升版若改訊息,這些格先紅,屬預期之提醒(R16 升版時).
+- **測 dist 之連動**:`api-`／`e2e-` 皆以 `dist/` 為受測對象,改 src 後須 `node toolg/gDistRollupComps.mjs`;變異腳本之錨點若跨行須用 CRLF(`src/components/WAggridVue.vue` 為 CRLF;Git Bash 之 `grep -c $'\r'` 對它回 0 而誤判為 LF,以 node 讀位元組核對).變異腳本之 finally 還原 src 並重建 dist,以雜湊比對修後之 dist 快照.
+- **獨立複審(sonnet,唯讀)之採納**:同頁連續案(X2)、DS8 改為整族名正規式與匯入形式全掃、DS7 補 `funLogWsemi`、帳本之類別措辭與格數;未採:`e2e-setup.mjs` 之 `writeXlsx` 於失敗時之明確錯誤訊息(已 fail-closed,屬夾具改進,低優先).
 
 ## 3. 相依套件之非顯而易見行為
 
@@ -213,7 +223,7 @@
 ## 8. 自有套件升版(wsemi 等)
 
 - 使用者發布後 npm 可能延遲數分鐘才出現新版:以背景迴圈每 120 秒執行 `npm view <套件>@<版本> version --prefer-online`(`--prefer-online` 略過本機快取),出現即 `npm i <套件>@<版本>`;**以 `node_modules/<套件>/package.json` 之 version 判定安裝成功**,不看 npm 離開碼.
-- 安裝後要確認:npm 上之內容與本機開發 repo(wsemi 在 `C:\opensrc\開源-JS-002-3-wsemi\wsemi`)之提交一致(比對改動之原始碼檔),以及**連帶升版之相依**(wsemi 1.9.10 把 hucre 升為 1.2.0),再重建 dist 跑完整回歸.
+- 安裝後要確認:npm 上之內容與本機開發 repo(wsemi 在 本機之 wsemi 開發 repo)之提交一致(比對改動之原始碼檔),以及**連帶升版之相依**(wsemi 1.9.10 把 hucre 升為 1.2.0),再重建 dist 跑完整回歸.
 
 ## 9. 踩過的錯
 
